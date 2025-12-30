@@ -3,6 +3,7 @@
 #include "MediaInfo/MediaInfo.h"
 
 #include "av_mediainfo.h"
+#include "av_media_info.h"
 
 #include "nlohmann/json.hpp"
 
@@ -93,19 +94,78 @@ namespace av {
                                         loge("exception err {}", e.what());
                                         return false;
                                     }
-                                    m_video.scan_type = av::str::toT(track["ScanType"].get<std::string>());
-                                    m_video.format = av::str::toT(track["Format"].get<std::string>());
+                                    auto scan_type = av::str::toT(track["ScanType"].get<std::string>());
+                                    if (scan_type == TEXT("Interlaced")) {
+                                        m_video.scan_type = av::media::ScanType::Interlaced;
+                                    }
+                                    else if (scan_type == TEXT("Progressive")) {
+                                        m_video.scan_type = av::media::ScanType::Progressive;
+                                    }
+                                    else if (scan_type == TEXT("MBAFF")) {
+                                        m_video.scan_type = av::media::ScanType::MBAFF;
+                                    }
+
+                                    auto format = av::str::toT(track["Format"].get<std::string>());
+                                    if (format == TEXT("AVC")) {
+                                        m_video.codec = av::media::SourceVideoCodec::_h264;
+                                    }
+                                    else if (format == TEXT("MPEGVideo")) {
+                                        m_video.codec = av::media::SourceVideoCodec::_mpeg2;
+                                    }
+                                    else if (format == TEXT("HEVC")) {
+                                        m_video.codec = av::media::SourceVideoCodec::_h265;
+                                    }
                                 }
                                 else if (type == TEXT("Audio")) {
-                                    m_audio.format = av::str::toT(track["Format"].get<std::string>());
-                                    m_audio.format_commercial_if_any = av::str::toT("");
+                                    auto format = av::str::toT(track["Format"].get<std::string>());
+                                    auto format_commercial_if_any = av::str::toT("");
                                     if (track.contains("Format_Commercial_IfAny")) {
-                                        m_audio.format_commercial_if_any = av::str::toT(track["Format_Commercial_IfAny"].get<std::string>());
+                                        format_commercial_if_any = av::str::toT(track["Format_Commercial_IfAny"].get<std::string>());
                                     }
-                                    m_audio.format_profile = av::str::toT("");
+                                    auto format_profile = av::str::toT("");
                                     if (track.contains("Format_Profile")) {
-                                        m_audio.format_profile = av::str::toT(track["Format_Profile"].get<std::string>());
+                                        format_profile = av::str::toT(track["Format_Profile"].get<std::string>());
                                     }
+
+                                    if (format == TEXT("AAC LC") || format == TEXT("AAC")) {
+                                        m_audio.codec = av::media::SourceAudioCodec::_aac;
+                                    }
+                                    else if (format == TEXT("AC-3")) {
+                                        if (format_commercial_if_any == TEXT("Dolby Digital")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_ac3;
+                                        }
+                                    }
+                                    else if (format == TEXT("OGG")) {
+                                        m_audio.codec = av::media::SourceAudioCodec::_ogg;
+                                    }
+                                    else if (format == TEXT("MPEG Audio")) {
+                                        if (format_profile == TEXT("Layer 1")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_mp1;
+                                        }
+                                        else if (format_profile == TEXT("Layer 2")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_mp2;
+                                        }
+                                        else if (format_profile == TEXT("Layer 3")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_mp3;
+                                        }
+                                    }
+                                    else if (format == TEXT("E-AC-3")) {
+                                        if (format_commercial_if_any == TEXT("Dolby Digital Plus")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_e_ac3_ddp;
+                                        }
+                                        else {
+                                            m_audio.codec = av::media::SourceAudioCodec::_e_ac3_atoms;
+                                        }
+                                    }
+                                    else if (format == TEXT("DTS")) {
+                                        if (format_commercial_if_any == TEXT("DTS-HD Master Audio")) {
+                                            m_audio.codec = av::media::SourceAudioCodec::_dts_hd_ma;
+                                        }
+                                        else {
+                                            m_audio.codec = av::media::SourceAudioCodec::_dts;
+                                        }
+                                    }
+
                                 }
                                 else if (type == TEXT("General")) {
                                     // no any value need

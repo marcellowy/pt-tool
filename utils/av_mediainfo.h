@@ -3,6 +3,7 @@
 
 #include "nlohmann/json.hpp"
 #include "av_string.h"
+#include "av_media_info.h"
 
 namespace av {
 	namespace mediainfo {
@@ -11,16 +12,14 @@ namespace av {
 		};
 
 		struct Video {
-			std::tstring format;
+			av::media::SourceVideoCodec codec = av::media::SourceVideoCodec::Unknown;
 			int64_t width;
 			int64_t height;
-			std::tstring scan_type;
+			av::media::ScanType scan_type = av::media::ScanType::Unknown;
 		};
 
 		struct Audio {
-			std::tstring format;
-			std::tstring format_commercial_if_any;
-			std::tstring format_profile;
+			av::media::SourceAudioCodec codec = av::media::SourceAudioCodec::Unknown;
 		};
 
 		class MediaInfo {

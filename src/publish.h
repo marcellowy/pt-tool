@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "defined.h"
+#include "av_media_info.h"
+
+using namespace av::media;
 
 
 class Publish
@@ -16,14 +19,14 @@ public:
 	bool start();
 	bool stop();
 protected:
-	std::vector<PublishObj> readDir();
-	bool getSiteType(PublishObj& obj);
+	std::vector<Source> readDir();
+	bool getSiteType(Source& obj);
 	
 	bool processDir(const std::tstring& path);
-	bool processFile(PublishObj& obj);
+	bool processFile(Source& obj);
 
 	// map tv name
-	void tvname(PublishObj& obj);
+	void tvname(Source& obj);
 private:
 	std::tstring dir_;
 };

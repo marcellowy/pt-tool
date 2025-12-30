@@ -13,7 +13,6 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-message("${CMAKE_TOOLCHAIN_FILE}")
 set(PROJECT_NAME "chadtest")
 
 project (${PROJECT_NAME})
@@ -42,19 +41,25 @@ if(MSVC)
 
 	# if use ninja
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        message("Debug MultiThreadedDebug")
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
         )
     else()
-    message("Release MultiThreaded")
         set_target_properties(${PROJECT_NAME} PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreaded"
         )
     endif()
-else()
-    message("============================================")
 endif()
+
+find_package(OpenSSL REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::Crypto)
+
+find_package(ZLIB REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
+
+find_package(CURL REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 
 find_package(ZenLib CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE zen)

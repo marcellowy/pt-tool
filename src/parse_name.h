@@ -4,22 +4,26 @@
 #include "defined.h"
 #include "av_string.h"
 
-//
-bool parseSportName(PublishObj& obj);
+#include "av_media_info.h"
+
+using namespace av::media;
 
 //
-bool parseMovieName(PublishObj& obj);
+bool parseSportName(Source& obj);
 
 //
-bool parseTVSeriesName(PublishObj& obj);
+bool parseMovieName(Source& obj);
 
 //
-bool parseDiscoverName(PublishObj& obj);
+bool parseTVSeriesName(Source& obj);
 
 //
-bool parseVarietyName(PublishObj& obj);
+bool parseDiscoverName(Source& obj);
 
 //
-bool parseCustomName(PublishObj& obj);
+bool parseVarietyName(Source& obj);
+
+//
+bool parseCustomName(Source& obj);
 
 #endif

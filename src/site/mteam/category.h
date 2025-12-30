@@ -7,22 +7,29 @@
 #include <optional>
 #include <string>
 #include "av_string.h"
+#include "av_media_info.h"
 
 namespace mteam {
-	namespace category {
-		
-		enum class Id {
-			Unknown = 0,
-			TVSeries = 402,
-			Discover = 404,
-			Sport = 407,
-			Movie = 419,
-		};
 
-		std::tstring to_string(Id id);
+	enum class CategoryId {
+		Unknown = 0,
+		TVSeries = 402,
+		Discover = 404,
+		Sport = 407,
+		Movie = 419,
+	};
 
-		Id from_string(const std::tstring& str);
-	}
+	class Category {
+	public:
+		Category() = default;
+		Category(const av::media::SourceCategory category);
+		~Category();
+
+		mteam::CategoryId getid();
+
+	private:
+		av::media::SourceCategory m_category;
+	};
 };
 
 #endif

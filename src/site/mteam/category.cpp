@@ -1,21 +1,29 @@
 #include "category.h"
 
-std::tstring mteam::category::to_string(Id id) {
-	switch (id) {
-	case Id::TVSeries: return TEXT("402");
-	case Id::Discover:  return TEXT("404");
-	case Id::Sport:  return TEXT("407");
-	case Id::Movie: return TEXT("419");
-	default:
-		return TEXT("Unknown");
-	}
-	return TEXT("Unknown");
-}
+namespace mteam {
 
-mteam::category::Id mteam::category::from_string(const std::tstring& str) {
-	if (str == TEXT("402")) return mteam::category::Id::TVSeries;
-	if (str == TEXT("404"))  return mteam::category::Id::Discover;
-	if (str == TEXT("407"))  return mteam::category::Id::Sport;
-	if (str == TEXT("419")) return mteam::category::Id::Movie;
-	return mteam::category::Id::Unknown;
+	Category::Category(const av::media::SourceCategory category):m_category(category){
+	
+	}
+	Category::~Category() {
+	
+	}
+
+	mteam::CategoryId Category::getid() {
+		switch (m_category) {
+		case av::media::SourceCategory::Unknown:
+			return CategoryId::Unknown;
+		case av::media::SourceCategory::Movie:
+			return CategoryId::Movie;
+		case av::media::SourceCategory::Discover:
+			return CategoryId::Discover;
+		case av::media::SourceCategory::Sport:
+			return CategoryId::Sport;
+		case av::media::SourceCategory::TVSeries:
+			return CategoryId::TVSeries;
+		case av::media::SourceCategory::Variety:
+			return CategoryId::TVSeries;
+		}
+		return CategoryId::Unknown;
+	}
 }

@@ -10,7 +10,7 @@
 #include "mteam/category.h"
 
 
-bool parseCustomName(PublishObj& obj) {
+bool parseCustomName(Source& obj) {
     // 0000@[402][标题][标题前缀][副标题][年份][豆瓣id][剧集][英文名].ts
     std::regex r(av::str::toA(publishPrefixCustom) + "\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]");
     std::smatch match;
@@ -32,14 +32,14 @@ bool parseCustomName(PublishObj& obj) {
 
                 // category id
                 auto tmp = av::str::toT(match[1]);
-                obj.category_id = mteam::category::from_string(tmp);
+                //obj.category_id = mteam::category::from_string(tmp);
 
                 logi("year: {}", av::str::toA(obj.year));
                 logi("name_chs: {}", av::str::toA(obj.name_chs));
                 logi("sub_title: {}", av::str::toA(obj.sub_title));
                 logi("title_prefix: {}", av::str::toA(obj.title_prefix));
                 logi("douban_id: {}", av::str::toA(obj.douban_id));
-                logi("category_id: {}", av::str::toA(mteam::category::to_string(obj.category_id)));
+                //logi("category_id: {}", av::str::toA(mteam::category::to_string(obj.category_id)));
                 logi("season: {}", av::str::toA(obj.season));
                 logi("name_eng: {}", av::str::toA(obj.name_eng));
 
@@ -56,7 +56,7 @@ bool parseCustomName(PublishObj& obj) {
     return false;
 }
 
-bool parseMovieName(PublishObj& obj) {
+bool parseMovieName(Source& obj) {
     // 一代妖后1989€1437318.ts
     std::regex r("\\s*(.*?)\\s*(\\d+)\\s*€\\s*(\\d+)\\s*\\.ts");
     std::smatch match;
@@ -93,11 +93,11 @@ bool parseMovieName(PublishObj& obj) {
     return false;
 }
 
-bool parseTVSeriesName(PublishObj& obj) {
+bool parseTVSeriesName(Source& obj) {
     return false;
 }
 
-bool parseDiscoverName(PublishObj& obj) {
+bool parseDiscoverName(Source& obj) {
     // 000@嫦娥六号1(4K)_CCTV4K_04_11_17_57.ts
     std::regex r(av::str::toA(publishPrefixDiscover) + "(.*?)\\_(.*?)\\_([\\d]+)\\_([\\d]+)\\_[\\d]+\\_[\\d]+.ts");
     std::smatch match;
@@ -134,7 +134,7 @@ bool parseDiscoverName(PublishObj& obj) {
     return false;
 }
 
-bool parseVarietyName(PublishObj& obj) {
+bool parseVarietyName(Source& obj) {
     {
         // 00@边陲新风——全民国家安全教育日特别节目-1_CCTV12_04_15_20_37.ts
         std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_(.*?)_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})_([\\d]{1,}).ts");
@@ -216,7 +216,7 @@ bool parseVarietyName(PublishObj& obj) {
     return false;
 }
 
-bool parseSportName(PublishObj& obj) {
+bool parseSportName(Source& obj) {
 
     {
         // 0@2024-2025赛季中国男子篮球职业联赛-总决赛第四场(北京北汽-浙江方兴渡)_CCTV5_05_14_18_57.ts

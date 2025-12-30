@@ -1,9 +1,9 @@
 // test.cpp: 定义应用程序的入口点。
 //
 
-#include "av_base.h"
+
 #include "test.h"
-//#include "httplib/httplib.h"
+#include "httplib/httplib.h"
 //#include "cron.h"
 #include "av_log.h"
 #include "config.h"
@@ -19,19 +19,13 @@
 #include "av_ffmpeg.h"
 #include "av_codec_jpg.h"
 #include "av_codec_stb_image_jpg.h"
+#include "av_translate.h"
+
 
 using namespace std;
 
 int main()
 {
-//#ifdef UNICODE
-//	logi("UNICODE");
-//#elifdef _UNICODE
-//	logi("_UNICODE");
-//#else
-//	logi("NOT UNICODE");
-//#endif // UNICODE
-
 #ifdef _WIN32
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);
@@ -41,8 +35,6 @@ int main()
 		return ErrorCode::ErrOpenLogFailed;
 	}
 
-	logi("中文测试");
-
 	if (!Config::instance().parse(av::str::toT("config.toml"))) {
 		loge("parse config.toml failed");
 		return ErrorCode::ErrParseConfigFileFailed;
@@ -51,10 +43,6 @@ int main()
 	
 	logi("server start ==================================");
 
-	av::path::create_dir(TEXT("中文目录"));
-	av::path::create_dir(TEXT("中文目录1"));
-	av::path::remove_dir(TEXT("中文目录1"));
-	
 	//logi("{}, {}, {}", av::time::seconds(), av::time::milliseconds(), av::time::microseconds());
 	const std::vector<int64_t> tt = { 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120 };
 	int64_t count = 0;
@@ -73,11 +61,11 @@ int main()
 	});
 #ifdef _WIN32
 
+
+	
 	av::mediainfo::MediaInfo m(TEXT("C:/Users/Marcello/Downloads/中.mp4"));
 	if (!m.parse()) {
 		loge("parse mediainfo failed");
-	} else{
-		logi("video format {} w: {} h: {}",av::str::toA(m.getVideo().format), m.getVideo().width, m.getVideo().height);
 	}
 
 	av::codec::JPG jpg([&count](uint8_t* data, size_t size) {
@@ -118,7 +106,7 @@ int main()
 	//p.start();
 
 	//Queue<int> q;
-	//Cron a("1", "*/1 * * * * *", [&q] {
+	//Cron a("1", "*1 * * * * *", [&q] {
 	//	av::async::Exit exit_cron([&q] {
 	//		logi("test aa end base64: {}", av::base64::encode("1234567890"));
 	//		q.push(2);
