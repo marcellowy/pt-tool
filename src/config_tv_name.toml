@@ -1,0 +1,534 @@
+﻿[[TVNameMap]]
+match = "CCTV2"
+titlePrefix = "CCTV-2"
+subTitleText = "CCTV-2"
+
+[[TVNameMap]]
+match = "CCTV3"
+titlePrefix = "CCTV-3"
+subTitleText = "CCTV-3"
+
+[[TVNameMap]]
+match = "CCTV4"
+titlePrefix = "CCTV-4"
+subTitleText = "CCTV-4"
+
+[[TVNameMap]]
+match = "CCTV5"
+titlePrefix = "CCTV-5"
+subTitleText = "CCTV-5"
+
+[[TVNameMap]]
+match = "CCTV5+"
+titlePrefix = "CCTV-5+"
+subTitleText = "CCTV-5+"
+
+[[TVNameMap]]
+match = "CCTV6"
+titlePrefix = "CCTV-6"
+subTitleText = "CCTV-6"
+
+[[TVNameMap]]
+match = "CCTV7"
+titlePrefix = "CCTV-7"
+subTitleText = "CCTV-7"
+
+[[TVNameMap]]
+match = "CCTV8"
+titlePrefix = "CCTV-8"
+subTitleText = "CCTV-8"
+
+[[TVNameMap]]
+match = "CCTV9"
+titlePrefix = "CCTV-9"
+subTitleText = "CCTV-9"
+
+[[TVNameMap]]
+match = "CCTV10"
+titlePrefix = "CCTV-10"
+subTitleText = "CCTV-10"
+
+[[TVNameMap]]
+match = "CCTV11"
+titlePrefix = "CCTV-11"
+subTitleText = "CCTV-11"
+
+[[TVNameMap]]
+match = "CCTV12"
+titlePrefix = "CCTV-12"
+subTitleText = "CCTV-12"
+
+[[TVNameMap]]
+match = "CCTV13"
+titlePrefix = "CCTV-13"
+subTitleText = "CCTV-13"
+
+[[TVNameMap]]
+match = "CCTV14"
+titlePrefix = "CCTV-14"
+subTitleText = "CCTV-14"
+
+[[TVNameMap]]
+match = "CCTV15"
+titlePrefix = "CCTV-15"
+subTitleText = "CCTV-15"
+
+[[TVNameMap]]
+match = "CCTV17"
+titlePrefix = "CCTV-17"
+subTitleText = "CCTV-17"
+
+[[TVNameMap]]
+match = "CCTV16"
+titlePrefix = "CCTV-16"
+subTitleText = "CCTV-16"
+
+[[TVNameMap]]
+match = "CCTV4K"
+titlePrefix = "CCTV-4K"
+subTitleText = "CCTV-4K"
+
+[[TVNameMap]]
+match = "欢笑剧场"
+titlePrefix = "HUANXIAO"
+subTitleText = "欢笑剧场"
+
+[[TVNameMap]]
+match = "CHC动作电影"
+titlePrefix = "CHC-ACTION"
+subTitleText = "CHC动作电影"
+
+[[TVNameMap]]
+match = "CHC家庭影院"
+titlePrefix = "CHC-FAMILY"
+subTitleText = "CHC家庭影院"
+
+[[TVNameMap]]
+match = "CHC影迷电影"
+titlePrefix = "CHC-MOVIE"
+subTitleText = "CHC影迷电影"
+
+[[TVNameMap]]
+match = "北京卫视"
+titlePrefix = "BRTV"
+subTitleText = "北京卫视"
+
+[[TVNameMap]]
+match = "江苏卫视"
+titlePrefix = "JSTV"
+subTitleText = "江苏卫视"
+
+[[TVNameMap]]
+match = "东方卫视"
+titlePrefix = "DRAGONTV"
+subTitleText = "东方卫视"
+
+[[TVNameMap]]
+match = "浙江卫视"
+titlePrefix = "ZJTV"
+subTitleText = "浙江卫视"
+
+[[TVNameMap]]
+match = "东南卫视"
+titlePrefix = "SETV"
+subTitleText = "东南卫视"
+
+[[TVNameMap]]
+match = "广东卫视"
+titlePrefix = "GDTV"
+subTitleText = "广东卫视"
+
+[[TVNameMap]]
+match = "深圳卫视"
+titlePrefix = "SZTV"
+subTitleText = "深圳卫视"
+
+[[TVNameMap]]
+match = "广西卫视"
+titlePrefix = "GXTV"
+subTitleText = "广西卫视"
+
+[[TVNameMap]]
+match = "云南卫视"
+titlePrefix = "YNTV"
+subTitleText = "云南卫视"
+
+[[TVNameMap]]
+match = "贵州卫视"
+titlePrefix = "GZTV"
+subTitleText = "贵州卫视"
+
+[[TVNameMap]]
+match = "四川卫视"
+titlePrefix = "SCTV"
+subTitleText = "四川卫视"
+
+[[TVNameMap]]
+match = "重庆卫视"
+titlePrefix = "CQTV"
+subTitleText = "重庆卫视"
+
+[[TVNameMap]]
+match = "湖北卫视"
+titlePrefix = "HBTV"
+subTitleText = "湖北卫视"
+
+[[TVNameMap]]
+match = "湖南卫视"
+titlePrefix = "HNTV"
+subTitleText = "湖南卫视"
+
+[[TVNameMap]]
+match = "江西卫视"
+titlePrefix = "JXTV"
+subTitleText = "江西卫视"
+
+[[TVNameMap]]
+match = "安徽卫视"
+titlePrefix = "AHTV"
+subTitleText = "安徽卫视"
+
+[[TVNameMap]]
+match = "河南卫视"
+titlePrefix = "HNTV-HE"
+subTitleText = "河南卫视"
+
+[[TVNameMap]]
+match = "河北卫视"
+titlePrefix = "HEBTV"
+subTitleText = "河北卫视"
+
+[[TVNameMap]]
+match = "山东卫视"
+titlePrefix = "SDTV"
+subTitleText = "山东卫视"
+
+[[TVNameMap]]
+match = "天津卫视"
+titlePrefix = "TJTV"
+subTitleText = "天津卫视"
+
+[[TVNameMap]]
+match = "辽宁卫视"
+titlePrefix = "LNTV"
+subTitleText = "辽宁卫视"
+
+[[TVNameMap]]
+match = "吉林卫视"
+titlePrefix = "JLTV"
+subTitleText = "吉林卫视"
+
+[[TVNameMap]]
+match = "黑龙江卫视"
+titlePrefix = "HLJTV"
+subTitleText = "黑龙江卫视"
+
+[[TVNameMap]]
+match = "陕西卫视"
+titlePrefix = "SXTV"
+subTitleText = "陕西卫视"
+
+[[TVNameMap]]
+match = "青海卫视"
+titlePrefix = "QHTV"
+subTitleText = "青海卫视"
+
+[[TVNameMap]]
+match = "甘肃卫视"
+titlePrefix = "GSTV"
+subTitleText = "甘肃卫视"
+
+[[TVNameMap]]
+match = "求索纪录"
+titlePrefix = "DISCOVERY-CHINA"
+subTitleText = "求索纪录"
+
+[[TVNameMap]]
+match = "纪实科教"
+titlePrefix = "DOCUCHINA"
+subTitleText = "纪实科教"
+
+[[TVNameMap]]
+match = "金鹰纪实"
+titlePrefix = "JINYING"
+subTitleText = "金鹰纪实"
+
+[[TVNameMap]]
+match = "上海纪实"
+titlePrefix = "SMG-DOCU"
+subTitleText = "上海纪实"
+
+[[TVNameMap]]
+match = "乐游"
+titlePrefix = "LEYOU"
+subTitleText = "乐游"
+
+[[TVNameMap]]
+match = "四川科教"
+titlePrefix = "SCTV-EDU"
+subTitleText = "四川科教"
+
+[[TVNameMap]]
+match = "凤凰中文"
+titlePrefix = "PHOENIX-CN"
+subTitleText = "凤凰中文"
+
+[[TVNameMap]]
+match = "凤凰资讯"
+titlePrefix = "PHOENIX-INFO"
+subTitleText = "凤凰资讯"
+
+[[TVNameMap]]
+match = "魅力足球"
+titlePrefix = "SOCCER"
+subTitleText = "魅力足球"
+
+[[TVNameMap]]
+match = "新视觉"
+titlePrefix = "NEWVISION"
+subTitleText = "新视觉"
+
+[[TVNameMap]]
+match = "重温经典CCTV1"
+titlePrefix = "CLASSIC-CCTV1"
+subTitleText = "重温经典CCTV1"
+
+[[TVNameMap]]
+match = "动作电影"
+titlePrefix = "ACTION-MOVIE"
+subTitleText = "动作电影"
+
+[[TVNameMap]]
+match = "家庭影院"
+titlePrefix = "FAMILY-CINEMA"
+subTitleText = "家庭影院"
+
+[[TVNameMap]]
+match = "影迷电影"
+titlePrefix = "MOVIE-FANS"
+subTitleText = "影迷电影"
+
+[[TVNameMap]]
+match = "新疆卫视"
+titlePrefix = "XJTV"
+subTitleText = "新疆卫视"
+
+[[TVNameMap]]
+match = "西藏卫视"
+titlePrefix = "XZTV"
+subTitleText = "西藏卫视"
+
+[[TVNameMap]]
+match = "宁夏卫视"
+titlePrefix = "NXTV"
+subTitleText = "宁夏卫视"
+
+[[TVNameMap]]
+match = "兵团卫视"
+titlePrefix = "BTTTV"
+subTitleText = "兵团卫视"
+
+[[TVNameMap]]
+match = "重温经典"
+titlePrefix = "CLASSIC"
+subTitleText = "重温经典"
+
+[[TVNameMap]]
+match = "宜宾公共"
+titlePrefix = "YIBIN-PUBLIC"
+subTitleText = "宜宾公共"
+
+[[TVNameMap]]
+match = "宜宾新闻"
+titlePrefix = "YIBIN-NEWS"
+subTitleText = "宜宾新闻"
+
+[[TVNameMap]]
+match = "CETV1"
+titlePrefix = "CETV-1"
+subTitleText = "CETV1"
+
+[[TVNameMap]]
+match = "CETV4"
+titlePrefix = "CETV-4"
+subTitleText = "CETV4"
+
+[[TVNameMap]]
+match = "中国交通"
+titlePrefix = "CHINA-TRAFFIC"
+subTitleText = "中国交通"
+
+[[TVNameMap]]
+match = "海南卫视"
+titlePrefix = "HNWTV"
+subTitleText = "海南卫视"
+
+[[TVNameMap]]
+match = "内蒙古卫视"
+titlePrefix = "NMTV"
+subTitleText = "内蒙古卫视"
+
+[[TVNameMap]]
+match = "CCTV16-HEVC"
+titlePrefix = "CCTV-16"
+subTitleText = "CCTV-16"
+
+[[TVNameMap]]
+match = "四川卫视-HEVC"
+titlePrefix = "SCTV"
+subTitleText = "四川卫视"
+
+[[TVNameMap]]
+match = "北京卫视-HEVC"
+titlePrefix = "BRTV"
+subTitleText = "北京卫视"
+
+[[TVNameMap]]
+match = "深圳卫视-HEVC"
+titlePrefix = "SZTV"
+subTitleText = "深圳卫视"
+
+[[TVNameMap]]
+match = "广东卫视-HEVC"
+titlePrefix = "GDTV"
+subTitleText = "广东卫视"
+
+[[TVNameMap]]
+match = "CCTV4K-HEVC"
+titlePrefix = "CCTV-4K"
+subTitleText = "CCTV-4K"
+
+[[TVNameMap]]
+match = "欢笑剧场-HEVC"
+titlePrefix = "HUANXIAO"
+subTitleText = "欢笑剧场"
+
+[[TVNameMap]]
+match = "CCTV16-AVS2"
+titlePrefix = "CCTV-16"
+subTitleText = "CCTV16"
+
+[[TVNameMap]]
+match = "北京卫视-AVS2"
+titlePrefix = "BRTV"
+subTitleText = "北京卫视"
+
+[[TVNameMap]]
+match = "广东卫视-AVS2"
+titlePrefix = "GDTV"
+subTitleText = "广东卫视"
+
+[[TVNameMap]]
+match = "深圳卫视-AVS2"
+titlePrefix = "SZTV"
+subTitleText = "深圳卫视"
+
+[[TVNameMap]]
+match = "CCTV1CS"
+titlePrefix = "CCTV-1"
+subTitleText = "CCTV-1"
+
+[[TVNameMap]]
+match = "CCTV2CS"
+titlePrefix = "CCTV-2"
+subTitleText = "CCTV-2"
+
+[[TVNameMap]]
+match = "CCTV3CS"
+titlePrefix = "CCTV-3"
+subTitleText = "CCTV-3"
+
+[[TVNameMap]]
+match = "CCTV5CS"
+titlePrefix = "CCTV-5"
+subTitleText = "CCTV-5"
+
+[[TVNameMap]]
+match = "CCTV5+CS"
+titlePrefix = "CCTV-5+"
+subTitleText = "CCTV-5+"
+
+[[TVNameMap]]
+match = "CCTV6CS"
+titlePrefix = "CCTV-6"
+subTitleText = "CCTV-6"
+
+[[TVNameMap]]
+match = "CCTV7CS"
+titlePrefix = "CCTV-7"
+subTitleText = "CCTV-7"
+
+[[TVNameMap]]
+match = "CCTV8CS"
+titlePrefix = "CCTV-8"
+subTitleText = "CCTV-8"
+
+[[TVNameMap]]
+match = "CCTV9CS"
+titlePrefix = "CCTV-9"
+subTitleText = "CCTV-9"
+
+[[TVNameMap]]
+match = "CCTV10CS"
+titlePrefix = "CCTV-10"
+subTitleText = "CCTV-10"
+
+[[TVNameMap]]
+match = "CCTV11CS"
+titlePrefix = "CCTV-11"
+subTitleText = "CCTV-11"
+
+[[TVNameMap]]
+match = "CCTV12CS"
+titlePrefix = "CCTV-12"
+subTitleText = "CCTV-12"
+
+[[TVNameMap]]
+match = "CCTV13CS"
+titlePrefix = "CCTV-13"
+subTitleText = "CCTV-13"
+
+[[TVNameMap]]
+match = "北京卫视P2"
+titlePrefix = "BRTV"
+subTitleText = "北京卫视"
+
+[[TVNameMap]]
+match = "广东卫视P2"
+titlePrefix = "GDTV"
+subTitleText = "广东卫视"
+
+[[TVNameMap]]
+match = "深圳卫视P2"
+titlePrefix = "SZTV"
+subTitleText = "深圳卫视"
+
+[[TVNameMap]]
+match = "江苏卫视CS"
+titlePrefix = "JSTV"
+subTitleText = "江苏卫视"
+
+[[TVNameMap]]
+match = "东方卫视CS"
+titlePrefix = "DRAGONTV"
+subTitleText = "东方卫视"
+
+[[TVNameMap]]
+match = "浙江卫视CS"
+titlePrefix = "ZJTV"
+subTitleText = "浙江卫视"
+
+[[TVNameMap]]
+match = "东南卫视CS"
+titlePrefix = "SETV"
+subTitleText = "东南卫视"
+
+[[TVNameMap]]
+match = "湖南卫视CS"
+titlePrefix = "HNTV"
+subTitleText = "湖南卫视"
+
+[[TVNameMap]]
+match = "西藏卫视CS"
+titlePrefix = "XZTV"
+subTitleText = "西藏卫视"
