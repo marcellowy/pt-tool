@@ -80,6 +80,7 @@ endif()
 
 set(FILES_TO_COPY 
     ${CMAKE_SOURCE_DIR}/src/config.toml
+    ${CMAKE_SOURCE_DIR}/src/config_dev.toml
     ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 

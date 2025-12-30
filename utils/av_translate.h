@@ -23,7 +23,8 @@ namespace av {
 			~Translate() = default;
 			bool foo(const std::tstring& source_text, std::tstring& text);
 		private:
-			std::tstring m_rapidapi_url = TEXT("https://google-translate113.p.rapidapi.com");
+
+			std::tstring m_rapidapi_url = TEXT("https://google-translate113.p.rapidapi.com/api/v1/translator/text");
 			std::tstring m_rapidapi_key;
 			std::tstring m_rapidapi_host;
 		};

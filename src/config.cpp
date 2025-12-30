@@ -11,9 +11,15 @@ bool Config::parse(const std::tstring& toml_file) {
 		log.max_size = config["log"]["max_size"].value_or(5 * 1024 * 1024);
 		log.max_count = config["log"]["max_count"].value_or(3);
 
+		// server
 		server.host = av::str::toT(config["server"]["host"].value_or(""));
 		server.port = config["server"]["port"].value_or(0);
 
+		// rapidapi
+		rapidapi.key = av::str::toT(config["rapidapi"]["key"].value_or(""));
+		rapidapi.host = av::str::toT(config["rapidapi"]["host"].value_or(""));
+
+		// tv map file
 		tv_name_file = av::str::toT(config["tvname"]["file"].value_or(""));
 		if (tv_name_file.empty()) {
 			loge("tv_name_file is empty");

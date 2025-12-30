@@ -27,12 +27,18 @@ struct TVName {
 	std::tstring sub_title_prefix = TEXT("");
 };
 
+struct Rapidapi {
+	std::tstring key = TEXT("");
+	std::tstring host = TEXT("");
+};
+
 class Config: public av::Singleton<Config> {
 	friend class Singleton<Config>;
 public:
 	TableLog log;
 	TableServer server;
 	std::vector<TVName> tv_name = {};
+	Rapidapi rapidapi;
 public:
 	bool parse(const std::tstring& toml_file);
 };

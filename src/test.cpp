@@ -3,7 +3,10 @@
 
 
 #include "test.h"
-#include "httplib/httplib.h"
+
+#include <curl/curl.h>
+
+//#include "httplib/httplib.h"
 //#include "cron.h"
 #include "av_log.h"
 #include "config.h"
@@ -20,7 +23,8 @@
 #include "av_codec_jpg.h"
 #include "av_codec_stb_image_jpg.h"
 #include "av_translate.h"
-
+#include "av_env.h"
+#include "av_async.h"
 
 using namespace std;
 
@@ -31,11 +35,20 @@ int main()
 	SetConsoleCP(CP_UTF8);
 #endif
 
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+	av::async::Exit exit_curl_g([] {
+		curl_global_cleanup();
+	});
+
 	if (!Logger::instance().open()) {
 		return ErrorCode::ErrOpenLogFailed;
 	}
 
-	if (!Config::instance().parse(av::str::toT("config.toml"))) {
+	std::tstring config_file = TEXT("config.toml");
+	if (av::env::is_dev()) {
+		config_file = TEXT("config_dev.toml");
+	}
+	if (!Config::instance().parse(config_file)) {
 		loge("parse config.toml failed");
 		return ErrorCode::ErrParseConfigFileFailed;
 	}
@@ -59,8 +72,27 @@ int main()
 		out_file.write(static_cast<char*>(data), size);  // 写入数据到文件
 		count++;
 	});
+
+	std::tstring text;
+	av::translate::Translate t(config.rapidapi.key,config.rapidapi.host);
+	if (!t.foo(TEXT("中国"), text)) {
+		loge("translate error");
+		return 0;
+	}
+	else {
+		logi("translate success {}", av::str::toA(text));
+	}
+
 #ifdef _WIN32
 
+	const char* a = std::getenv("PT_TOOL_ENV");
+	if (a == NULL) {
+		logi("no value");
+	}
+	else {
+		logi("MY_USER_VARIABLE {}", a);
+	}
+	
 
 	
 	av::mediainfo::MediaInfo m(TEXT("C:/Users/Marcello/Downloads/中.mp4"));
@@ -92,9 +124,6 @@ int main()
 	av::mediainfo::MediaInfo m("/home/marcello/tmp/中.mp4");
 	if (!m.parse()) {
 		loge("parse mediainfo failed");
-	}
-	else {
-		logi("video format {} w: {} h: {}", av::str::toA(m.getVideo().format), m.getVideo().width, m.getVideo().height);
 	}
 
 	if (!av::ffmpeg::captureFrame(TEXT("/home/marcello/tmp/中.mp4"), tt, stbPng)) {
