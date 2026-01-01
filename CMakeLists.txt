@@ -49,6 +49,10 @@ if(MSVC)
             MSVC_RUNTIME_LIBRARY "MultiThreaded"
         )
     endif()
+else()
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)
+    endif()
 endif()
 
 find_package(OpenSSL REQUIRED)
@@ -74,8 +78,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
 
 if(WIN32)
     add_compile_definitions(${PROJECT_NAME} PRIVATE -DUNICODE -D_UNICODE)
-else()
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -DNO_UNICODE)    
 endif()
 
 set(FILES_TO_COPY 

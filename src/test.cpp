@@ -25,6 +25,7 @@
 #include "av_translate.h"
 #include "av_env.h"
 #include "av_async.h"
+#include "av_http.h"
 
 using namespace std;
 
@@ -56,6 +57,38 @@ int main()
 	
 	logi("server start ==================================");
 
+	av::http::Client client;
+	av::http::Response response;
+	/*if (!client.get(TEXT("https://www.baidu.com"), response)) {
+		loge("http failed");
+
+	}*/
+
+	av::http::Header h;
+	av::http::File f;
+	av::http::FormData d;
+	d.data[TEXT("username")] = TEXT("admin");
+	d.data[TEXT("password")] = TEXT("marcello123");
+
+	auto aa = std::make_tuple(h, d);
+	if (!client.postForm(TEXT("http://192.168.50.205:8086/api/v2/auth/login"), d, response)) {
+		loge("http failed");
+		return 0;
+	}
+	logi("http response code {}\n body: {}", response.code, av::str::toA(response.body));
+
+	if (response.isOk()) {
+		logi("is ok");
+		for (auto& aa : response.header.data) {
+			logi("header {}: {}", av::str::toA(aa.first), av::str::toA(aa.second));
+		}
+		for (auto& cookie: response.header.cookie.data) {
+			logi("cookie {}: {}", av::str::toA(cookie.first), av::str::toA(cookie.second));
+		}
+	}
+
+	return 0;
+
 	//logi("{}, {}, {}", av::time::seconds(), av::time::milliseconds(), av::time::microseconds());
 	const std::vector<int64_t> tt = { 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120 };
 	int64_t count = 0;
@@ -73,15 +106,15 @@ int main()
 		count++;
 	});
 
-	std::tstring text;
-	av::translate::Translate t(config.rapidapi.key,config.rapidapi.host);
-	if (!t.foo(TEXT("中国"), text)) {
-		loge("translate error");
-		return 0;
-	}
-	else {
-		logi("translate success {}", av::str::toA(text));
-	}
+	//std::tstring text;
+	//av::translate::Translate t(config.rapidapi.key,config.rapidapi.host);
+	//if (!t.foo(TEXT("中国"), text)) {
+	//	loge("translate error");
+	//	return 0;
+	//}
+	//else {
+	//	logi("translate success {}", av::str::toA(text));
+	//}
 
 #ifdef _WIN32
 
@@ -95,7 +128,7 @@ int main()
 	
 
 	
-	av::mediainfo::MediaInfo m(TEXT("C:/Users/Marcello/Downloads/中.mp4"));
+	av::mediainfo::MediaInfo m(TEXT("C:/Users/Marcello/Downloads/1153734.mp4"));
 	if (!m.parse()) {
 		loge("parse mediainfo failed");
 	}
