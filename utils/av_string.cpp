@@ -38,18 +38,19 @@ namespace av {
 				return "";
 			}
 #ifdef _WIN32
-            std::string mbs;
-            mbs.reserve((str.length() + 1) * 2);
-            int mbs_len = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), static_cast<int>(str.length()), &mbs[0], static_cast<int>(mbs.capacity()), nullptr, nullptr);
-            if (mbs_len < 1) {
-                DWORD err = GetLastError();
-                loge("WideCharToMultiByte failed with {}, last error {}", mbs_len, err);
-                return "";
-            }
+            // 1. CP_UTF8 目标编码
+            int size_needed = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()),
+                NULL, 0, NULL, NULL);
+            if (size_needed <= 0) return std::string();
+            // 2. 准备缓冲区
+            std::string result(size_needed, 0);
 
-            return std::string(&mbs[0], static_cast<size_t>(mbs_len));
+            // 3. 执行实际转换
+            WideCharToMultiByte(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()),
+                &result[0], size_needed, NULL, NULL);
+            return result;
 #else
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
             return conv.to_bytes(str);
 #endif // _WIN32
 		}
@@ -59,7 +60,7 @@ namespace av {
 				return L"";
 			}
 #ifdef _WIN32
-            std::wstring wcs;
+            /*std::wstring wcs;
             wcs.reserve(str.length() + 1);
             int wcs_len = MultiByteToWideChar(CP_UTF8, 0, &str[0], static_cast<int>(str.length()), &wcs[0], static_cast<int>(wcs.capacity()));
             if (wcs_len < 1) {
@@ -67,8 +68,22 @@ namespace av {
                 loge("MultiByteToWideChar failed with {}, last error {}", wcs_len, err);
                 return L"";
             }
+            return std::wstring(&wcs[0], static_cast<size_t>(wcs_len));*/
+            
+            // 1. 计算转换后需要的 wchar_t 字符数
+            // CP_UTF8: 告诉系统输入源是 UTF-8 编码
+            int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()),
+                NULL, 0);
 
-            return std::wstring(&wcs[0], static_cast<size_t>(wcs_len));
+            if (size_needed <= 0) return std::wstring();
+
+            // 2. 准备缓冲区 (std::wstring 会自动处理末尾的 \0)
+            std::wstring result(size_needed, 0);
+
+            // 3. 执行实际转换
+            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), static_cast<int>(str.size()),
+                &result[0], size_needed);
+            return result;
 #else
             std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
             return conv.from_bytes(str);

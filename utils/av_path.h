@@ -6,6 +6,7 @@
 namespace av {
 	namespace path {
 		std::tstring get_exe_name();
+		std::tstring get_exe_dir();
 		std::tstring append(const std::tstring& path, const std::tstring& app);
 		bool create_dir(const std::tstring& path);
 		bool exists(const std::tstring& path);

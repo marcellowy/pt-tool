@@ -57,8 +57,9 @@ bool parseCustomName(Source& obj) {
 }
 
 bool parseMovieName(Source& obj) {
+    
     // 一代妖后1989€1437318.ts
-    std::regex r("\\s*(.*?)\\s*(\\d+)\\s*€\\s*(\\d+)\\s*\\.ts");
+    std::regex r("\\s*(.*?)\\s*(\\d+)\\s*€\\s*(\\d+)\\s*\\.");
     std::smatch match;
     std::string start_tmp = av::str::toA(obj.name);
     std::string::const_iterator start = start_tmp.begin();
@@ -99,7 +100,7 @@ bool parseTVSeriesName(Source& obj) {
 
 bool parseDiscoverName(Source& obj) {
     // 000@嫦娥六号1(4K)_CCTV4K_04_11_17_57.ts
-    std::regex r(av::str::toA(publishPrefixDiscover) + "(.*?)\\_(.*?)\\_([\\d]+)\\_([\\d]+)\\_[\\d]+\\_[\\d]+.ts");
+    std::regex r(av::str::toA(publishPrefixDiscover) + "(.*?)\\_(.*?)\\_([\\d]+)\\_([\\d]+)\\_[\\d]+\\_[\\d]+\\.");
     std::smatch match;
     std::string start_tmp = av::str::toA(obj.name);
     std::string::const_iterator start = start_tmp.begin();
@@ -137,7 +138,7 @@ bool parseDiscoverName(Source& obj) {
 bool parseVarietyName(Source& obj) {
     {
         // 00@边陲新风——全民国家安全教育日特别节目-1_CCTV12_04_15_20_37.ts
-        std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_(.*?)_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})_([\\d]{1,}).ts");
+        std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_(.*?)_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})\\.");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -178,7 +179,7 @@ bool parseVarietyName(Source& obj) {
 
     {
         // 00@第27届上海国际电影节金爵奖颁奖典礼_06_21_20_00.ts
-        std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_([\\d]{2})_([\\d]{2})_([\\d]{2})_([\\d]{2}).ts");
+        std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_([\\d]{2})_([\\d]{2})_([\\d]{2})_([\\d]{2})\\.");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -220,7 +221,7 @@ bool parseSportName(Source& obj) {
 
     {
         // 0@2024-2025赛季中国男子篮球职业联赛-总决赛第四场(北京北汽-浙江方兴渡)_CCTV5_05_14_18_57.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})[\\-\\_]{1,}([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.ts");
+        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})[\\-\\_]{1,}([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -255,7 +256,7 @@ bool parseSportName(Source& obj) {
 
     {
         // 0@2025年世界泳联花样游泳世界杯(埃及站) - 双人自由自选决赛_CCTV5_04_12_16_57.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.ts");
+        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -289,7 +290,7 @@ bool parseSportName(Source& obj) {
 
     {
         // 0@现场直播(高清体育) - 2025年十堰马拉松_CCTV5 + _04_13_07_22.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\-([\\d]+)(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.ts");
+        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\-([\\d]+)(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -323,7 +324,7 @@ bool parseSportName(Source& obj) {
 
     {
         // 0@北京国际长跑节北京半程马拉松_北京卫视_04_20_06_59.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\_(.*)\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.ts");
+        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\_(.*)\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();

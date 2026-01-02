@@ -94,6 +94,7 @@ namespace av {
 			std::tstring dir;							// 影片所在目录
 			std::tstring name;							// 影片名称
 			std::tstring fullpath;						// 完整路径
+			std::tstring fullpath_md5;					// 完整路径md5
 			SourceType type;							// 输入类型
 
 			int64_t group_id;							// 发布组id, 发布的网站必须有对应的id实现
@@ -111,6 +112,9 @@ namespace av {
 			std::tstring douban_id;
 			std::tstring season;
 			std::tstring name_eng;
+			std::tstring imdb_link;
+			std::tstring description;
+			std::tstring poster_img;
 
 			// video screenshot
 			std::vector<std::tstring> screenshot_local;
@@ -118,7 +122,6 @@ namespace av {
 
 			// mediainfo
 			std::tstring mediainfo_text;
-			std::tstring mediainfo_json;
 		};
 	}
 }

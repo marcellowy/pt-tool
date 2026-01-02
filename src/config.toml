@@ -23,3 +23,6 @@ img_api_key = ""
 [tgbot]
 token = ""
 chat_id = ""
+
+[ptgen]
+url = ""

@@ -55,6 +55,8 @@ bool Config::parse(const std::tstring& toml_file) {
 		tgbot.token = av::str::toT(config["tgbot"]["token"].value_or(""));
 		tgbot.chat_id = av::str::toT(config["tgbot"]["chat_id"].value_or(""));
 		
+		// PTGen
+		ptgen.url = av::str::toT(config["ptgen"]["url"].value_or(""));
 
 	}
 	catch (const toml::parse_error& e) {

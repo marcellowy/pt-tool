@@ -46,6 +46,10 @@ struct TGBot {
 	std::tstring chat_id = TEXT("");
 };
 
+struct PTGen {
+	std::tstring url = TEXT("");
+};
+
 class Config: public av::Singleton<Config> {
 	friend class Singleton<Config>;
 public:
@@ -55,6 +59,7 @@ public:
 	Rapidapi rapidapi;
 	Mteam mteam;
 	TGBot tgbot;
+	PTGen ptgen;
 public:
 	bool parse(const std::tstring& toml_file);
 };

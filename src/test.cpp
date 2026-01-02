@@ -46,7 +46,9 @@ int main()
 	logi("server start ==================================");
 
 	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>();
-	Publish publish(ptr, TEXT(""));
+	Publish publish(ptr, TEXT("D:\\Downloads\\tmp2"));
+	publish.start();
+	
 
 
 	return ErrorCode::Success;

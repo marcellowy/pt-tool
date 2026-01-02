@@ -14,7 +14,7 @@ namespace mteam {
             MTeam = 9
         };
         std::map<int64_t, std::tstring> enum_group();
-        std::string getText(int64_t id);
+        std::tstring getText(int64_t id);
     }
 };
 

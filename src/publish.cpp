@@ -9,10 +9,13 @@
 #include "av_time.h"
 #include "av_mediainfo.h"
 #include "av_media_info.h"
+#include "av_pt_gen.h"
+#include "av_ffmpeg.h"
+#include "av_codec_stb_image_jpg.h"
+#include "av_md5.h"
 
 #include "config.h"
 #include "parse_name.h"
-
 
 namespace fs = std::filesystem;
 
@@ -37,7 +40,6 @@ bool Publish::start(){
             break;
         }
         m_site->publish(tmp);
-        break;
     }
     return false;
 }
@@ -116,7 +118,8 @@ bool Publish::getSiteType(Source& obj) {
 bool Publish::processDir(const std::tstring& path) { return false;  }
 
 bool Publish::processFile(Source& obj) {
-    logi("process {}, {}", av::str::toA(obj.dir), av::str::toA(obj.name));
+    auto& config = Config::instance();
+    logi("process {}", av::str::toA(obj.fullpath));
 
     // site type
     if (!getSiteType(obj)) {
@@ -133,9 +136,6 @@ bool Publish::processFile(Source& obj) {
         logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
         return false;
     }
-
-    logi("{} {}", av::str::toA(obj.fullpath), av::str::toA(obj.mediainfo_json));
-    logi("{} {}", av::str::toA(obj.fullpath), av::str::toA(obj.mediainfo_text));
 
     // video resolution
     auto video_height = m.getVideo().height;
@@ -175,7 +175,60 @@ bool Publish::processFile(Source& obj) {
 
     // audio codec
     obj.audio_codec = m.getAudio().codec;
-   
+
+    // mediainfo text
+    obj.mediainfo_text = m.getText();
+
+    // add douban info
+    if (!obj.douban_id.empty()) {
+        av::ptgen::Douban db;
+        char buff[2048];
+        snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
+        std::string real_url(buff);
+        if (!av::ptgen::get(av::str::toT(real_url), db)) {
+            loge("get douban info failed!");
+            return false;
+        }
+
+        // set douban info to obj
+        obj.year = av::str::toT(db.year);
+        obj.name_chs = av::str::toT(db.name_chs);
+        obj.name_eng = av::str::toT(db.name_eng);
+        obj.sub_title = av::str::toT(db.sub_title);
+        obj.imdb_link = av::str::toT(db.imdb_link);
+        obj.description = av::str::toT(db.description);
+        obj.poster_img = av::str::toT( db.poster_img);
+    }
+
+    // add screenshot
+    // 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
+    const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
+    int capture_count = 0;
+    av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
+        
+        // screenshots dir
+        std::tstring dir = av::path::get_exe_dir();
+        dir = av::path::append(dir, TEXT("screenshots"));
+        dir = av::path::append(dir, obj.fullpath_md5);
+        if (!av::path::create_dir(dir)) {
+            loge("create dir {} failed", av::str::toA(dir));
+            return;
+        }
+        std::tstringstream oo;
+        oo << TEXT("screenshot_") << capture_count << TEXT(".png");
+        std::tstring filename = av::path::append(dir, oo.str());
+        std::ofstream out_file(av::str::toA(filename), std::ios::binary);
+        out_file.write(static_cast<char*>(data), size);  // 写入数据到文件
+
+        obj.screenshot_local.push_back(filename);
+
+        capture_count++;
+    });
+    if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
+        loge("capture frame failed");
+        return false;
+    }
+
     return true; 
 }
 
@@ -191,7 +244,12 @@ std::vector<Source> Publish::readDir() {
     // read
     for (const auto& entry : fs::directory_iterator(m_dir)) {
         Source obj;
+#ifdef _UNICODE
+        obj.name = av::str::toT(entry.path().filename().wstring());
+#else
         obj.name = av::str::toT(entry.path().filename().string());
+#endif // _UNICODE
+
         // 
         if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
             // published
@@ -209,6 +267,9 @@ std::vector<Source> Publish::readDir() {
         //logi("dir_ {}, obj.name {}, ", dir_, obj.name);
         try {
             obj.fullpath = av::path::append(m_dir, obj.name);
+            std::string tmp_md5;
+            av::hash::md5(av::str::toA(obj.fullpath), tmp_md5);
+            obj.fullpath_md5 = av::str::toT(tmp_md5);
         }
         catch (const std::exception& e) {
             loge("exception {}", e.what());

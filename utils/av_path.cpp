@@ -16,9 +16,26 @@ std::tstring av::path::get_exe_name() {
 	size_t pos = path.find_last_of(TEXT("\\/"));
 	return (pos != std::tstring::npos) ? path.substr(pos + 1) : path;
 }
+
+std::tstring av::path::get_exe_dir() {
+	wchar_t path[MAX_PATH];
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+	return av::str::toT( std::filesystem::path(path).parent_path().wstring());
+}
+
 #else
 #include <unistd.h>
 #include <limits.h>
+
+std::string av::path::get_exe_dir() {
+	char result[PATH_MAX];
+	ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+	if (count != -1) {
+		return std::filesystem::path(std::string(result, count)).parent_path().string();
+	}
+	return "";
+}
+
 std::tstring av::path::get_exe_name() {
 	char buffer[PATH_MAX] = { 0 };
 	ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
@@ -35,7 +52,13 @@ std::tstring av::path::get_exe_name() {
 std::tstring av::path::append(const std::tstring& path, const std::tstring& app) {
 	fs::path path_ = path;
 	fs::path app_ = app;
+#ifdef UNICODE
+	return av::str::toT((path_ / app_).wstring());
+#else
 	return av::str::toT((path_ / app_).string());
+#endif // UNICDOE
+
+	
 }
 
 bool av::path::create_dir(const std::tstring& path) {
@@ -166,7 +189,14 @@ bool av::path::split(const std::tstring& path, std::tstring& p, std::tstring& f)
 	fs::path file_path(path);
 	fs::path directory = file_path.parent_path();
 	fs::path filename = file_path.filename();
+#ifdef UNICODE
+	p = av::str::toT(directory.wstring());
+	f = av::str::toT(filename.wstring());
+#else
 	p = av::str::toT(directory.string());
 	f = av::str::toT(filename.string());
+#endif // UNICODE
+
+	
 	return true;
 }
