@@ -9,6 +9,10 @@ namespace mteam {
 	
 	}
 
+	void Category::setSourceCategory(const av::media::SourceCategory category) {
+		m_category = category;
+	}
+
 	mteam::CategoryId Category::getid() {
 		switch (m_category) {
 		case av::media::SourceCategory::Unknown:

@@ -26,6 +26,10 @@ namespace mteam {
 		Codec::Codec(const av::media::SourceAudioCodec& codec) :m_codec(codec) {}
 		Codec::~Codec() {}
 
+		void Codec::setSourceCodec(const av::media::SourceAudioCodec& codec) {
+			m_codec = codec;
+		}
+
 		CodecId Codec::getid() {
 			switch (m_codec) {
 			case av::media::SourceAudioCodec::_aac:

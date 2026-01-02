@@ -25,6 +25,10 @@ namespace mteam {
 		{
 		}
 
+		void Codec::setSourceVideoCodec(const av::media::SourceVideoCodec& codec) {
+			m_codec = codec;
+		}
+
 		CodecId Codec::getid() {
 			switch (m_codec) {
 			case av::media::SourceVideoCodec::_h264:

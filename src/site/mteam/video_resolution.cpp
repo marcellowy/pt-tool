@@ -24,6 +24,10 @@ namespace mteam {
 		{
 		}
 
+		void Resolution::setSourceResolution(const av::media::SourceVideoResolution& resolution) {
+			m_resolution = resolution;
+		}
+
 		std::tstring Resolution::getText() {
 			auto id = getid();
 			if (ResolutionIdMapString.find(id) != ResolutionIdMapString.end()) {

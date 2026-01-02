@@ -35,6 +35,8 @@ struct Rapidapi {
 };
 
 struct Mteam {
+	int64_t group_id = 0;
+	int64_t source_id = 0;
 	std::tstring api_key = TEXT("");
 	std::tstring api_url = TEXT("");
 	std::tstring img_api_key = TEXT("");

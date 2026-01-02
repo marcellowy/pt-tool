@@ -46,6 +46,8 @@ bool Config::parse(const std::tstring& toml_file) {
 		}
 
 		// mteam
+		mteam.source_id = config["mteam"]["source_id"].value_or(0);
+		mteam.group_id = config["mteam"]["group_id"].value_or(0);
 		mteam.api_key = av::str::toT(config["mteam"]["api_key"].value_or(""));
 		mteam.api_url = av::str::toT(config["mteam"]["api_url"].value_or(""));
 		mteam.img_api_key = av::str::toT(config["mteam"]["img_api_key"].value_or(""));

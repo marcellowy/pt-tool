@@ -28,6 +28,7 @@ namespace mteam {
 			Resolution() = default;
 			Resolution(const av::media::SourceVideoResolution& resolution);
 			~Resolution();
+			void setSourceResolution(const av::media::SourceVideoResolution& resolution);
 			ResolutionId getid();
 			std::tstring getText();
 		private:

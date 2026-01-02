@@ -118,7 +118,6 @@ namespace av {
 
 			// video screenshot
 			std::vector<std::tstring> screenshot_local;
-			std::vector<std::tstring> screenshot_url;
 
 			// mediainfo
 			std::tstring mediainfo_text;

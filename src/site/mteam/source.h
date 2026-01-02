@@ -28,6 +28,7 @@ namespace mteam {
 		Source() = default;
 		Source(const av::media::SourceId& source_id);
 		~Source() = default;
+		void setExternalSourceId(const av::media::SourceId& source_id);
 		SourceId getid();
 		std::tstring getText();
 	private:

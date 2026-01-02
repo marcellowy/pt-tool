@@ -56,10 +56,9 @@ TEST_F(FFmpegTest, DISABLED_captureFrame_jpg) {
 
 	av::codec::JPG jpg([&count](uint8_t* data, size_t size) {
 		logi("capture freame callback, {}", count);
-		// save
-		char filename[128];
-		sprintf(filename, "frame%lld.jpg", count);
-		FILE* f = fopen(filename, "wb");
+		// 
+		std::string filename = fmt::format("frame_{}.jpg", count);
+		FILE* f = fopen(filename.c_str(), "wb");
 		if (f == NULL) {
 			loge("open {} failed", av::str::toA(filename));
 			return;

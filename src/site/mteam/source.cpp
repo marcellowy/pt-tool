@@ -22,6 +22,10 @@ namespace mteam {
 	Source::Source(const av::media::SourceId& source_id):m_source_id(source_id) {
 	}
 
+	void Source::setExternalSourceId(const av::media::SourceId& source_id) {
+		m_source_id = source_id;
+	}
+
 	SourceId Source::getid() {
 		switch (m_source_id) {
 		case av::media::SourceId::_Bluray:

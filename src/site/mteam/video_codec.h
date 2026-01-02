@@ -31,6 +31,7 @@ namespace mteam {
 			Codec() = default;
 			Codec(const av::media::SourceVideoCodec& codec);
 			~Codec();
+			void setSourceVideoCodec(const av::media::SourceVideoCodec& codec);
 			CodecId getid();
 			std::tstring getText();
 		private:

@@ -24,7 +24,7 @@ namespace mteam {
 		Category() = default;
 		Category(const av::media::SourceCategory category);
 		~Category();
-
+		void setSourceCategory(const av::media::SourceCategory category);
 		mteam::CategoryId getid();
 
 	private:

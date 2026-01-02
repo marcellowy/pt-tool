@@ -286,10 +286,11 @@ namespace av {
                 });
             return lower;
         }
-
+#ifdef _WIN32
         std::tstring trim(const std::tstring& s) {
             return av::str::toT(trim(av::str::toA(s)));
         }
+#endif // _WIN32
 
         std::string trim(const std::string& s) {
             std::string tmp = s;

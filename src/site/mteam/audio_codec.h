@@ -37,6 +37,7 @@ namespace mteam {
 			Codec() = default;
 			Codec(const av::media::SourceAudioCodec& codec);
 			~Codec();
+			void setSourceCodec(const av::media::SourceAudioCodec& codec);
 			CodecId getid();
 			std::tstring getText();
 		private:

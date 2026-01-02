@@ -46,7 +46,9 @@ namespace str {
 	void replace(std::tstring& str, const std::tstring& old_str, const std::tstring& new_str);
 	void replace_all(std::tstring& str, const std::tstring& old_str, const std::tstring& new_str);
 	void remove_suffix(std::tstring& s, const std::tstring& suffix);
+#ifdef _WIN32
 	std::tstring trim(const std::tstring& s);
+#endif // _WIN32
 	std::string trim(const std::string& s);
 	
 	template<typename T>

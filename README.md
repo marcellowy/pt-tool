@@ -1,15 +1,9 @@
-### vcpkg依赖安装 
+### windows vcpkg依赖安装 
 ```
-	vcpkg install ffmpeg:x64-windows-static 
-	vcpkg install libmediainfo:x64-windows-static 
-	vcpkg install openssl:x64-windows-static
-	vcpkg install gtest:x64-windows-static
-	vcpkg install croncpp:x64-windows-static
-	vcpkg install tomlplusplus:x64-windows-static
-	vcpkg install stb:x64-windows-static
-	vcpkg install nlohmann-json:x64-windows-static
-	vcpkg install spdlog:x64-windows-static
-	vcpkg install cpp-httplib:x64-windows-static
-	vcpkg install libtorrent:x64-windows-static
-	vcpkg install tgbot-cpp:x64-windows-static
+	vcpkg install curl:x64-windows-static ffmpeg:x64-windows-static  libmediainfo:x64-windows-static  openssl:x64-windows-static gtest:x64-windows-static croncpp:x64-windows-static tomlplusplus:x64-windows-static stb:x64-windows-static nlohmann-json:x64-windows-static spdlog:x64-windows-static cpp-httplib:x64-windows-static libtorrent:x64-windows-static tgbot-cpp:x64-windows-static
+```
+
+### linux vcpkg依赖安装
+```
+	vcpkg install curl ffmpeg libmediainfo openssl gtest croncpp tomlplusplus stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp
 ```

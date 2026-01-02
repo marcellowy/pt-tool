@@ -15,6 +15,8 @@ key = ""
 host = ""
 
 [mteam]
+source_id = 0
+group_id = 0
 api_url = ""
 api_key = ""
 img_api_url = ""

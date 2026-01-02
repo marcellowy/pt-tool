@@ -13,6 +13,7 @@
 #include "av_ffmpeg.h"
 #include "av_codec_stb_image_jpg.h"
 #include "av_md5.h"
+#include "av_translate.h"
 
 #include "config.h"
 #include "parse_name.h"
@@ -53,6 +54,10 @@ bool Publish::getSiteType(Source& obj) {
     if (obj.type == SourceType::Dir) {
         return false;
     }
+
+    av::async::Exit exit_filter_name([&obj] {
+        av::str::replace_all(obj.name_chs, TEXT("(4k)"), TEXT("（4K）"));
+    });
 
     std::tstring pre = TEXT("");
 
@@ -229,6 +234,15 @@ bool Publish::processFile(Source& obj) {
         return false;
     }
 
+    // add english name
+    if (obj.name_eng.empty()) {
+        av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
+        if (!t.foo(obj.name_chs, obj.name_eng)) {
+            loge("translate failed");
+            return false;
+        }
+    }
+
     return true; 
 }
 
@@ -289,7 +303,7 @@ void Publish::tvname(Source& obj) {
         if (tv.match == obj.title_prefix) {
             obj.title_prefix = tv.title_prefix;
             if (obj.category != av::media::SourceCategory::Movie) {
-                obj.title_prefix = tv.sub_title_prefix + TEXT(" | ") + obj.sub_title;
+                obj.sub_title = tv.sub_title_prefix + TEXT(" | ") + obj.sub_title;
             }
             return;
         }
