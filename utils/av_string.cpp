@@ -6,10 +6,20 @@
 #include "av_log.h"
 
 void av::str::replace(std::tstring& str, const std::tstring& old_str, const std::tstring& new_str) {
+    if (old_str.empty()) return;
 	size_t pos = str.find(old_str);
 	if (pos != std::string::npos) {
 		str.replace(pos, old_str.size(), new_str);
 	}
+}
+
+void av::str::replace_all(std::tstring& str, const std::tstring& old_str, const std::tstring& new_str) {
+    if (old_str.empty()) return;
+    size_t pos = 0;
+    while ((pos = str.find(old_str, pos)) != std::tstring::npos) {
+        str.replace(pos, old_str.size(), new_str);
+        pos += new_str.size();
+    }
 }
 
 void av::str::remove_suffix(std::tstring& s, const std::tstring& suffix) {

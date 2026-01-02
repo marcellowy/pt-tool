@@ -10,4 +10,5 @@
 	vcpkg install nlohmann-json:x64-windows-static
 	vcpkg install spdlog:x64-windows-static
 	vcpkg install cpp-httplib:x64-windows-static
+	vcpkg install libtorrent:x64-windows-static
 ```
