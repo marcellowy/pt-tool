@@ -26,6 +26,7 @@
 #include "av_env.h"
 #include "av_async.h"
 #include "av_http.h"
+#include "mteam/upload_img.h"
 
 using namespace std;
 
@@ -54,8 +55,15 @@ int main()
 		return ErrorCode::ErrParseConfigFileFailed;
 	}
 	auto& config = Config::instance();
-	
 	logi("server start ==================================");
+
+	mteam::UploadImg a(TEXT("chv_R_69c9b8590fa411662aecfa580ef6553fedafce215c569b7cadb0fca08e4966b9a7b29272798af37a7d1e45a8984d223179bbc926d814c4fe1c1d2753f362b1b0"));
+	if (!a.Upload(TEXT("E:\\2025\\pt-tool\\out\\build\\x64-debug\\test_1.png"))) {
+		loge("upload failed");
+		return 0;
+	}
+	logi("upload success");
+	return 0;
 
 	av::http::Client client;
 	av::http::Response response;
@@ -118,13 +126,13 @@ int main()
 
 #ifdef _WIN32
 
-	const char* a = std::getenv("PT_TOOL_ENV");
-	if (a == NULL) {
-		logi("no value");
-	}
-	else {
-		logi("MY_USER_VARIABLE {}", a);
-	}
+	//const char* a = std::getenv("PT_TOOL_ENV");
+	//if (a == NULL) {
+	//	logi("no value");
+	//}
+	//else {
+	//	logi("MY_USER_VARIABLE {}", a);
+	//}
 	
 
 	

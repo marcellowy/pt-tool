@@ -51,33 +51,33 @@ namespace av {
 
 		bool Client::postForm(const std::tstring& url, const paramType& param, Response& response) {
 			Header header;
-			FormData data;
+			FormData form;
 			File file;
-			std::visit([&header, &data, &file](auto&& arg) {
+			std::visit([&header, &form, &file](auto&& arg) {
 				if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, Header>) {
 					header = arg;
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, FormData>) {
-					data = arg;
+					form = arg;
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, File>) {
 					file = arg;
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::tuple<Header, FormData>>) {
 					header = std::get<0>(arg);
-					data = std::get<1>(arg);
+					form = std::get<1>(arg);
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::tuple<Header, File>>) {
 					header = std::get<0>(arg);
 					file = std::get<1>(arg);
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::tuple<FormData, File>>) {
-					data = std::get<0>(arg);
+					form = std::get<0>(arg);
 					file = std::get<1>(arg);
 				}
 				else if constexpr (std::is_same_v<std::decay_t<decltype(arg)>, std::tuple<Header, FormData, File>>) {
 					header = std::get<0>(arg);
-					data = std::get<1>(arg);
+					form = std::get<1>(arg);
 					file = std::get<2>(arg);
 				}
 			}, param);
@@ -87,20 +87,10 @@ namespace av {
 			rb.type = RequestBodyType::Form;
 
 			// add File
-			for (auto& f : file.data) {
-				curl_formadd(&rb.form_post, &rb.last_post,
-					CURLFORM_COPYNAME, av::str::toA(f.first).c_str(),
-					CURLFORM_FILE, av::str::toA(f.second).c_str(),
-					CURLFORM_END);
-			}
-
+			rb.file = file.data;
+			
 			// add form data
-			for (auto& m : data.data) {
-				curl_formadd(&rb.form_post, &rb.last_post,
-					CURLFORM_COPYNAME, av::str::toA(m.first).c_str(),
-					CURLFORM_COPYCONTENTS, av::str::toA(m.second).c_str(),
-					CURLFORM_END);
-			}
+			rb.form = form.data;
 
 			return request(Method::Post, url, header, rb, response);
 		}
@@ -109,7 +99,7 @@ namespace av {
 
 			response.code = 0;
 			response.body = TEXT("");
-
+			logi("libcurl version: {}", curl_version());
 			CURL* curl = curl_easy_init();
 			if (!curl) {
 				logw("curl_easy_init failed");
@@ -127,6 +117,7 @@ namespace av {
 			for (auto& h : header.data) {
 				std::tstringstream s;
 				s << h.first << ": " << h.second;
+				logi("add header {}", av::str::toA(s.str()));
 				hds = curl_slist_append(hds, av::str::toA(s.str()).c_str());
 			}
 			if (hds != NULL) {
@@ -134,6 +125,16 @@ namespace av {
 			}
 			av::async::Exit exit_header([&hds] {
 				if(hds != NULL) curl_slist_free_all(hds);
+			});
+
+			// form mime
+			curl_mime* mime = curl_mime_init(curl);
+			if (mime == NULL) {
+				loge("init mime faild");
+				return false;
+			}
+			av::async::Exit exit_mime([&mime] {
+				curl_mime_free(mime);
 			});
 
 			// set method
@@ -145,7 +146,22 @@ namespace av {
 					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, av::str::toA(request.body).c_str());
 				}
 				else if (request.type == RequestBodyType::Form) {
-					curl_easy_setopt(curl, CURLOPT_HTTPPOST, request.form_post);
+					curl_mimepart* part = NULL;
+					// add form data
+					for (auto data : request.form) {
+						part = curl_mime_addpart(mime);
+						curl_mime_name(part, av::str::toA(data.first).c_str() );
+						curl_mime_data(part, av::str::toA(data.second).c_str(), CURL_ZERO_TERMINATED);
+					}
+
+					// add file
+					for (auto f : request.file) {
+						part = curl_mime_addpart(mime);
+						curl_mime_name(part, av::str::toA(f.first).c_str() );
+						curl_mime_filedata(part, av::str::toA(f.second).c_str() );
+					}
+
+					curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
 				}
 			}
 

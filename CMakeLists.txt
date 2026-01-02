@@ -14,6 +14,7 @@ if (POLICY CMP0141)
 endif()
 
 set(PROJECT_NAME "chadtest")
+set(PROJECT_LIB_NAME "chadtest_lib")
 
 project (${PROJECT_NAME})
 
@@ -34,50 +35,58 @@ include_directories(
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+add_library(${PROJECT_LIB_NAME} STATIC ${SOURCE_FILE})
 
+macro(setup name)
 if(MSVC)
 
-    target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+    target_compile_options(${name} PRIVATE /utf-8)
 
 	# if use ninja
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set_target_properties(${PROJECT_NAME} PROPERTIES
+        set_target_properties(${name} PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
         )
     else()
-        set_target_properties(${PROJECT_NAME} PROPERTIES
+        set_target_properties(${name} PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreaded"
         )
     endif()
 else()
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG=1)
+        target_compile_definitions(${name} PRIVATE DEBUG=1)
     endif()
 endif()
+endmacro()
+
+setup(${PROJECT_NAME})
+setup(${PROJECT_LIB_NAME})
 
 find_package(OpenSSL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::Crypto)
-
 find_package(ZLIB REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE ZLIB::ZLIB)
-
 find_package(CURL REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
-
 find_package(ZenLib CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE zen)
-
 find_package(MediaInfoLib CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE mediainfo)
-
 find_package(FFMPEG REQUIRED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARY_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
+
+add_library(common_deps INTERFACE)
+target_link_libraries(common_deps INTERFACE 
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ZLIB::ZLIB
+    CURL::libcurl
+    zen
+    mediainfo
+    ${FFMPEG_LIBRARY_DIRS}
+    ${FFMPEG_LIBRARIES}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE common_deps)
+target_link_libraries(${PROJECT_LIB_NAME} PRIVATE common_deps)
 
 if(WIN32)
     add_compile_definitions(${PROJECT_NAME} PRIVATE -DUNICODE -D_UNICODE)
+    add_compile_definitions(${PROJECT_LIB_NAME} PRIVATE -DUNICODE -D_UNICODE)
 endif()
 
 set(FILES_TO_COPY 
@@ -92,3 +101,7 @@ add_custom_command(
         ${FILES_TO_COPY}
         $<TARGET_FILE_DIR:${PROJECT_NAME}>  # 可执行文件所在目录
 )
+
+## Add tests
+enable_testing()
+add_subdirectory(tests)

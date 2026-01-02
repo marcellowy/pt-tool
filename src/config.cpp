@@ -7,9 +7,11 @@ bool Config::parse(const std::tstring& toml_file) {
 
 		// config.toml
 		const auto config = toml::parse_file(av::str::toA(toml_file));
-		log.dir = av::str::toT(config["log"]["dir"].value_or(""));
-		log.max_size = config["log"]["max_size"].value_or(5 * 1024 * 1024);
-		log.max_count = config["log"]["max_count"].value_or(3);
+		log.dir = av::str::toT(config["log"]["dir"].value_or(log.dir));
+		log.max_file_size = config["log"]["max_size"].value_or(log.max_file_size);
+		log.max_file_count = config["log"]["max_count"].value_or(log.max_file_count);
+		auto log_level = config["log"]["level"].value_or("info");
+		log.level = spdlog::level::from_str(log_level);
 
 		// server
 		server.host = av::str::toT(config["server"]["host"].value_or(""));

@@ -1,7 +1,7 @@
 #ifndef AV_HTTP_H_
 #define AV_HTTP_H_
 
-#include <curl/curl.h>
+#include "curl/curl.h"
 #include <map>
 #include <vector>
 #include <utility>
@@ -64,8 +64,8 @@ namespace av {
 			struct RequestBody {
 				RequestBodyType type;
 				std::tstring body;			// type = Normal
-				curl_httppost* form_post = NULL;	// type = Form
-				curl_httppost* last_post = NULL;
+				std::map<std::tstring, std::tstring> form;
+				std::map<std::tstring, std::tstring> file;
 			};
 		public:
 			Client() = default;

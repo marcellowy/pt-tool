@@ -9,11 +9,13 @@
 #include "av_log.h"
 #include "av_singleton.h"
 #include "av_string.h"
+#include "spdlog/spdlog.h"
 
 struct TableLog {
-	std::tstring dir = TEXT("");				// log to dir
-	size_t max_size = 5 * 1024 * 1024;	// file max size
-	size_t max_count = 3;				// file max count
+	std::tstring dir = TEXT("logs");	// log to dir
+	size_t max_file_size = 5 * 1024 * 1024;	// file max size
+	size_t max_file_count = 3;				// file max count
+	spdlog::level::level_enum level;	// debug
 };
 
 struct TableServer {
