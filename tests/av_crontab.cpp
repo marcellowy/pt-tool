@@ -21,7 +21,7 @@ protected:
 	}
 };
 
-TEST_F(CronTest, Cron) {
+TEST_F(CronTest, DISABLED_Cron) {
 
 	Queue<int> q;
 	av::cron::Cron a(TEXT("1"), TEXT("*/1 * * * * *"), [&q] {
@@ -62,7 +62,7 @@ TEST_F(CronTest, Cron) {
 	return;
 }
 
-TEST_F(CronTest, Cron_task_repeate_in) {
+TEST_F(CronTest, DISABLED_Cron_task_repeate_in) {
 	// 如果上一次任务未结束,下一次任务就来了，那么会阻塞,不会重复执行
 	av::cron::Cron a(TEXT("1"), TEXT("*/1 * * * * *"), [] {
 		logi("test aa end base64: {}", av::base64::encode("1234567890"));

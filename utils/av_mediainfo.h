@@ -29,6 +29,7 @@ namespace av {
 			bool parse();
 			Video getVideo();
 			Audio getAudio();
+			std::tstring getText();
 		protected:
 			std::tstring m_video_path;
 			std::tstring m_json;

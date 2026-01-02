@@ -11,5 +11,3 @@
 	vcpkg install spdlog:x64-windows-static
 	vcpkg install cpp-httplib:x64-windows-static
 ```
-
-

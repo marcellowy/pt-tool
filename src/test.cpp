@@ -13,6 +13,9 @@
 #include "logger.h"
 #include "error_code.h"
 
+#include "publish.h"
+#include "mteam/mteam.h"
+
 using namespace std;
 
 int main()
@@ -41,5 +44,10 @@ int main()
 	}
 	auto& config = Config::instance();
 	logi("server start ==================================");
+
+	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>();
+	Publish publish(ptr, TEXT(""));
+
+
 	return ErrorCode::Success;
 }

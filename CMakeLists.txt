@@ -13,8 +13,8 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-set(PT_TOOL_PROJECT_NAME "chadtest")
-set(PT_TOOL_LIB_NAME "chadtest_lib")
+set(PT_TOOL_PROJECT_NAME "ptool")
+set(PT_TOOL_LIB_NAME "ptool_lib")
 
 project (${PT_TOOL_PROJECT_NAME})
 

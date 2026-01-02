@@ -14,7 +14,5 @@ namespace mteam{
 		std::tstring m_api_img_url; // img api url
 		std::tstring m_api_img_key; // img api key
 	};
-
-
 }
 #endif

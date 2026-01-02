@@ -20,7 +20,7 @@ Publish::Publish()
 {
 }
 
-Publish::Publish(const std::tstring& dir): dir_(dir) {
+Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir): m_site(std::move(site)), m_dir(dir) {
 
 }
 
@@ -36,10 +36,9 @@ bool Publish::start(){
             logw("process file failed, dir {}, name {} get site type failed", av::str::toA(tmp.dir), av::str::toA(tmp.name));
             break;
         }
-
-        //break;
+        m_site->publish(tmp);
+        break;
     }
-
     return false;
 }
 
@@ -50,7 +49,6 @@ bool Publish::stop() {
 bool Publish::getSiteType(Source& obj) {
 
     if (obj.type == SourceType::Dir) {
-
         return false;
     }
 
@@ -100,20 +98,6 @@ bool Publish::getSiteType(Source& obj) {
             return false;
         }
         return true;
-
-        //if (obj.category_id == mteam::category::Id::TVSeries) {
-        //    obj.type_site = PublishSiteType::TVSeries;
-        //} else if (obj.category_id == mteam::category::Id::Sport) {
-        //    obj.type_site = PublishSiteType::Sport;
-        //} else if (obj.category_id == mteam::category::Id::Movie) {
-        //    obj.type_site = PublishSiteType::Movie;
-        //} else if (obj.category_id == mteam::category::Id::Discover) {
-        //    obj.type_site = PublishSiteType::Discover;
-        //} else {
-        //    loge("unknown category_id {}", av::str::toA(mteam::category::to_string(obj.category_id)));
-        //    return false;
-        //}
-        return true;
     }
 
     // Movie
@@ -149,7 +133,7 @@ bool Publish::processFile(Source& obj) {
         logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
         return false;
     }
-    
+
     logi("{} {}", av::str::toA(obj.fullpath), av::str::toA(obj.mediainfo_json));
     logi("{} {}", av::str::toA(obj.fullpath), av::str::toA(obj.mediainfo_text));
 
@@ -199,13 +183,13 @@ std::vector<Source> Publish::readDir() {
     std::vector<Source> v;
 
     // check
-    if (!av::path::dir_exists(dir_)) {
-        logw("{} not exists", av::str::toA(dir_));
+    if (!av::path::dir_exists(m_dir)) {
+        logw("{} not exists", av::str::toA(m_dir));
         return v;
     }
 
     // read
-    for (const auto& entry : fs::directory_iterator(dir_)) {
+    for (const auto& entry : fs::directory_iterator(m_dir)) {
         Source obj;
         obj.name = av::str::toT(entry.path().filename().string());
         // 
@@ -221,10 +205,10 @@ std::vector<Source> Publish::readDir() {
         else if (entry.is_directory()) {
             obj.type = SourceType::Dir;
         }
-        obj.dir = dir_;
+        obj.dir = m_dir;
         //logi("dir_ {}, obj.name {}, ", dir_, obj.name);
         try {
-            obj.fullpath = av::path::append(dir_, obj.name);
+            obj.fullpath = av::path::append(m_dir, obj.name);
         }
         catch (const std::exception& e) {
             loge("exception {}", e.what());

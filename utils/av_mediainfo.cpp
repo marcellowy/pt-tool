@@ -191,6 +191,10 @@ namespace av {
         Audio MediaInfo::getAudio() {
             return m_audio;
         }
+
+        std::tstring MediaInfo::getText() {
+            return m_text;
+        }
     }
 }
 

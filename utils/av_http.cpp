@@ -197,9 +197,9 @@ namespace av {
 
 			// parse response header
 			{
-				logd("response code {} resonse header {}", response_code, response_header);
 				parseHeader(response_header, response);
 			}
+			logd("response code {} resonse header \n{} response body \n{}", response_code, response_header, response_string);
 
 			// set response
 			response.code = static_cast<int64_t>(response_code);
