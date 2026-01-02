@@ -75,17 +75,32 @@ namespace av {
 			Progressive	// 1080p
 		};
 
+		enum class SourceId {
+			Unknown,
+			_WebDL,
+			_Bluray,
+			_Remux,
+			_Encode,
+			_HDTV,
+			_TV,
+			_DVD,
+			_CD,
+			_Other
+		};
+
 		struct Source {
 
 			// dirinfo
-			std::tstring dir;
-			std::tstring name;
-			std::tstring fullpath;
-			SourceType type;
-			SourceCategory category;
-			SourceVideoResolution video_resolution;
-			SourceVideoCodec video_codec;
-			SourceAudioCodec audio_codec;
+			std::tstring dir;							// 影片所在目录
+			std::tstring name;							// 影片名称
+			std::tstring fullpath;						// 完整路径
+			SourceType type;							// 输入类型
+
+			SourceId source_id;							// 影片来源
+			SourceCategory category;					// 影片分类
+			SourceVideoResolution video_resolution;		// 视频分辨率
+			SourceVideoCodec video_codec;				// 视频格式
+			SourceAudioCodec audio_codec;				// 音频格式
 
 			// baseinfo
 			std::tstring year;

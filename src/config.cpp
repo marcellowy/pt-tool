@@ -45,10 +45,16 @@ bool Config::parse(const std::tstring& toml_file) {
 			}
 		}
 
+		// mteam
 		mteam.api_key = av::str::toT(config["mteam"]["api_key"].value_or(""));
 		mteam.api_url = av::str::toT(config["mteam"]["api_url"].value_or(""));
 		mteam.img_api_key = av::str::toT(config["mteam"]["img_api_key"].value_or(""));
 		mteam.img_api_url = av::str::toT(config["mteam"]["img_api_url"].value_or(""));
+
+		// tgbot
+		tgbot.token = av::str::toT(config["tgbot"]["token"].value_or(""));
+		tgbot.chat_id = av::str::toT(config["tgbot"]["chat_id"].value_or(""));
+		
 
 	}
 	catch (const toml::parse_error& e) {

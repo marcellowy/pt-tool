@@ -13,3 +13,13 @@ file = "config_tv_name.toml"
 [rapidapi]
 key = ""
 host = ""
+
+[mteam]
+api_url = ""
+api_key = ""
+img_api_url = ""
+img_api_key = ""
+
+[tgbot]
+token = ""
+chat_id = ""

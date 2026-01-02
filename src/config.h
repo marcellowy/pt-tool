@@ -41,6 +41,11 @@ struct Mteam {
 	std::tstring img_api_url = TEXT("");
 };
 
+struct TGBot {
+	std::tstring token = TEXT("");
+	std::tstring chat_id = TEXT("");
+};
+
 class Config: public av::Singleton<Config> {
 	friend class Singleton<Config>;
 public:
@@ -49,6 +54,7 @@ public:
 	std::vector<TVName> tv_name = {};
 	Rapidapi rapidapi;
 	Mteam mteam;
+	TGBot tgbot;
 public:
 	bool parse(const std::tstring& toml_file);
 };
