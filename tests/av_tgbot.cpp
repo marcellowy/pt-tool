@@ -36,5 +36,5 @@ TEST_F(TGbotTest, DISABLED_send) {
 	// https://api.telegram.org/bot8022060026:AAG8bFnVE1H_OI0OaZRJu7vg_6htLnet1VI/getUpdates
 	// bot nezha 可以找botfather查
 	auto& config = Config::instance();
-	av::tgbot::send_message(av::str::toA(config.tg_bot.token), av::str::toA(config.tg_bot.chat_id), "测试消息");
+	av::tgbot::send_message(av::str::toA(config.tgbot.token), av::str::toA(config.tgbot.chat_id), "测试消息");
 }

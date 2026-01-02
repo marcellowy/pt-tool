@@ -96,6 +96,7 @@ namespace av {
 			std::tstring fullpath;						// 完整路径
 			SourceType type;							// 输入类型
 
+			int64_t group_id;							// 发布组id, 发布的网站必须有对应的id实现
 			SourceId source_id;							// 影片来源
 			SourceCategory category;					// 影片分类
 			SourceVideoResolution video_resolution;		// 视频分辨率

@@ -6,17 +6,17 @@
 
 namespace mteam {
 
-	static std::map<SourceId, std::tstring> sourceIdMap = {
-		{SourceId::Unknown, "Unknown"},
-		{SourceId::_Bluray, "Unknown"},
-		{SourceId::_CD, "Unknown"},
-		{SourceId::_DVD, "Unknown"},
-		{SourceId::_Encode, "Unknown"},
-		{SourceId::_HDTV, "Unknown"},
-		{SourceId::_Other, "Unknown"},
-		{SourceId::_Remux, "Unknown"},
-		{SourceId::_TV, "Unknown"},
-		{SourceId::_Web_DL, "Unknown"},
+	static std::map<SourceId, std::tstring> sourceIdMapString = {
+		{SourceId::Unknown, TEXT("Unknown")},
+		{SourceId::_Bluray, TEXT("Unknown")},
+		{SourceId::_CD, TEXT("Unknown")},
+		{SourceId::_DVD, TEXT("Unknown")},
+		{SourceId::_Encode, TEXT("Unknown")},
+		{SourceId::_HDTV, TEXT("HDTV")}, // 我发的都是HDTV,所以只知道hdtv
+		{SourceId::_Other, TEXT("Unknown")},
+		{SourceId::_Remux, TEXT("Unknown")},
+		{SourceId::_TV, TEXT("Unknown")},
+		{SourceId::_WebDL, TEXT("Unknown")},
 	};
 
 	Source::Source(const av::media::SourceId& source_id):m_source_id(source_id) {
@@ -59,6 +59,6 @@ namespace mteam {
 
 	std::tstring Source::getText() {
 		auto id = getid();
-		return sourceIdMap[id];
+		return sourceIdMapString[id];
 	}
 }
