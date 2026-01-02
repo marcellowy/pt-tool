@@ -1,22 +1,108 @@
-#include "parse_name.h"
-#include "logger.h"
-#include "gtest/gtest.h"
-
-class MyTest : public ::testing::Test {
-protected:
-	void SetUp() override {
-	
-	}
-
-	void TearDown() override {
-
-	}
-};
-
-
-TEST_F(MyTest, CheckInitialSize) {
-	EXPECT_EQ(1,1);
-}
+//#include "parse_name.h"
+//#include "logger.h"
+//#include "gtest/gtest.h"
+//#include "mteam/upload_img.h"
+//#include "av_log.h"
+//#include "av_http.h"
+//#include "logger.h"
+//#include "av_translate.h"
+//#include "av_env.h"
+//#include "config.h"
+//
+//class MteamTest : public ::testing::Test {
+//protected:
+//	void SetUp() override {
+//		if (!Logger::instance().open()) {
+//			std::cout << "can not open log" << std::endl;
+//			return;
+//		}
+//
+//		std::tstring config_file = TEXT("config.toml");
+//		if (av::env::is_dev()) {
+//			config_file = TEXT("config_dev.toml");
+//		}
+//		if (!Config::instance().parse(config_file)) {
+//			loge("parse config.toml failed");
+//			return ;
+//		}
+//	}
+//
+//	void TearDown() override {
+//
+//	}
+//};
+//
+//
+//TEST_F(MteamTest, DISABLED_UploadImage) {
+//	auto& config = Config::instance();
+//	std::tstring url;
+//	mteam::UploadImg a(config.mteam.img_api_url, config.mteam.img_api_key);
+//	if (!a.Upload(TEXT("test.jpeg"), url)) {
+//		loge("upload failed");
+//		return;
+//	}
+//	logi("upload url {}", av::str::toA(url));
+//	return;
+//}
+//
+//TEST_F(MteamTest, DISABLED_QbittorrentLogin) {
+//	av::http::Client client;
+//	av::http::Header h;
+//	av::http::File f;
+//	av::http::FormData d;
+//	av::http::Response response;
+//	d.data[TEXT("username")] = TEXT("admin");
+//	d.data[TEXT("password")] = TEXT("marcello123");
+//
+//	auto aa = std::make_tuple(h, d);
+//	if (!client.postForm(TEXT("http://192.168.50.205:8086/api/v2/auth/login"), d, response)) {
+//		loge("http failed");
+//		return;
+//	}
+//	logi("http response code {}\n body: {}", response.code, av::str::toA(response.body));
+//
+//	if (response.isOk()) {
+//		logi("is ok");
+//		for (auto& aa : response.header.data) {
+//			logi("header {}: {}", av::str::toA(aa.first), av::str::toA(aa.second));
+//		}
+//		for (auto& cookie : response.header.cookie.data) {
+//			logi("cookie {}: {}", av::str::toA(cookie.first), av::str::toA(cookie.second));
+//		}
+//	}
+//}
+//
+//TEST_F(MteamTest, DISABLED_Translate) {
+//	auto& config = Config::instance();
+//	std::tstring text;
+//	av::translate::Translate t(config.rapidapi.key,config.rapidapi.host);
+//	if (!t.foo(TEXT("中国"), text)) {
+//		loge("translate error");
+//		return;
+//	}
+//	else {
+//		logi("translate success {}", av::str::toA(text));
+//	}
+//}
+//
+//TEST_F(MteamTest, aa) {
+//	//logi("{}, {}, {}", av::time::seconds(), av::time::milliseconds(), av::time::microseconds());
+//	const std::vector<int64_t> tt = { 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120 };
+//	int64_t count = 0;
+//
+//	av::codec::StbPNG stbPng([&count](void* data, int size) {
+//		//logi("capture freame callback, {}", count);
+//		//char buff[1024];
+//		//snprintf(buff, sizeof(buff) - 1, "test_%ll.png", count);
+//
+//		std::tstringstream oo;
+//		oo << TEXT("test_") << count << TEXT(".png");
+//
+//		std::ofstream out_file(av::str::toA(oo.str()), std::ios::binary);
+//		out_file.write(static_cast<char*>(data), size);  // 写入数据到文件
+//		count++;
+//		});
+//}
 
 //#define TestParseName true
 //

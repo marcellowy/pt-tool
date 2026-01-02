@@ -7,10 +7,11 @@ namespace mteam{
 	class UploadImg
 	{
 	public:
-		UploadImg(const std::tstring& key);
+		UploadImg(const std::tstring& url, const std::tstring& key);
 		~UploadImg();
-		bool Upload(const std::tstring& img_path);
+		bool Upload(const std::tstring& img_path, std::tstring& url);
 	private:
+		std::tstring m_api_img_url; // img api url
 		std::tstring m_api_img_key; // img api key
 	};
 

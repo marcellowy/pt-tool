@@ -197,8 +197,8 @@ namespace av {
 
 			// parse response header
 			{
-				logi("response code {} resonse header {}", response_code, response_header);
-				parseHeader(response_header, response.header);
+				logd("response code {} resonse header {}", response_code, response_header);
+				parseHeader(response_header, response);
 			}
 
 			// set response
@@ -207,7 +207,7 @@ namespace av {
 			return true;
 		}
 		
-		void Client::parseHeader(const std::string& header_str, Header& header) {
+		void Client::parseHeader(const std::string& header_str, Response& response) {
 			size_t start = 0;
 			size_t end = 0;
 
@@ -218,7 +218,7 @@ namespace av {
 					auto value = line.substr(pos + 1);
 					key = av::str::trim(key);
 					value = av::str::trim(value);
-					header.data[av::str::toT(key)] = av::str::toT(value);
+					response.header.data[av::str::toT(key)] = av::str::toT(value);
 					if (av::str::toLower(key) == "set-cookie") {
 						auto cookie_str = value;
 						// parse cookie
@@ -232,12 +232,12 @@ namespace av {
 								auto cookie_vaue = cookie_part.substr(cookie_pos + 1);
 								cookie_key = av::str::trim(cookie_key);
 								cookie_vaue = av::str::trim(cookie_vaue);
-								header.cookie.data[av::str::toT(cookie_key)] = av::str::toT(cookie_vaue);
+								response.header.cookie.data[av::str::toT(cookie_key)] = av::str::toT(cookie_vaue);
 							}
 							else {
 								// only value
 								cookie_part = av::str::trim(cookie_part);
-								header.cookie.data[av::str::toT(cookie_part)] = av::str::toT(cookie_part);
+								response.header.cookie.data[av::str::toT(cookie_part)] = av::str::toT(cookie_part);
 							}
 							cookie_start = cookie_end + 1;
 						}

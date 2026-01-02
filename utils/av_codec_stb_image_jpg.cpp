@@ -5,13 +5,13 @@
 // 在test.cpp中定义STB_IMAGE_IMPLEMENTATION
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#include "stb_image.h"
 #endif
 
 // 在main.cpp中定义STB_IMAGE_WRITE_IMPLEMENTATION
 #ifndef STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
+#include "stb_image_write.h"
 #endif
 
 namespace av {

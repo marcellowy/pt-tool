@@ -44,6 +44,12 @@ bool Config::parse(const std::tstring& toml_file) {
 				tv_name.emplace_back(n);
 			}
 		}
+
+		mteam.api_key = av::str::toT(config["mteam"]["api_key"].value_or(""));
+		mteam.api_url = av::str::toT(config["mteam"]["api_url"].value_or(""));
+		mteam.img_api_key = av::str::toT(config["mteam"]["img_api_key"].value_or(""));
+		mteam.img_api_url = av::str::toT(config["mteam"]["img_api_url"].value_or(""));
+
 	}
 	catch (const toml::parse_error& e) {
 		loge("parse {} {} failed, err {}", 

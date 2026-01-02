@@ -80,7 +80,7 @@ namespace av {
 			void setConnectTimeoutMS(int64_t timeout);
 		private:
 			bool request(const Method& method, const std::tstring& url, const Header& header, const RequestBody& request, Response& response);
-			void parseHeader(const std::string& header_str, Header& header);
+			void parseHeader(const std::string& header_str, Response& response);
 		private:
 			bool m_need_response_headers = false;
 			int64_t m_timeout_ms = 10000;

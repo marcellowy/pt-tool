@@ -13,10 +13,10 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-set(PROJECT_NAME "chadtest")
-set(PROJECT_LIB_NAME "chadtest_lib")
+set(PT_TOOL_PROJECT_NAME "chadtest")
+set(PT_TOOL_LIB_NAME "chadtest_lib")
 
-project (${PROJECT_NAME})
+project (${PT_TOOL_PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/*.h
@@ -33,41 +33,25 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/site
 )
 
-# 将源代码添加到此项目的可执行文件。
-add_executable(${PROJECT_NAME} ${SOURCE_FILE})
-add_library(${PROJECT_LIB_NAME} STATIC ${SOURCE_FILE})
-
-macro(setup name)
-if(MSVC)
-
-    target_compile_options(${name} PRIVATE /utf-8)
-
-	# if use ninja
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set_target_properties(${name} PROPERTIES
-            MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
-        )
-    else()
-        set_target_properties(${name} PROPERTIES
-            MSVC_RUNTIME_LIBRARY "MultiThreaded"
-        )
-    endif()
-else()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_definitions(${name} PRIVATE DEBUG=1)
-    endif()
-endif()
-endmacro()
-
-setup(${PROJECT_NAME})
-setup(${PROJECT_LIB_NAME})
-
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(CURL REQUIRED)
 find_package(ZenLib CONFIG REQUIRED)
 find_package(MediaInfoLib CONFIG REQUIRED)
 find_package(FFMPEG REQUIRED)
+find_package(croncpp CONFIG REQUIRED)
+find_package(tomlplusplus CONFIG REQUIRED)
+find_package(Stb REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+
+# 将源代码添加到此项目的可执行文件。
+add_executable(${PT_TOOL_PROJECT_NAME} ${SOURCE_FILE})
+add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
+
+set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES 
+    OUTPUT_NAME ${PT_TOOL_PROJECT_NAME}
+)
 
 add_library(common_deps INTERFACE)
 target_link_libraries(common_deps INTERFACE 
@@ -77,17 +61,44 @@ target_link_libraries(common_deps INTERFACE
     CURL::libcurl
     zen
     mediainfo
+    croncpp::croncpp
+    tomlplusplus::tomlplusplus
+    nlohmann_json::nlohmann_json
+    spdlog::spdlog_header_only
+    # spdlog::spdlog
+    ${Stb_INCLUDE_DIR}
     ${FFMPEG_LIBRARY_DIRS}
     ${FFMPEG_LIBRARIES}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE common_deps)
-target_link_libraries(${PROJECT_LIB_NAME} PRIVATE common_deps)
+macro(setup name)
+    if(MSVC)
+        target_compile_options(${name} PRIVATE /utf-8)
+	    # if use ninja
+	    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set_target_properties(${name} PROPERTIES
+                MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
+            )
+        else()
+            set_target_properties(${name} PROPERTIES
+                MSVC_RUNTIME_LIBRARY "MultiThreaded"
+            )
+        endif()
+    else()
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            target_compile_definitions(${name} PRIVATE DEBUG=1)
+        endif()
+    endif()
+        
+    if(WIN32)
+        add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
+    endif()
 
-if(WIN32)
-    add_compile_definitions(${PROJECT_NAME} PRIVATE -DUNICODE -D_UNICODE)
-    add_compile_definitions(${PROJECT_LIB_NAME} PRIVATE -DUNICODE -D_UNICODE)
-endif()
+        target_link_libraries(${name} PRIVATE common_deps)
+endmacro()
+
+setup(${PT_TOOL_PROJECT_NAME})
+setup(${PT_TOOL_LIB_NAME})
 
 set(FILES_TO_COPY 
     ${CMAKE_SOURCE_DIR}/src/config.toml
@@ -96,10 +107,10 @@ set(FILES_TO_COPY
 )
 
 add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
+    TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         ${FILES_TO_COPY}
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>  # 可执行文件所在目录
+        $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
 )
 
 ## Add tests

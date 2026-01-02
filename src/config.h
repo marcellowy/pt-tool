@@ -34,6 +34,13 @@ struct Rapidapi {
 	std::tstring host = TEXT("");
 };
 
+struct Mteam {
+	std::tstring api_key = TEXT("");
+	std::tstring api_url = TEXT("");
+	std::tstring img_api_key = TEXT("");
+	std::tstring img_api_url = TEXT("");
+};
+
 class Config: public av::Singleton<Config> {
 	friend class Singleton<Config>;
 public:
@@ -41,6 +48,7 @@ public:
 	TableServer server;
 	std::vector<TVName> tv_name = {};
 	Rapidapi rapidapi;
+	Mteam mteam;
 public:
 	bool parse(const std::tstring& toml_file);
 };

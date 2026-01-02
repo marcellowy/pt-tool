@@ -1,32 +1,18 @@
-#set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-#include(FetchContent)
-#FetchContent_Declare(
-#  googletest
-#  URL https://github.com/google/googletest/archive/refs/heads/main.zip
-#)
-#set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
-#FetchContent_MakeAvailable(googletest)
-
 set(PROJECT_NAME "unit_tests")
 
 project (${PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/*.h
-	${CMAKE_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_SOURCE_DIR}/site/mteam/*.h
-	${CMAKE_SOURCE_DIR}/site/mteam/*.cpp
-    ${CMAKE_SOURCE_DIR}/utils/*.h
-    ${CMAKE_SOURCE_DIR}/utils/*.cpp
+    ${CMAKE_SOURCE_DIR}/tests/*.cpp
 )
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}
 )
 
 find_package(GTest CONFIG REQUIRED)
 
-add_executable(${PROJECT_NAME} test.cpp)
+add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 macro(setup name)
 if(MSVC)
@@ -58,12 +44,24 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     GTest::gtest_main 
     GTest::gmock 
     GTest::gmock_main
-    chadtest_lib
+    ${PT_TOOL_LIB_NAME}
+)
+
+set(FILES_TO_COPY 
+    ${CMAKE_SOURCE_DIR}/tests/test.jpeg
+    ${CMAKE_SOURCE_DIR}/src/config_dev.toml
+    ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
+)
+
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${FILES_TO_COPY}
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>  # 可执行文件所在目录
 )
 
 add_test(AllTestsInMain main)
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
-# target_link_libraries(${PROJECT_NAME} PRIVATE chadtest_lib)
 
