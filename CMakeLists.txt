@@ -44,6 +44,7 @@ find_package(tomlplusplus CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(httplib CONFIG REQUIRED)
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PT_TOOL_PROJECT_NAME} ${SOURCE_FILE})
@@ -66,6 +67,7 @@ target_link_libraries(common_deps INTERFACE
     nlohmann_json::nlohmann_json
     spdlog::spdlog_header_only
     # spdlog::spdlog
+    httplib::httplib
     ${Stb_INCLUDE_DIR}
     ${FFMPEG_LIBRARY_DIRS}
     ${FFMPEG_LIBRARIES}

@@ -3,30 +3,15 @@
 
 
 #include "test.h"
-
 #include <curl/curl.h>
 
-//#include "httplib/httplib.h"
-//#include "cron.h"
+#include "av_async.h"
+#include "av_env.h"
 #include "av_log.h"
+
 #include "config.h"
 #include "logger.h"
 #include "error_code.h"
-//#include "av_async.h"
-//#include "av_queue.h"
-//#include "av_base64.h"
-#include "publish.h"
-#include "av_path.h"
-#include "av_time.h"
-#include "av_mediainfo.h"
-#include "av_ffmpeg.h"
-#include "av_codec_jpg.h"
-#include "av_codec_stb_image_jpg.h"
-#include "av_translate.h"
-#include "av_env.h"
-#include "av_async.h"
-#include "av_http.h"
-#include "mteam/upload_img.h"
 
 using namespace std;
 
@@ -56,6 +41,5 @@ int main()
 	}
 	auto& config = Config::instance();
 	logi("server start ==================================");
-	return 0;
 	return ErrorCode::Success;
 }
