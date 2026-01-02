@@ -167,7 +167,7 @@ namespace av {
 				douban.sub_title += " | " + tmp;
 			}
 
-			auto filter_name = [](const std::string& name) {
+			auto filter_name = [](const std::string& name) -> std::string {
 				size_t pos = name.find_first_of(" ");
 				if (pos == std::string::npos) {
 					// no space
@@ -178,6 +178,7 @@ namespace av {
 				if (tmp != "") {
 					return tmp;
 				}
+				return name;
 			};
 
 			if (d.director.size() > 0) {

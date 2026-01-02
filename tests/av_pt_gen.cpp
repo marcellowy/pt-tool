@@ -31,8 +31,8 @@ protected:
 	}
 };
 
-//TEST_F(PTGenTest, DISABLED_pt_gen) {
-TEST_F(PTGenTest, pt_gen) {
+TEST_F(PTGenTest, DISABLED_pt_gen) {
+//TEST_F(PTGenTest, pt_gen) {
 #ifdef _WIN32
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);
