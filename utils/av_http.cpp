@@ -2,6 +2,7 @@
 #include "av_log.h"
 #include "av_async.h"
 #include <tuple>
+#include <codecvt>
 #include <variant>
 
 namespace av {
@@ -140,13 +141,17 @@ namespace av {
 				curl_mime_free(mime);
 			});
 
+			//
+			std::string tmp_postdata;
+
 			// set method
 			switch (method) {
 			case Method::Get:
 			case Method::Post:
 				if (request.type == RequestBodyType::Normal)
 				{
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, av::str::toA(request.body).c_str());
+					tmp_postdata = av::str::toA(request.body);
+					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, tmp_postdata.c_str());
 				}
 				else if (request.type == RequestBodyType::Form) {
 					curl_mimepart* part = NULL;

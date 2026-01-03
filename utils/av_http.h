@@ -24,6 +24,7 @@ namespace av {
 		struct FormData {
 			std::map<std::tstring, std::tstring> data;
 		};
+		typedef FormData Form;
 
 		struct File {
 			std::map<std::tstring, std::tstring> data;

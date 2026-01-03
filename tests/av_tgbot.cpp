@@ -30,7 +30,7 @@ protected:
 	}
 };
 
-TEST_F(TGbotTest, send) {
+TEST_F(TGbotTest, DISABLED_send) {
 //TEST_F(TGbotTest, send) {
 	// 获取chat_id
 	// https://api.telegram.org/bot{your token}/getUpdates

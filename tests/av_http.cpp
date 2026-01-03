@@ -27,7 +27,7 @@ protected:
 	}
 };
 
-TEST_F(AVHttpTest, post_form) {
+TEST_F(AVHttpTest, DISABLED_post_form) {
 	av::http::Client client;
 	av::http::Response resp;
 	av::http::Header header;

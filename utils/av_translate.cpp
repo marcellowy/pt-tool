@@ -5,6 +5,7 @@
 
 #include "av_log.h"
 #include "av_async.h"
+#include "av_http.h"
 
 using json = nlohmann::json;
 
@@ -29,65 +30,30 @@ namespace av {
 			a["from"] = "auto";
 			a["to"] = "en";
 			a["text"] = av::str::toA(source_text);
-
+			
 			// dump
-			auto data = a.dump();
+			auto data = a.dump(4);
 			logi("post json: {}", data);
 
-			// curl post
-			CURL* curl;
-			CURLcode res;
-			curl = curl_easy_init();
-			if (!curl) {
-				loge("curl_easy_init failed");
-				return false;
-			}
-			av::async::Exit exit_curl([&curl] {
-				curl_easy_cleanup(curl);
-			});
-			
-			// 
-			curl_easy_setopt(curl, CURLOPT_URL, av::str::toA(m_rapidapi_url).c_str());
-
-			// header
-			struct curl_slist* headers = NULL;
-			std::string header_key = "x-rapidapi-key: " + av::str::toA(m_rapidapi_key);
-			std::string header_host = "x-rapidapi-host: " + av::str::toA(m_rapidapi_host);
-			headers = curl_slist_append(headers, "Content-Type: application/json");
-			headers = curl_slist_append(headers, header_key.c_str());
-			headers = curl_slist_append(headers, header_host.c_str());
-			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-			av::async::Exit exit_header([&headers] {
-				curl_slist_free_all(headers);
-			});
-
-			// post data
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-
-			// response callback
-			std::string response_string;
-			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CURLWriteCallback);
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
-
-			// 
-			res = curl_easy_perform(curl);
-			if (res != CURLE_OK) {
-				loge("curl_easy_perform failed, err: {}", curl_easy_strerror(res));
+			av::http::Client client;
+			av::http::Header header;
+			header.data[TEXT("x-rapidapi-key")] = m_rapidapi_key;
+			header.data[TEXT("x-rapidapi-host")] = m_rapidapi_host;
+			header.data[TEXT("User-Agent")] = TEXT("team tptv");
+			header.data[TEXT("Content-Type")] = TEXT("application/json");
+			av::http::Response resp;
+			client.setConnectTimeoutMS(10000);
+			client.setTimeoutMS(30000);
+			std::tstring tmp = av::str::toT(data);
+			if (!client.post(m_rapidapi_url, header, tmp, resp)) {
+				loge("post data failed");
 				return false;
 			}
 
-			// code
-			long response_code;
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-			if (response_code != 200) {
-				loge("http response status code {}, body {}", response_code, response_string);
-				return false;
-			}
-			
 			// parse response body
 			try {
 				json b;
-				auto o = b.parse(response_string);
+				auto o = b.parse(av::str::toA(resp.body));
 				if (o.contains("trans") && o["trans"].is_string())
 				{
 					text = av::str::toT(o["trans"].get<std::string>());
@@ -97,11 +63,11 @@ namespace av {
 				return false;
 			}
 			catch (const json::parse_error& e) {
-				loge("{} exception {}", response_string, e.what());
+				loge("{} exception {}", av::str::toA(resp.body), e.what());
 				return false;
 			}
 			catch (const std::exception& e) {
-				loge("{} exception {}", response_string, e.what());
+				loge("{} exception {}", av::str::toA(resp.body), e.what());
 				return false;
 			}
 			return false;
