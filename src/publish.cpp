@@ -306,6 +306,7 @@ std::vector<Source> Publish::readDir() {
 #else
             obj.file_suffix = entry.path().extension().string();
 #endif
+            av::str::replace(obj.file_suffix, TEXT("."), TEXT(""));
         }
         else if (entry.is_directory()) {
             obj.type = SourceType::Dir;

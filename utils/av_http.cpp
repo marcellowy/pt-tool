@@ -92,6 +92,9 @@ namespace av {
 			// add form data
 			rb.form = form.data;
 
+			// add default User-Agent
+			header.data[TEXT("User-Agent")] = TEXT("M-TEAM TPTV PT-TOOL");
+
 			return request(Method::Post, url, header, rb, response);
 		}
 

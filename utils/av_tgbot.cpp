@@ -27,7 +27,8 @@ namespace av {
 		bool send_local_photo_message(const std::string& token, const std::string& chat_id, const std::string& local_img, const std::string& text) {
 			TgBot::Bot bot(token);
 			try {
-				bot.getApi().sendPhoto(chat_id, TgBot::InputFile::fromFile(local_img, "image/png"), text);
+				auto msg_ptr = bot.getApi().sendPhoto(chat_id, TgBot::InputFile::fromFile(local_img, "image/png"), text);
+				logi("send message success {}", msg_ptr->messageId);
 			}
 			catch (TgBot::TgException& e) {
 				loge("{}", e.what());
@@ -39,7 +40,8 @@ namespace av {
 		bool send_net_photo_message(const std::string& token, const std::string& chat_id, const std::string& net_img, const std::string& text) {
 			TgBot::Bot bot(token);
 			try {
-				bot.getApi().sendPhoto(chat_id, net_img, text);
+				auto msg_ptr = bot.getApi().sendPhoto(chat_id, net_img, text);
+				logi("send message success {}", msg_ptr->messageId);
 			}
 			catch (TgBot::TgException& e) {
 				loge("{}", e.what());

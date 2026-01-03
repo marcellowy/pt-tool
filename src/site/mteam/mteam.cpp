@@ -94,6 +94,7 @@ namespace mteam {
 					continue;
 				}
 				if (!tmp.empty()) {
+					tmp = av::str::toT( fmt::format("![]({})", av::str::toA(tmp)));
 					img_url.push_back(tmp);
 				}
 			}
@@ -144,7 +145,6 @@ namespace mteam {
 			
 			// 上传到网站
 			auto url = m_api_url + TEXT("/api/torrent/createOredit");
-			//auto url = m_api_url;
 			logi("post url {}", av::str::toA(url));
 			if (!client.postForm(url, std::make_tuple(header, form, file), resp)) {
 				loge("send http failed");
@@ -156,10 +156,10 @@ namespace mteam {
 			}
 
 			// 解析返回
-			std::tstring response_id;
-			std::tstring response_name;
-			std::tstring response_sub_title;
-			std::tstring response_create_date;
+			std::tstring response_id = TEXT("");
+			std::tstring response_name = TEXT("");
+			std::tstring response_sub_title = TEXT("");
+			std::tstring response_create_date = TEXT("");
 			try {
 				json obj;
 				auto j = obj.parse(av::str::toA( resp.body));
@@ -171,7 +171,6 @@ namespace mteam {
 				if (j.contains("message") && j["message"].is_string()) {
 					message = j["message"].get<std::string>();
 				}
-
 				auto code = j["code"].get<std::string>();
 				if (code != "0") { // here, the website result string
 					logw("code {} message {}", code, message);
@@ -202,7 +201,7 @@ namespace mteam {
 				return false;
 			}
 			
-			if (!sendTGMessage(m_external_source.poster_img, img_url, response_id, response_name,
+			if (!sendTGMessage(m_external_source.poster_img, m_external_source.screenshot_local, response_id, response_name,
 				response_sub_title, response_create_date)) {
 				logw("sendTGMessage failed");
 			}
@@ -227,39 +226,47 @@ namespace mteam {
 ⏲ 发布时间: %s
 )";
 			char buff[32768];
-			sprintf(buff, text_tmp.c_str(), av::str::toA(publish_id), av::str::toA(title), av::str::toA(sub_title), av::str::toA(create_date));
+			sprintf(buff, text_tmp.c_str(), av::str::toA(publish_id).c_str(), av::str::toA(title).c_str(), 
+				av::str::toA(sub_title).c_str(), av::str::toA(create_date).c_str());
 			text = av::str::toT(std::string(buff));
 		}
 
 		// use douban img
 		if (!douban_poster_img.empty()) {
-			if (!av::tgbot::send_net_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-				av::str::toA(douban_poster_img), av::str::toA(text))) {
-				logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-					av::str::toA(douban_poster_img), av::str::toA(text));
-				return false;
+			logi("try use douban poster img: {}", av::str::toA(douban_poster_img));
+			while (true) {
+				if (!av::tgbot::send_net_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
+					av::str::toA(douban_poster_img), av::str::toA(text))) {
+					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
+						av::str::toA(douban_poster_img), av::str::toA(text));
+					break;
+				}
+				return true;
 			}
-			return true;
 		}
 
 		// use screenshots
 		if (!screenshots.empty()) {
 			auto img = screenshots[0];
-			if (!av::tgbot::send_local_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-				av::str::toA(img), av::str::toA(text))) {
-				logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-					av::str::toA(img), av::str::toA(text));
-				return false;
+			logi("try use screenshots img: {}", av::str::toA(img));
+			while (true) {
+				if (!av::tgbot::send_local_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
+					av::str::toA(img), av::str::toA(text))) {
+					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
+						av::str::toA(img), av::str::toA(text));
+					break;
+				}
+				return true;
 			}
 		}
 
 		// use defualt m-team logo
 		std::tstring img = TEXT("https://static.m-team.cc/static/media/logo.80b63235eaf702e44a8d.png");
+		logi("try use default img: {}", av::str::toA(img));
 		if (!av::tgbot::send_net_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
 			av::str::toA(img), av::str::toA(text))) {
 			logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
 				av::str::toA(img), av::str::toA(text));
-			return false;
 		}
 
 		return true;
