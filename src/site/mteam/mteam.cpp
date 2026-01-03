@@ -122,7 +122,7 @@ namespace mteam {
 				form.data[TEXT("team")] = av::str::toT(std::to_string(m_external_source.group_id));
 				form.data[TEXT("imdb")] = m_external_source.imdb_link;
 				char buff[2048];
-				//snprintf(buff, sizeof(buff)-1, "https://movie.douban.com/subject/%s/", av::str::toA(m_external_source.douban_id));
+				snprintf(buff, sizeof(buff)-1, "https://movie.douban.com/subject/%s/", av::str::toA(m_external_source.douban_id).c_str());
 				form.data[TEXT("douban")] = av::str::toT(std::string(buff));
 				form.data[TEXT("labelsNew")] = TEXT("");
 				form.data[TEXT("mediainfo")] = m_external_source.mediainfo_text;
@@ -136,17 +136,17 @@ namespace mteam {
 					form.data[TEXT("labelsNew")] = TEXT("中配");
 				}
 			}
-			av::http::File file;
-			{
-				file.data[TEXT("file")] = torrent_file;
-			}
 			av::http::Header header;
-			{
-				header.data[TEXT("x-api-key")] = m_api_key;
-			}
+			header.data[TEXT("x-api-key")] = m_api_key;
 
+			av::http::File file;
+			file.data[TEXT("file")] = torrent_file;
+			
 			// 上传到网站
-			if (!client.postForm(m_api_url + TEXT("/api/torrent/createOredit"), std::make_tuple(header, form, file), resp)) {
+			auto url = m_api_url + TEXT("/api/torrent/createOredit");
+			//auto url = m_api_url;
+			logi("post url {}", av::str::toA(url));
+			if (!client.postForm(url, std::make_tuple(header, form, file), resp)) {
 				loge("send http failed");
 				return false;
 			}
@@ -319,7 +319,7 @@ namespace mteam {
 		{
 			auto tmp = m_audio_codec.getText();
 			av::str::replace_all(tmp, TEXT(" "), TEXT("."));
-			title_name.push_back(tmp);
+			video_name.push_back(tmp);
 			torrent_name.push_back(tmp);
 		}
 
