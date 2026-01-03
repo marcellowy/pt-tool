@@ -14,6 +14,7 @@
 #include "av_codec_stb_image_jpg.h"
 #include "av_md5.h"
 #include "av_translate.h"
+#include "av_env.h"
 
 #include "config.h"
 #include "parse_name.h"
@@ -22,6 +23,7 @@ namespace fs = std::filesystem;
 
 Publish::Publish()
 {
+    
 }
 
 Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir): m_site(std::move(site)), m_dir(dir) {
@@ -36,11 +38,15 @@ Publish::~Publish()
 bool Publish::start(){
     auto arr = readDir();
     for (auto& tmp : arr) {
-        if (!processFile(tmp)) {
-            logw("process file failed, dir {}, name {} get site type failed", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+        if (tmp.type == SourceType::File) {
+            if (!processFile(tmp)) {
+                logw("process file failed, dir {}, name {} get site type failed", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+                break;
+            }
+            m_site->publish(tmp);
             break;
         }
-        m_site->publish(tmp);
+        // 目录是 AVS 要额外处理
     }
     return false;
 }
@@ -125,6 +131,10 @@ bool Publish::processDir(const std::tstring& path) { return false;  }
 bool Publish::processFile(Source& obj) {
     auto& config = Config::instance();
     logi("process {}", av::str::toA(obj.fullpath));
+
+    obj.source_id = av::media::from(config.mteam.source_id);
+    obj.group_id = config.mteam.group_id;
+    obj.seed_dir = config.mteam.seed_dir;
 
     // site type
     if (!getSiteType(obj)) {
@@ -234,6 +244,20 @@ bool Publish::processFile(Source& obj) {
         return false;
     }
 
+    // 首字母大写
+    auto capitalizeWords = [](std::tstring& s) {
+        bool newWord = true;
+        for (tchar& c : s) {
+            if (std::isspace(c)) {
+                newWord = true;
+            }
+            else if (newWord) {
+                c = std::toupper(static_cast<unsigned char>(c));
+                newWord = false;
+            }
+        }
+    };
+
     // add english name
     if (obj.name_eng.empty()) {
         av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
@@ -241,6 +265,10 @@ bool Publish::processFile(Source& obj) {
             loge("translate failed");
             return false;
         }
+    }
+
+    if (!empty(obj.name_eng)) {
+        capitalizeWords(obj.name_eng);
     }
 
     return true; 
@@ -273,6 +301,11 @@ std::vector<Source> Publish::readDir() {
         //
         if (entry.is_regular_file()) {
             obj.type = SourceType::File;
+#ifdef _UNICODE
+            obj.file_suffix = entry.path().extension().wstring();
+#else
+            obj.file_suffix = entry.path().extension().string();
+#endif
         }
         else if (entry.is_directory()) {
             obj.type = SourceType::Dir;

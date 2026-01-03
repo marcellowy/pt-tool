@@ -88,6 +88,41 @@ namespace av {
 			_Other
 		};
 
+		inline SourceId from(int64_t id) {
+			switch (id) {
+			case static_cast<int64_t>(SourceId::Unknown):
+				return SourceId::Unknown;
+				break;
+			case static_cast<int64_t>(SourceId::_Bluray):
+				return SourceId::_Bluray;
+				break;
+			case static_cast<int64_t>(SourceId::_CD):
+				return SourceId::_CD;
+				break;
+				case static_cast<int64_t>(SourceId::_DVD):
+				return SourceId::_DVD;
+				break;
+			case static_cast<int64_t>(SourceId::_HDTV):
+				return SourceId::_HDTV;
+				break;
+			case static_cast<int64_t>(SourceId::_Encode):
+				return SourceId::_Encode;
+			case static_cast<int64_t>(SourceId::_Remux):
+				return SourceId::_Remux;
+				break;
+			case static_cast<int64_t>(SourceId::_Other):
+				return SourceId::_Other;
+				break; 
+			case static_cast<int64_t>(SourceId::_TV):
+				return SourceId::_TV;
+				break;
+			case static_cast<int64_t>(SourceId::_WebDL):
+				return SourceId::_WebDL;
+				break;
+			}
+			return SourceId::Unknown;
+		}
+
 		struct Source {
 
 			// dirinfo
@@ -96,6 +131,7 @@ namespace av {
 			std::tstring fullpath;						// 完整路径
 			std::tstring fullpath_md5;					// 完整路径md5
 			SourceType type;							// 输入类型
+			std::tstring file_suffix;					// 如果是文件,文件后缀
 
 			int64_t group_id;							// 发布组id, 发布的网站必须有对应的id实现
 			SourceId source_id;							// 影片来源
@@ -103,6 +139,9 @@ namespace av {
 			SourceVideoResolution video_resolution;		// 视频分辨率
 			SourceVideoCodec video_codec;				// 视频格式
 			SourceAudioCodec audio_codec;				// 音频格式
+
+			// seed
+			std::tstring seed_dir;						// 做种目录
 
 			// baseinfo
 			std::tstring year;

@@ -1,6 +1,8 @@
 #include <string>
 #include <codecvt>
 #include <locale>
+#include <ranges>
+#include <string_view>
 
 #include "av_string.h"
 #include "av_log.h"
@@ -297,6 +299,28 @@ namespace av {
             tmp.erase(0, tmp.find_first_not_of(" "));
             tmp.erase(tmp.find_last_not_of(" ") + 1);
             return tmp;
+        }
+
+        std::vector<std::tstring> split(const std::tstring tmp, std::tstring delimiter) {
+            auto s = tmp;
+            std::vector<std::tstring> tokens;
+            size_t pos = 0;
+            std::tstring token;
+            while ((pos = s.find(delimiter)) != std::tstring::npos) {
+                token = s.substr(0, pos);
+                tokens.push_back(token);
+                s.erase(0, pos + delimiter.length());
+            }
+            tokens.push_back(s);
+            return tokens;
+        }
+
+        std::tstring join(const std::vector<std::tstring>& vec, const std::tstring& sep) {
+            std::vector<std::string> tmp;
+            for (auto& t : vec) {
+                tmp.push_back(av::str::toA(t));
+            }
+            return av::str::toT(fmt::format("{}", fmt::join(tmp, av::str::toA(sep))));
         }
 	}
 }

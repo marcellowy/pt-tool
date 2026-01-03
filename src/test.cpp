@@ -45,11 +45,13 @@ int main()
 	auto& config = Config::instance();
 	logi("server start ==================================");
 
-	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>();
-	Publish publish(ptr, TEXT("D:\\Downloads\\tmp2"));
+	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>(
+		config.mteam.api_url, config.mteam.api_key,
+		config.mteam.img_api_url, config.mteam.img_api_key,
+		config.tgbot.token, config.tgbot.chat_id
+	);
+	Publish publish(ptr, config.mteam.seed_dir);
 	publish.start();
 	
-
-
 	return ErrorCode::Success;
 }

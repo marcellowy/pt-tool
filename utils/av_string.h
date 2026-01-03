@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+#include "fmt/ranges.h"
+#include "fmt/format.h"
+
 namespace std {
 #if defined(UNICODE) || defined(_UNICODE)
 	typedef wstring tstring;
@@ -58,8 +61,10 @@ namespace str {
 #else
 		return std::to_string(v);
 #endif // _WIN32
-
 	}
+
+	std::vector<std::tstring> split(const std::tstring s, std::tstring delimiter);
+	std::tstring join(const std::vector<std::tstring>& vec, const std::tstring& sep);
 }
 };
 

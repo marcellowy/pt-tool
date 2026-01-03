@@ -23,10 +23,23 @@ namespace av {
 			return true;
 		}
 
-		bool send_message(const std::string& token, int64_t chat_id, const std::string& text) {
+
+		bool send_local_photo_message(const std::string& token, const std::string& chat_id, const std::string& local_img, const std::string& text) {
 			TgBot::Bot bot(token);
 			try {
-				bot.getApi().sendMessage(chat_id, text);
+				bot.getApi().sendPhoto(chat_id, TgBot::InputFile::fromFile(local_img, "image/png"), text);
+			}
+			catch (TgBot::TgException& e) {
+				loge("{}", e.what());
+				return false;
+			}
+			return true;
+		}
+
+		bool send_net_photo_message(const std::string& token, const std::string& chat_id, const std::string& net_img, const std::string& text) {
+			TgBot::Bot bot(token);
+			try {
+				bot.getApi().sendPhoto(chat_id, net_img, text);
 			}
 			catch (TgBot::TgException& e) {
 				loge("{}", e.what());

@@ -35,6 +35,7 @@ struct Rapidapi {
 };
 
 struct Mteam {
+	std::tstring seed_dir = TEXT("");
 	int64_t group_id = 0;
 	int64_t source_id = 0;
 	std::tstring api_key = TEXT("");

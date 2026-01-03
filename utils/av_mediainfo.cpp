@@ -94,30 +94,36 @@ namespace av {
                                         loge("exception err {}", e.what());
                                         return false;
                                     }
-                                    auto scan_type = av::str::toT(track["ScanType"].get<std::string>());
-                                    if (scan_type == TEXT("Interlaced")) {
-                                        m_video.scan_type = av::media::ScanType::Interlaced;
+                                    if (track.contains("ScanType")) {
+                                        auto scan_type = av::str::toT(track["ScanType"].get<std::string>());
+                                        if (scan_type == TEXT("Interlaced")) {
+                                            m_video.scan_type = av::media::ScanType::Interlaced;
+                                        }
+                                        else if (scan_type == TEXT("Progressive")) {
+                                            m_video.scan_type = av::media::ScanType::Progressive;
+                                        }
+                                        else if (scan_type == TEXT("MBAFF")) {
+                                            m_video.scan_type = av::media::ScanType::MBAFF;
+                                        }
                                     }
-                                    else if (scan_type == TEXT("Progressive")) {
-                                        m_video.scan_type = av::media::ScanType::Progressive;
-                                    }
-                                    else if (scan_type == TEXT("MBAFF")) {
-                                        m_video.scan_type = av::media::ScanType::MBAFF;
-                                    }
-
-                                    auto format = av::str::toT(track["Format"].get<std::string>());
-                                    if (format == TEXT("AVC")) {
-                                        m_video.codec = av::media::SourceVideoCodec::_h264;
-                                    }
-                                    else if (format == TEXT("MPEGVideo")) {
-                                        m_video.codec = av::media::SourceVideoCodec::_mpeg2;
-                                    }
-                                    else if (format == TEXT("HEVC")) {
-                                        m_video.codec = av::media::SourceVideoCodec::_h265;
+                                    if (track.contains("Format")) {
+                                        auto format = av::str::toT(track["Format"].get<std::string>());
+                                        if (format == TEXT("AVC")) {
+                                            m_video.codec = av::media::SourceVideoCodec::_h264;
+                                        }
+                                        else if (format == TEXT("MPEGVideo")) {
+                                            m_video.codec = av::media::SourceVideoCodec::_mpeg2;
+                                        }
+                                        else if (format == TEXT("HEVC")) {
+                                            m_video.codec = av::media::SourceVideoCodec::_h265;
+                                        }
                                     }
                                 }
                                 else if (type == TEXT("Audio")) {
-                                    auto format = av::str::toT(track["Format"].get<std::string>());
+                                    auto format = av::str::toT("");
+                                    if (track.contains("Format")) {
+                                        format = av::str::toT(track["Format"].get<std::string>());
+                                    }
                                     auto format_commercial_if_any = av::str::toT("");
                                     if (track.contains("Format_Commercial_IfAny")) {
                                         format_commercial_if_any = av::str::toT(track["Format_Commercial_IfAny"].get<std::string>());

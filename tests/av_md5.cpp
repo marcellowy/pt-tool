@@ -31,10 +31,11 @@ protected:
 	}
 };
 
-TEST_F(AVMd5Test, DISABLED_md5) {
-//TEST_F(AVMd5Test, md5) {
+//TEST_F(AVMd5Test, DISABLED_md5) {
+TEST_F(AVMd5Test, md5) {
 	std::string a = "123";
 	std::string hash;
 	av::hash::md5(a, hash);
 	logi("{}", hash);
+	//std::abort();
 }

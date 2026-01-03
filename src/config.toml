@@ -15,6 +15,7 @@ key = ""
 host = ""
 
 [mteam]
+seed_dir = ""
 source_id = 0
 group_id = 0
 api_url = ""
