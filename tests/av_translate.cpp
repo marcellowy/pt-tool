@@ -36,9 +36,7 @@ TEST_F(TranslateTest, foo) {
 	SetConsoleCP(CP_UTF8);
 #endif
 	auto& config = Config::instance().rapidapi;
-	//av::translate::Translate t(config.key, config.host);
-	av::translate::Translate t(TEXT("9731f143b9msh5aca6a9aa2372ecp1c55d8jsna19c9817b328"),
-		TEXT("google-translate113.p.rapidapi.com"));
+	av::translate::Translate t(config.key, config.host);
 	std::tstring cc;
 	std::tstring mm = TEXT("中国");
 	if (!t.foo(mm, cc)) {
