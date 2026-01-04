@@ -114,27 +114,38 @@ setup(${PT_TOOL_PROJECT_NAME})
 setup(${PT_TOOL_LIB_NAME})
 
 set(FILES_TO_COPY 
-    ${CMAKE_SOURCE_DIR}/src/config.toml
     ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 
 add_custom_command(
     TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
+    COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>
 )
 
-if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
-    set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev_linux.toml)
-elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
-    set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev_windows.toml)
-endif()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # debug config file
+    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+        set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_linux.toml)
+    elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+        set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_windows.toml)
+    endif()
 
-if (EXISTS ${DEV_CONFIG})
-    add_custom_command(
-        TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config_dev.toml  # COPY TO TARGET DIR
-    )
-endif ()
+    if (EXISTS ${CONFIG_FILE})
+        add_custom_command(
+            TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
+        )
+    endif ()
+else()
+    # release config file
+    set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config.toml)
+    if(EXISTS ${CONFIG_FILE})
+        add_custom_command(
+            TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
+        )
+    endif()
+endif()
 
 ## Add tests
 if(ENABLE_GOOGLE_TEST)
