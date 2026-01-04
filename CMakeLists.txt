@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(ENABLE_TEST "enable google tests" OFF)
+
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
@@ -70,8 +72,6 @@ target_link_libraries(common_deps INTERFACE
     spdlog::spdlog_header_only
     # spdlog::spdlog
     httplib::httplib
-    ${Stb_INCLUDE_DIR}
-    ${FFMPEG_LIBRARY_DIRS}
     ${FFMPEG_LIBRARIES}
     LibtorrentRasterbar::torrent-rasterbar
     TgBot::TgBot
@@ -100,7 +100,12 @@ macro(setup name)
         add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
     endif()
 
-        target_link_libraries(${name} PRIVATE common_deps)
+    target_link_libraries(${name} PRIVATE common_deps)
+    target_include_directories(${name} PRIVATE
+            ${FFMPEG_INCLUDE_DIRS}
+            ${Stb_INCLUDE_DIR}
+    )
+    target_link_directories(${name} PRIVATE ${FFMPEG_LIBRARY_DIRS})
 endmacro()
 
 setup(${PT_TOOL_PROJECT_NAME})
@@ -108,17 +113,24 @@ setup(${PT_TOOL_LIB_NAME})
 
 set(FILES_TO_COPY 
     ${CMAKE_SOURCE_DIR}/src/config.toml
-    ${CMAKE_SOURCE_DIR}/src/config_dev.toml
     ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 
 add_custom_command(
     TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${FILES_TO_COPY}
-        $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
+    COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
 )
 
+set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev.toml)
+if (EXISTS ${DEV_CONFIG})
+    add_custom_command(
+        TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
+    )
+endif ()
+
 ## Add tests
-enable_testing()
-add_subdirectory(tests)
+if(ENABLE_TEST)
+    enable_testing()
+    add_subdirectory(tests)
+endif ()
