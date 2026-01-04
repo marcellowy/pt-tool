@@ -16,7 +16,7 @@ namespace av {
 
 		// 使用当前系统时区, 计算时间过去了多少秒
 		// 时间格式: %Y-%m-%d %H:%M:%S
-		bool diff_now(const std::string& date_time, std::chrono::system_clock::duration& duration);
+		bool diff_now(const std::string& date_time, int64_t& sencods);
 			
 	}
 }

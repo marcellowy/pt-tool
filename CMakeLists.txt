@@ -1,11 +1,14 @@
 # CMakeList.txt: test 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
-cmake_minimum_required (VERSION 3.28)
+cmake_minimum_required (VERSION 3.25)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_STATIC_LIBRARY_FLAGS "")
+set(BUILD_SHARED_LIBS OFF)
+set(BOOST_USE_STATIC_LIBS ON)
 
 option(ENABLE_GOOGLE_TEST "enable google tests" ON)
 
@@ -100,6 +103,8 @@ macro(setup name)
         
     if(WIN32)
         add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
+    else()
+        
     endif()
 
     target_link_libraries(${name} PRIVATE common_deps)

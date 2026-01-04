@@ -32,11 +32,10 @@ protected:
 	}
 };
 
-TEST_F(AVTimeTest, DISABLED_time_diff) {
+TEST_F(AVTimeTest, time_diff) {
 	
-	std::chrono::system_clock::duration d;
-	auto a = av::time::diff_now("2026-01-04 18:00:00", d);
-	std::chrono::duration seconds = std::chrono::duration_cast<std::chrono::seconds>(d);
-
-	logi("secods: {}", seconds.count() / 60);
+	int64_t diff;
+	auto a = av::time::diff_now("2026-01-05 03:11:00", diff);
+	logi("secods: {}", diff);
+	std::abort();
 }

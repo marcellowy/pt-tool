@@ -26,7 +26,8 @@ Thank you to the [vcpkg](https://vcpkg.io/) project.
 
 You can install dependencies on Debian-based distributive with these commands:
 ```shell
-sudo apt install gcc g++ cmake pkg-config autoconf ninja-build python3 nasm
+sudo apt install git gcc g++ cmake pkg-config autoconf ninja-build python3 nasm \
+curl zip unzip tar
 
 git clone https://github.com/microsoft/vcpkg.git
 cd vcpkg && ./bootstrap-vcpkg.sh

@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <fstream>
 #include <chrono>
-#include <format>
 
 #include "boost/locale.hpp"
 
@@ -314,13 +313,13 @@ int Publish::processDir(Source& obj) {
     tvname(obj);
 
     // check time
-    std::chrono::system_clock::duration duration;
-    if (!av::time::diff_now(av::str::toA(avs_info.created_time), duration)) {
+    int64_t diff_time_seconds;
+    if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
         logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
         return -1;
     }
-    std::chrono::duration seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
-    if (seconds.count() < 24 * 3600) { // 24 hours
+
+    if (diff_time_seconds < 24 * 3600) { // 24 hours
         logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
         return ErrorCode::ErrTimeNotReached;
     }

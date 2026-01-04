@@ -1,6 +1,8 @@
 #include <sstream>
 #include <ctime>
-#include <format>
+
+#include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/date_time/local_time/local_time.hpp"
 
 #include "av_time.h"
 #include "av_log.h"
@@ -27,39 +29,34 @@ namespace av {
 			return microseconds.count();
 		}
 		
-		bool diff_now(const std::string& date_time, std::chrono::system_clock::duration& duration) {
-			auto now = std::chrono::system_clock::now();
+		bool diff_now(const std::string& date_time, int64_t& seconds) {
+            using namespace boost::posix_time;
+            using namespace boost::local_time;
 
-			// format input
-			std::istringstream iss(date_time);
-			std::tm tm = {};
-			iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
-			if (iss.fail()) {
-				logw("format {} failed", date_time);
-				return false;
-			}
-			
-			// 
-			std::time_t time = std::mktime(&tm);
-			auto tp = std::chrono::system_clock::from_time_t(time);
-			
-			// tiemzone
-			auto time_zone = std::chrono::current_zone();
+            // 创建一个时区对象（假设使用 UTC）
+            time_zone_ptr zone(new posix_time_zone("UTC+8"));
 
-			//
-			auto zoned_tp = std::chrono::zoned_time{ time_zone, tp };
-			auto zoned_now = std::chrono::zoned_time{ time_zone, now };
+            // 解析给定时间字符串
+            ptime past_time(boost::posix_time::time_from_string(date_time));
 
-			logi("current time: {}", std::format("{:%Y-%m-%d %H:%M:%S}", zoned_now));
-			logi("last time: {}", std::format("{:%Y-%m-%d %H:%M:%S}", zoned_tp));
+            // 获取当前时间
+            ptime current_time = second_clock::universal_time();
 
-			if(zoned_tp.get_sys_time() > zoned_now.get_sys_time()) {
-				logw("{} greater than the current time", date_time);
-				return false;
-			}
+            // 将当前时间转换为当地时区时间
+            local_date_time current_local_time(current_time, zone);
 
-			// compare
-			duration = zoned_now.get_sys_time() - zoned_tp.get_sys_time();
+            // 输出比较的时间
+			//std::cout << "Past time: " << past_time << std::endl;
+            //std::cout << "Current local time: " << current_local_time << std::endl;
+
+			ptime local_ptime = current_local_time.local_time();
+			//std::cout << "aa: " << local_ptime << std::endl;
+            // 计算两个时间点的差值
+            time_duration diff = local_ptime - past_time;
+
+            // 输出时间差，单位是秒
+            // std::cout << "Time difference in seconds: " << diff.total_seconds() << " seconds." << std::endl;
+			seconds = diff.total_seconds();
 			return true;
 		}
 	}
