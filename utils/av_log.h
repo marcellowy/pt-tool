@@ -2,7 +2,7 @@
 #define AV_LOG_H_
 
 #include <memory>
-#include <spdlog/spdlog.h>
+#include "spdlog/spdlog.h"
 
 std::shared_ptr<spdlog::logger> getDefaultLogger();
 

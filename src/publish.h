@@ -11,7 +11,6 @@
 
 using namespace av::media;
 
-
 class Publish
 {
 public:
@@ -32,6 +31,9 @@ protected:
 
 	// 
 	void setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj);
+
+	// 
+	void capitalizeWords(std::tstring& s);
 private:
 	std::tstring m_dir;
 	std::shared_ptr<Site> m_site;

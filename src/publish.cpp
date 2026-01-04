@@ -402,7 +402,20 @@ int Publish::processDir(Source& obj) {
     if (!av::path::remove_file(media_info_text_path)) {
         logw("remove file {} failed", av::str::toA(media_info_text_path));
     }
+
+    // add english name
+    if (obj.name_eng.empty()) {
+        av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
+        if (!t.foo(obj.name_chs, obj.name_eng)) {
+            loge("translate failed");
+            return false;
+        }
+    }
+    if (!empty(obj.name_eng)) {
+        capitalizeWords(obj.name_eng);
+    }
     logi("process dir succ");
+
     return ErrorCode::Success;
 }
 
@@ -494,20 +507,6 @@ bool Publish::processFile(Source& obj) {
         return false;
     }
 
-    // 首字母大写
-    auto capitalizeWords = [](std::tstring& s) {
-        bool newWord = true;
-        for (tchar& c : s) {
-            if (std::isspace(c)) {
-                newWord = true;
-            }
-            else if (newWord) {
-                c = std::toupper(static_cast<unsigned char>(c));
-                newWord = false;
-            }
-        }
-    };
-
     // add english name
     if (obj.name_eng.empty()) {
         av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
@@ -516,7 +515,6 @@ bool Publish::processFile(Source& obj) {
             return false;
         }
     }
-
     if (!empty(obj.name_eng)) {
         capitalizeWords(obj.name_eng);
     }
@@ -624,5 +622,19 @@ void Publish::setResolution(int64_t width, int64_t height, const av::media::Scan
     }
     else if (height <= 480) {
         obj.video_resolution = SourceVideoResolution::_480;
+    }
+}
+
+
+void Publish::capitalizeWords(std::tstring& s) {
+    bool newWord = true;
+    for (tchar& c : s) {
+        if (std::isspace(c)) {
+            newWord = true;
+        }
+        else if (newWord) {
+            c = std::toupper(static_cast<tchar>(c));
+            newWord = false;
+        }
     }
 }

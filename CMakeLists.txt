@@ -123,11 +123,16 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
 )
 
-set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev.toml)
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+    set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev_linux.toml)
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev_windows.toml)
+endif()
+
 if (EXISTS ${DEV_CONFIG})
     add_custom_command(
         TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>  # COPY TO TARGET DIR
+        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config_dev.toml  # COPY TO TARGET DIR
     )
 endif ()
 
