@@ -5,6 +5,8 @@
 #include <chrono>
 #include <format>
 
+#include "boost/locale.hpp"
+
 #include "av_log.h"
 #include "av_string.h"
 #include "av_path.h"
@@ -51,28 +53,28 @@ void from_json(const json& j, AVSInfo& avs) {
     if (j.contains("height") && j["height"].is_number_integer()) {
         avs.height = j["height"].get<int64_t>();
     }
-    if (j.contains("videoFormat") && j["videoFormat"].is_number_integer()) {
+    if (j.contains("videoFormat") && j["videoFormat"].is_string()) {
         avs.video_format = av::str::toT(j["videoFormat"].get<std::string>());
     }
-    if (j.contains("scanType") && j["scanType"].is_number_integer()) {
+    if (j.contains("scanType") && j["scanType"].is_string()) {
         avs.scan_type = av::str::toT(j["scanType"].get<std::string>());
     }
-    if (j.contains("audioFormat") && j["audioFormat"].is_number_integer()) {
+    if (j.contains("audioFormat") && j["audioFormat"].is_string()) {
         avs.audio_format = av::str::toT(j["audioFormat"].get<std::string>());
     }
-    if (j.contains("title") && j["title"].is_number_integer()) {
+    if (j.contains("title") && j["title"].is_string()) {
         avs.title = av::str::toT(j["title"].get<std::string>());
     }
-    if (j.contains("channel") && j["channel"].is_number_integer()) {
+    if (j.contains("channel") && j["channel"].is_string()) {
         avs.channel = av::str::toT(j["channel"].get<std::string>());
     }
-    if (j.contains("year") && j["year"].is_number_integer()) {
+    if (j.contains("year") && j["year"].is_string()) {
         avs.year = av::str::toT(j["year"].get<std::string>());
     }
     if (j.contains("category") && j["category"].is_number_integer()) {
         avs.category = j["category"].get<int64_t>();
     }
-    if (j.contains("createdTime") && j["createdTime"].is_number_integer()) {
+    if (j.contains("createdTime") && j["createdTime"].is_string()) {
         avs.created_time = av::str::toT(j["createdTime"].get<std::string>());
     }
 }
@@ -106,10 +108,11 @@ bool Publish::start(){
                 logw("{} time not reached", av::str::toA(tmp.name));
                 continue;
             }
-            logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-            continue;
+            else if (ret != ErrorCode::Success) {
+                logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+                continue;
+            }
         }
-
         // preprocess succ
         m_site->publish(tmp);
         break;
@@ -196,22 +199,51 @@ int Publish::processDir(Source& obj) {
     auto& config = Config::instance();
     logi("process {}", av::str::toA(obj.fullpath));
 
+    //
+    obj.source_id = av::media::from(config.mteam.source_id);
+    obj.group_id = config.mteam.group_id;
+    obj.seed_dir = config.mteam.seed_dir;
+
     // media_info.json, media_info.txt
     auto media_info_json_path = av::path::append(obj.fullpath, TEXT("media_info.json"));
     auto media_info_text_path = av::path::append(obj.fullpath, TEXT("media_info.txt"));
     if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
         logw("{} or {} not exists", 
             av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
-        return ErrorCode::ErrTimeNotReached;
+        return -1;
     }
 
     // read file
-    std::ifstream ifs;
+    //std::wifstream ifs;
+    
+    std::string json_content;
     try {
-        ifs.open(media_info_json_path, std::ios::in);
-        if (!ifs.is_open()) {
-            logw("open {} failed", av::str::toA(media_info_json_path));
-            return -1;
+        {
+            std::ifstream file(media_info_json_path, std::ios::in);
+            if (!file) {
+                loge("open file {} failed", av::str::toA(media_info_json_path));
+                return - 1;
+            }
+            std::string line;
+            
+            while (std::getline(file, line)) {
+                std::string utf8_text = boost::locale::conv::to_utf<char>(line, "UTF-8");
+                json_content += utf8_text;
+            }
+            file.close();
+        }
+        {
+            std::ifstream file(media_info_text_path, std::ios::in);
+            if (!file) {
+                loge("open file {} failed", av::str::toA(media_info_text_path));
+                return -1;
+            }
+            std::string line;
+            while (std::getline(file, line)) {
+                std::string utf8_text = boost::locale::conv::to_utf<char>(line, "UTF-8");
+                obj.mediainfo_text += av::str::toT(utf8_text);
+            }
+            file.close();
         }
     }
     catch (const std::system_error& e) {
@@ -222,11 +254,7 @@ int Publish::processDir(Source& obj) {
         logw("open {} failed, std::exception {}", av::str::toA(media_info_json_path), e.what());
         return -1;
     }
-    std::tstring json_content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    av::async::Exit exit_ifs([&ifs] {
-        if (ifs.is_open()) ifs.close();
-    });
-
+    logi("json_content: {}", json_content);
     // parse json file
     AVSInfo avs_info;
     try {
@@ -258,16 +286,32 @@ int Publish::processDir(Source& obj) {
         obj.sub_title = avs_info.title;
         obj.year = avs_info.year;
 
-        // TODO: 相当于反向映射回来 这里的category要用外部公共的，
-        // 但是提供的是一个m-team的category,这里硬编码一个转换
-        //obj.category = avs_info.category;
+        // category
+        obj.category = SourceCategory::Unknown; // default
+        if (avs_info.category == 402) {
+            obj.category = SourceCategory::TVSeries;
+        }
+        else if (avs_info.category == 404) {
+            obj.category = SourceCategory::Discover;
+        }
+        else if (avs_info.category == 407) {
+            obj.category = SourceCategory::Sport;
+        }
+        else if (avs_info.category == 419) {
+            obj.category = SourceCategory::Movie;
+        }
     }
     catch (const json::parse_error& e) {
         logw("json::parse_error {}", e.what());
+        return -1;
     }
     catch (const std::exception& e) {
         logw("std::exception {}", e.what());
+        return -1;
     }
+
+    //
+    tvname(obj);
 
     // check time
     std::chrono::system_clock::duration duration;
@@ -309,6 +353,7 @@ int Publish::processDir(Source& obj) {
 
     if (ts_count == 0) {
         // no ts
+        logw("no ts file");
         return -1;
     }
 
@@ -340,16 +385,25 @@ int Publish::processDir(Source& obj) {
             }
             obj.screenshot_local.push_back(tmp);
         }
+        logi("move_image succ");
         return true;
     };
 
     // move img
     if (!move_image()) {
         logw("move image failed");
-        return false;
+        return -1;
     }
 
-    return true;
+    if (!av::path::remove_file(media_info_json_path)) {
+        logw("remove file {} failed", av::str::toA(media_info_json_path));
+    }
+
+    if (!av::path::remove_file(media_info_text_path)) {
+        logw("remove file {} failed", av::str::toA(media_info_text_path));
+    }
+    logi("process dir succ");
+    return ErrorCode::Success;
 }
 
 bool Publish::processFile(Source& obj) {

@@ -16,6 +16,7 @@ C++ library for M-Team TPTV Team
 - LibtorrentRasterbar
 - TgBot
 - Libcurl
+- boost
 
 We use vcpkg to minimize platform-specific differences in dependencies.
 
@@ -39,7 +40,8 @@ export PATH=$VCPKG_ROOT:$PATH
 
 Install Dependencies
 ```shell
-vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp
+vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
+stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
 ```
 
 ## Library installation on Windows via vcpkg
@@ -50,7 +52,8 @@ cd vcpkg && bootstrap-vcpkg.bat
 
 Install Dependencies
 ```shell
-vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp
+vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
+stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
 ```
 Add VCPKG_ROOT=/path/to/your/vcpkg to system environment
 

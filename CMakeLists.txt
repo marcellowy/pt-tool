@@ -49,6 +49,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
 find_package(LibtorrentRasterbar CONFIG REQUIRED)
 find_package(TgBot CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS locale)
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PT_TOOL_PROJECT_NAME} ${SOURCE_FILE})
@@ -75,6 +76,7 @@ target_link_libraries(common_deps INTERFACE
     ${FFMPEG_LIBRARIES}
     LibtorrentRasterbar::torrent-rasterbar
     TgBot::TgBot
+    Boost::locale
 )
 
 macro(setup name)
