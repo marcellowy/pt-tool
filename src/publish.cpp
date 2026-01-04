@@ -335,19 +335,21 @@ int Publish::processDir(Source& obj) {
 
             auto tmp = av::path::append(dir, tmp_name);
             if (!av::path::move_file(img, tmp, true)) {
-                loge("move file {} to {} failed", img, tmp);
-                return -1;
+                loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
+                return false;
             }
             obj.screenshot_local.push_back(tmp);
         }
+        return true;
     };
 
+    // move img
     if (!move_image()) {
         logw("move image failed");
-        return -1;
+        return false;
     }
 
-    return ErrorCode::Success;
+    return true;
 }
 
 bool Publish::processFile(Source& obj) {
