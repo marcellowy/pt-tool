@@ -8,6 +8,7 @@ enum ErrorCode {
     ErrServerParam,                 // 
     ErrServerBind,                  //
     ErrServerListen,                //
+    ErrTimeNotReached,              //
 };
 
 

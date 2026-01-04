@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(ENABLE_TEST "enable google tests" OFF)
+option(ENABLE_GOOGLE_TEST "enable google tests" ON)
 
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
@@ -130,7 +130,10 @@ if (EXISTS ${DEV_CONFIG})
 endif ()
 
 ## Add tests
-if(ENABLE_TEST)
+if(ENABLE_GOOGLE_TEST)
+    message("ENABLE_TEST ON")
     enable_testing()
     add_subdirectory(tests)
+else()
+    message("ENABLE_TEST OFF")
 endif ()

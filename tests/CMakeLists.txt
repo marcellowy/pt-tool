@@ -49,7 +49,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 set(FILES_TO_COPY 
     ${CMAKE_SOURCE_DIR}/tests/test.jpeg
-    ${CMAKE_SOURCE_DIR}/src/config_dev.toml
+    ${CMAKE_SOURCE_DIR}/src/config.toml
     ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 
@@ -59,6 +59,14 @@ add_custom_command(
         ${FILES_TO_COPY}
         $<TARGET_FILE_DIR:${PROJECT_NAME}>  # 可执行文件所在目录
 )
+
+set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev.toml)
+if (EXISTS ${DEV_CONFIG})
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PROJECT_NAME}>  # COPY TO TARGET DIR
+    )
+endif ()
 
 add_test(AllTestsInMain main)
 

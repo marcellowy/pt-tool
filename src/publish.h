@@ -24,11 +24,14 @@ protected:
 	std::vector<Source> readDir();
 	bool getSiteType(Source& obj);
 	
-	bool processDir(const std::tstring& path);
+	int processDir(Source& obj);
 	bool processFile(Source& obj);
 
 	// map tv name
 	void tvname(Source& obj);
+
+	// 
+	void setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj);
 private:
 	std::tstring m_dir;
 	std::shared_ptr<Site> m_site;
