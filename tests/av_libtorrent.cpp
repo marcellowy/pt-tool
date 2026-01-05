@@ -27,6 +27,6 @@ protected:
 	}
 };
 
-TEST_F(LibtorrentTest, DISABLE_create_torrent) {
+TEST_F(LibtorrentTest, DISABLED_create_torrent) {
 	av::libtorrent::create_torrent("D:/abc/中文/新建文本文档.txt", "D:/aa.torrent");
 }

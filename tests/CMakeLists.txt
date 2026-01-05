@@ -34,10 +34,14 @@ else()
         target_compile_definitions(${name} PRIVATE DEBUG=1)
     endif()
 endif()
+
+if(WIN32)
+    add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
+endif()
+
 endmacro()
 
 setup(${PROJECT_NAME})
-
  
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     GTest::gtest 
@@ -48,25 +52,38 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 set(FILES_TO_COPY 
-    ${CMAKE_SOURCE_DIR}/tests/test.jpeg
-    ${CMAKE_SOURCE_DIR}/src/config.toml
     ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${FILES_TO_COPY}
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>  # 可执行文件所在目录
+    COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-set(DEV_CONFIG ${CMAKE_SOURCE_DIR}/src/config_dev.toml)
-if (EXISTS ${DEV_CONFIG})
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${DEV_CONFIG} $<TARGET_FILE_DIR:${PROJECT_NAME}>  # COPY TO TARGET DIR
-    )
-endif ()
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # debug config file
+    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+        set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_linux.toml)
+    elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+        set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_windows.toml)
+    endif()
+
+    if (EXISTS ${CONFIG_FILE})
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/config.toml
+        )
+    endif ()
+else()
+    # release config file
+    set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config.toml)
+    if(EXISTS ${CONFIG_FILE})
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PROJECT_NAME}>/config.toml
+        )
+    endif()
+endif()
 
 add_test(AllTestsInMain main)
 

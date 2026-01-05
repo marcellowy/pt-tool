@@ -7,6 +7,14 @@
 
 #include "av_tgbot.h"
 
+//#define OPEN_TEST
+
+#ifdef OPEN_TEST
+#define DISABLED_(a) a
+#else
+#define DISABLED_(a) DISABLED_##a
+#endif // OPEN_TEST
+
 class TGbotTest : public ::testing::Test {
 protected:
 	void SetUp() override {
@@ -30,20 +38,30 @@ protected:
 	}
 };
 
-TEST_F(TGbotTest, DISABLED_send) {
-//TEST_F(TGbotTest, send) {
+TEST_F(TGbotTest, DISABLED_(send_message)) {
+	auto& config = Config::instance();
+	av::tgbot::send_message(av::str::toA(config.tgbot.token),
+		av::str::toA(config.tgbot.chat_id), "这是普通消息");
+}
+
+TEST_F(TGbotTest, DISABLED_(send_local_photo)) {
+	auto& config = Config::instance();
+	auto img = "C:\\Users\\chadwang\\Downloads\\Telegram Desktop\\tg_image_914412118.png";
+	av::tgbot::send_local_photo_message(av::str::toA(config.tgbot.token),
+		av::str::toA(config.tgbot.chat_id), img, "这是本地图片");
+}
+
+TEST_F(TGbotTest, DISABLED_(send_net_photo)) {
 	// 获取chat_id
 	// https://api.telegram.org/bot{your token}/getUpdates
+	
 	// bot nezha 可以找botfather查
 	auto& config = Config::instance();
 	//av::tgbot::send_message(av::str::toA(config.tgbot.token), av::str::toA(config.tgbot.chat_id), "测试消息");
-	auto img = "E:\\2025\\pt-tool\\out\\build\\x64-debug\\screenshots\\6e3602205c35797e91bf663e0760c180\\screenshot_2.png";
-	av::tgbot::send_local_photo_message(av::str::toA(config.tgbot.token),
-		av::str::toA(config.tgbot.chat_id),img, "测试消息111");
 
-	/*av::tgbot::send_net_photo_message(av::str::toA(config.tgbot.token),
+	av::tgbot::send_net_photo_message(av::str::toA(config.tgbot.token),
 		av::str::toA(config.tgbot.chat_id), 
-		av::str::toA("https://img3.doubanio.com/view/photo/l/public/p2928322397.webp"), "测试消息111");*/
+		av::str::toA("https://img3.doubanio.com/view/photo/l/public/p2928322397.webp"), "这是网络图片");
 	
 	std::abort();
 
