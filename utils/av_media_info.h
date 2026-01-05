@@ -133,12 +133,12 @@ namespace av {
 			SourceType type;							// 输入类型
 			std::tstring file_suffix;					// 如果是文件,文件后缀
 
-			int64_t group_id;							// 发布组id, 发布的网站必须有对应的id实现
-			SourceId source_id;							// 影片来源
-			SourceCategory category;					// 影片分类
-			SourceVideoResolution video_resolution;		// 视频分辨率
-			SourceVideoCodec video_codec;				// 视频格式
-			SourceAudioCodec audio_codec;				// 音频格式
+			int64_t group_id = 0;														// 发布组id, 发布的网站必须有对应的id实现
+			SourceId source_id = SourceId::Unknown;										// 影片来源
+			SourceCategory category = SourceCategory::Unknown;							// 影片分类
+			SourceVideoResolution video_resolution = SourceVideoResolution::Unknown;	// 视频分辨率
+			SourceVideoCodec video_codec = SourceVideoCodec::Unknown;					// 视频格式
+			SourceAudioCodec audio_codec = SourceAudioCodec::Unknown;					// 音频格式
 
 			// seed
 			std::tstring seed_dir;						// 做种目录
@@ -146,11 +146,11 @@ namespace av {
 			// baseinfo
 			std::tstring year;
 			std::tstring name_chs;
+			std::tstring name_eng;
 			std::tstring sub_title;
 			std::tstring title_prefix;
 			std::tstring douban_id;
 			std::tstring season;
-			std::tstring name_eng;
 			std::tstring imdb_link;
 			std::tstring description;
 			std::tstring poster_img;

@@ -112,6 +112,20 @@ bool Publish::start(){
                 continue;
             }
         }
+
+        // check param
+        if (tmp.audio_codec == SourceAudioCodec::Unknown ||
+            tmp.category == SourceCategory::Unknown ||
+            tmp.group_id == 0 ||
+            tmp.name_eng.empty() ||
+            tmp.source_id == SourceId::Unknown ||
+            tmp.video_codec == SourceVideoCodec::Unknown ||
+            tmp.video_resolution == SourceVideoResolution::Unknown
+            ) {
+            logw("{} param error, please check", av::str::toA(tmp.fullpath));
+            continue;
+        }
+
         // preprocess succ
         m_site->publish(tmp);
         break;
@@ -278,7 +292,7 @@ int Publish::processDir(Source& obj) {
 
         // 
         obj.video_codec = SourceVideoCodec::_avs;
-        obj.audio_codec = SourceAudioCodec::_e_ac3_ddp;
+        obj.audio_codec = SourceAudioCodec::_ac3;
 
         obj.title_prefix = avs_info.channel;
         obj.name_chs = avs_info.title;

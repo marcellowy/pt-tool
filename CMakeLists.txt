@@ -18,6 +18,18 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# linker
+find_program(MOLD_PATH mold)
+find_program(LLD_PATH lld)
+
+if(MOLD_PATH)
+    message("link option mold")
+    add_link_options("-fuse-ld=mold")
+elseif(LLD_PATH)
+    message("link option lld")
+    add_link_options("-fuse-ld=lld")
+endif()
+
 set(PT_TOOL_PROJECT_NAME "ptool")
 set(PT_TOOL_LIB_NAME "ptool_lib")
 
