@@ -39,6 +39,8 @@ export VCPKG_ROOT=/path/to/your/vcpkg
 export PATH=$VCPKG_ROOT:$PATH
 ```
 
+if your're using visual studio develop, but build on remote linux system, please set the environment to linux user's home .bashrc file.
+
 Install Dependencies
 ```shell
 cd /path/to/your/vcpkg
@@ -67,7 +69,7 @@ Add cmake toolchain file
 ```
 if you want use static library, vcpkg install add target triplet x64-windows-static (only windows) and add triplet to cmake command
 ```shell
-# windows static library
+# install windows static library
 vcpkg install curl:x64-windows-static ...
 
 # cmake add build param dynamic library
@@ -77,3 +79,4 @@ vcpkg install curl:x64-windows-static ...
 -DVCPKG_TARGET_TRIPLET=x64-windows-static
  
 ```
+
