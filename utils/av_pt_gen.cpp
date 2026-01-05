@@ -47,8 +47,6 @@ namespace av {
 		bool get(const std::tstring& url, Douban& douban) {
 			std::string a;
 			av::http::Client client;
-			client.setConnectTimeoutMS(30000);
-			client.setTimeoutMS(600000);
 			av::http::Response resp;
 			logi("douban url = {}", av::str::toA(url));
 			if (!client.get(url, resp)) {

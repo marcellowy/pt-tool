@@ -84,8 +84,8 @@ namespace av {
 			void parseHeader(const std::string& header_str, Response& response);
 		private:
 			bool m_need_response_headers = false;
-			int64_t m_timeout_ms = 10000;
-			int64_t m_connect_timeout_ms = 5000;
+			int64_t m_timeout_ms = 30000;
+			int64_t m_connect_timeout_ms = 10000;
 		};
 	}
 }

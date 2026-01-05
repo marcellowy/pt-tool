@@ -42,8 +42,6 @@ namespace av {
 			header.data[TEXT("User-Agent")] = TEXT("team tptv");
 			header.data[TEXT("Content-Type")] = TEXT("application/json");
 			av::http::Response resp;
-			client.setConnectTimeoutMS(10000);
-			client.setTimeoutMS(30000);
 			std::tstring tmp = av::str::toT(data);
 			if (!client.post(m_rapidapi_url, header, tmp, resp)) {
 				loge("post data failed");
