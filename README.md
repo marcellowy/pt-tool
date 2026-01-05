@@ -41,7 +41,8 @@ export PATH=$VCPKG_ROOT:$PATH
 
 Install Dependencies
 ```shell
-vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
+cd /path/to/your/vcpkg
+./vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
 stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
 ```
 
@@ -53,7 +54,8 @@ cd vcpkg && bootstrap-vcpkg.bat
 
 Install Dependencies
 ```shell
-vcpkg install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
+cd /path/to/your/vcpkg
+.\vcpkg.exe install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus \
 stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
 ```
 Add VCPKG_ROOT=/path/to/your/vcpkg to system environment
@@ -65,7 +67,7 @@ Add cmake toolchain file
 ```
 if you want use static library, vcpkg install add target triplet x64-windows-static (only windows) and add triplet to cmake command
 ```shell
-# static library
+# windows static library
 vcpkg install curl:x64-windows-static ...
 
 # cmake add build param dynamic library
@@ -75,10 +77,3 @@ vcpkg install curl:x64-windows-static ...
 -DVCPKG_TARGET_TRIPLET=x64-windows-static
  
 ```
-
-## Build
-### Build on Linux
-
-### Build on Windows (Visual Studio)
-
-### Build on Windows (mingw64)
