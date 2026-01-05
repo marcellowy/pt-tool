@@ -1,9 +1,12 @@
 // test.cpp: 定义应用程序的入口点。
 //
 
+#include <csignal>
+#include <atomic>
 
-#include "test.h"
+#include "main.h"
 #include <curl/curl.h>
+#include "httplib.h"
 
 #include "av_async.h"
 #include "av_env.h"
@@ -48,7 +51,17 @@ int main()
 		config.tgbot.token, config.tgbot.chat_id
 	);
 	Publish publish(ptr, config.mteam.seed_dir);
-	publish.start();
-	
+	if (!publish.start()) {
+		return ErrorCode::ErrStartCronFailed;
+	}
+	//publish.task();
+
+	httplib::Server svr;
+	if (!svr.bind_to_port(av::str::toA(config.server.host), config.server.port)) {
+		logw("bind failed");
+		return ErrorCode::ErrOpenLogFailed;
+	}
+	svr.listen_after_bind();
+
 	return ErrorCode::Success;
 }

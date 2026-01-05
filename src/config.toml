@@ -23,6 +23,14 @@ api_key = ""
 img_api_url = ""
 img_api_key = ""
 
+[[mteam.publish_cycle.pattern]]
+name = "1"
+pattern = "0 0 */3 * * *"
+
+[[mteam.publish_cycle.pattern]]
+name = "2"
+pattern = "0 30 1-23/3 * * *"
+
 [tgbot]
 token = ""
 chat_id = ""

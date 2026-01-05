@@ -30,8 +30,8 @@ elseif(LLD_PATH)
     add_link_options("-fuse-ld=lld")
 endif()
 
-set(PT_TOOL_PROJECT_NAME "ptool")
-set(PT_TOOL_LIB_NAME "ptool_lib")
+set(PT_TOOL_PROJECT_NAME "pt-tool")
+set(PT_TOOL_LIB_NAME "pt-tool_lib")
 
 project (${PT_TOOL_PROJECT_NAME})
 
@@ -43,6 +43,10 @@ file(GLOB SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/utils/*.h
     ${CMAKE_SOURCE_DIR}/utils/*.cpp
 )
+
+# remove main from lib
+list(REMOVE_ITEM SOURCE_FILE "${CMAKE_SOURCE_DIR}/src/main.cpp")
+
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rdparty/include
@@ -66,7 +70,10 @@ find_package(LibtorrentRasterbar CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS locale)
 
 # 将源代码添加到此项目的可执行文件。
-add_executable(${PT_TOOL_PROJECT_NAME} ${SOURCE_FILE})
+add_executable(${PT_TOOL_PROJECT_NAME} 
+    ${SOURCE_FILE}
+    "${CMAKE_SOURCE_DIR}/src/main.cpp"
+)
 add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
 
 set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES 

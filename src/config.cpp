@@ -61,6 +61,20 @@ bool Config::parse(const std::tstring& toml_file) {
 		// PTGen
 		ptgen.url = av::str::toT(config["ptgen"]["url"].value_or(""));
 
+		// publish cycle
+		if (auto* patterns = config.at_path("mteam.publish_cycle.pattern").as_array()) {
+			for (auto&& node : *patterns) {
+				if (auto* tbl = node.as_table()) {
+					PublishCycle cycle;
+					std::string_view name = (*tbl)["name"].as_string()->get();
+					std::string_view cron = (*tbl)["pattern"].as_string()->get();
+					cycle.name = av::str::toT(std::string(name));
+					cycle.pattern = av::str::toT(std::string(cron));
+					mteam.publish_cycle.push_back(cycle);
+
+				}
+			}
+		}
 	}
 	catch (const toml::parse_error& e) {
 		loge("parse {} {} failed, err {}", 

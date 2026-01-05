@@ -18,10 +18,12 @@ namespace av {
 	namespace cron {
 		class Cron {
 		public:
+			Cron() = default;
 			Cron(const std::tstring& name, const std::tstring& cronexpr, std::function<void()> task);
+			void addCron(const std::tstring& name, const std::tstring& cronexpr, std::function<void()> task);
 			~Cron();
 
-			void start();
+			bool start();
 			void stop();
 		private:
 			void run();
@@ -29,6 +31,7 @@ namespace av {
 		private:
 			std::tstring name_;
 			std::tstring cronexpr_;
+			ocron::cronexpr expr_;
 			std::function<void()> task_;
 			std::mutex mtx_;
 			std::condition_variable cv_;

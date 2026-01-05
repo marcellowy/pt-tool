@@ -23,6 +23,7 @@
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
+
 #include "config.h"
 #include "parse_name.h"
 
@@ -92,7 +93,8 @@ Publish::~Publish()
     stop();
 }
 
-bool Publish::start(){
+void Publish::task() {
+
     auto arr = readDir();
     for (auto& tmp : arr) {
         if (tmp.type == SourceType::File) {
@@ -130,10 +132,28 @@ bool Publish::start(){
         m_site->publish(tmp);
         break;
     }
-    return false;
+}
+
+bool Publish::start(){
+    auto& config = Config::instance();
+    for (auto& cycle : config.mteam.publish_cycle) {
+        auto c = std::make_shared<av::cron::Cron>(cycle.name, cycle.pattern, [this] {
+            logi("do task");
+            task();
+        });
+        if (!c->start()) {
+            logw("add cron {} failed!", av::str::toA(cycle.name));
+            return false;
+        }
+        m_cron.push_back(c);
+    }
+    return true;
 }
 
 bool Publish::stop() {
+    for (auto& c: m_cron) {
+        c->stop();
+    }
     return true;
 }
 

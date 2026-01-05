@@ -7,7 +7,9 @@
 
 #include "defined.h"
 #include "av_media_info.h"
+#include "av_cron.h"
 #include "site.h"
+
 
 using namespace av::media;
 
@@ -17,6 +19,7 @@ public:
 	Publish();
 	Publish(std::shared_ptr<Site>& site, const std::tstring& dir);
 	~Publish();
+	void task();
 	bool start();
 	bool stop();
 protected:
@@ -34,9 +37,11 @@ protected:
 
 	// 
 	void capitalizeWords(std::tstring& s);
+
 private:
 	std::tstring m_dir;
 	std::shared_ptr<Site> m_site;
+	std::vector<std::shared_ptr<av::cron::Cron>> m_cron;
 };
 
 

@@ -9,6 +9,7 @@ enum ErrorCode {
     ErrServerBind,                  //
     ErrServerListen,                //
     ErrTimeNotReached,              //
+    ErrStartCronFailed,
 };
 
 

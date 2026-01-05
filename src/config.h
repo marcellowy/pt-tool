@@ -34,6 +34,11 @@ struct Rapidapi {
 	std::tstring host = TEXT("");
 };
 
+struct PublishCycle {
+	std::tstring name;
+	std::tstring pattern;
+};
+
 struct Mteam {
 	std::tstring seed_dir = TEXT("");
 	int64_t group_id = 0;
@@ -42,6 +47,7 @@ struct Mteam {
 	std::tstring api_url = TEXT("");
 	std::tstring img_api_key = TEXT("");
 	std::tstring img_api_url = TEXT("");
+	std::vector<PublishCycle> publish_cycle;
 };
 
 struct TGBot {
@@ -52,6 +58,8 @@ struct TGBot {
 struct PTGen {
 	std::tstring url = TEXT("");
 };
+
+
 
 class Config: public av::Singleton<Config> {
 	friend class Singleton<Config>;
