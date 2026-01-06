@@ -13,8 +13,6 @@ namespace av {
 			~Qbittorrent() = default;
 			bool login();
 		private:
-			bool post(const std::tstring& url, const std::map<std::tstring, std::tstring>& body);
-		private:
 			std::tstring m_api_url;
 			std::tstring m_username;
 			std::tstring m_password;

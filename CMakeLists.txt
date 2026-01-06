@@ -18,6 +18,11 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# FindBoost.cmake
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
 # linker
 find_program(MOLD_PATH mold)
 find_program(LLD_PATH lld)
@@ -30,8 +35,9 @@ elseif(LLD_PATH)
     add_link_options("-fuse-ld=lld")
 endif()
 
-set(PT_TOOL_PROJECT_NAME "pt-tool")
-set(PT_TOOL_LIB_NAME "pt-tool_lib")
+set(PT_TOOL_NAME "pt-tool")
+set(PT_TOOL_PROJECT_NAME "pttool")
+set(PT_TOOL_LIB_NAME "pttool_lib")
 
 project (${PT_TOOL_PROJECT_NAME})
 
@@ -67,7 +73,8 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(httplib CONFIG REQUIRED)
 find_package(LibtorrentRasterbar CONFIG REQUIRED)
-find_package(Boost REQUIRED COMPONENTS locale)
+#find_package(Boost REQUIRED COMPONENTS locale)
+find_package(Boost 1.70 REQUIRED locale)
 
 # 将源代码添加到此项目的可执行文件。
 add_executable(${PT_TOOL_PROJECT_NAME} 
@@ -77,7 +84,11 @@ add_executable(${PT_TOOL_PROJECT_NAME}
 add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
 
 set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES 
-    OUTPUT_NAME ${PT_TOOL_PROJECT_NAME}
+    OUTPUT_NAME ${PT_TOOL_NAME}
+)
+
+set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES
+    OUTPUT_NAME ${PT_TOOL_NAME}
 )
 
 add_library(common_deps INTERFACE)
