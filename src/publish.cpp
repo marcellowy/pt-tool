@@ -46,6 +46,14 @@ struct AVSInfo {
 
 static void from_json(const json& j, AVSInfo& avs);
 
+static std::tstring getTmpDir(Source& obj);
+
+std::tstring getTmpDir(Source& obj) {
+    std::tstring dir = av::path::get_exe_dir();
+    dir = av::path::append(dir, TEXT("tmp"));
+    dir = av::path::append(dir, obj.fullpath_md5);
+}
+
 void from_json(const json& j, AVSInfo& avs) {
     if (j.contains("width") && j["width"].is_number_integer()) {
         avs.width = j["width"].get<int64_t>();
@@ -129,7 +137,13 @@ void Publish::task() {
         }
 
         // preprocess succ
-        m_site->publish(tmp);
+        if (m_site->publish(tmp)) {
+            auto dir = getTmpDir(tmp);
+            if (av::path::remove_dir_all(dir)) {
+                logi("clean tmp dir {} succ", av::str::toA(dir));
+            }
+        }
+
         break;
     }
 }
@@ -392,9 +406,7 @@ int Publish::processDir(Source& obj) {
 
     auto move_image = [&obj, &img_vec]() -> bool {
         // create dir
-        std::tstring dir = av::path::get_exe_dir();
-        dir = av::path::append(dir, TEXT("screenshots"));
-        dir = av::path::append(dir, obj.fullpath_md5);
+        auto dir = getTmpDir(obj);
         if (!av::path::exists(dir)) {
             if (!av::path::create_dir(dir)) {
                 loge("create dir {} failed", av::str::toA(dir));
@@ -516,11 +528,8 @@ bool Publish::processFile(Source& obj) {
     const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
     int capture_count = 0;
     av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
-        
         // screenshots dir
-        std::tstring dir = av::path::get_exe_dir();
-        dir = av::path::append(dir, TEXT("screenshots"));
-        dir = av::path::append(dir, obj.fullpath_md5);
+        auto dir = getTmpDir(obj);
         if (!av::path::create_dir(dir)) {
             loge("create dir {} failed", av::str::toA(dir));
             return;

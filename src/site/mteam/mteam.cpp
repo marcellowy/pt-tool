@@ -10,6 +10,7 @@
 #include "av_libtorrent.h"
 #include "av_http.h"
 #include "av_tgbot.h"
+#include "av_async.h"
 
 #include "nlohmann/json.hpp"
 
@@ -49,10 +50,9 @@ namespace mteam {
 
 	bool Mteam::publish(const av::media::Source& source) {
 		m_external_source = source;
-		//m_category = std::make_shared<Category>(m_source.category);
 		Category category(source.category);
-		//CategoryId category_id = category.getid();
-		
+
+		// all names
 		std::tstring torrent_dir;
 		std::tstring title;
 		std::tstring video_filename;
@@ -94,14 +94,19 @@ namespace mteam {
 				return false;
 			}
 		}
-		
-		
+				
 		// 制作种子文件
 		auto torrent_file = av::path::append(m_external_source.dir, torrent_filename);
 		if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(torrent_file))) {
 			loge("create torrent file failed, {}, {}", av::str::toA(seed_dir), av::str::toA(torrent_file));
 			return false;
 		}
+		av::async::Exit exit_delete_torrent_file([&torrent_file] {
+			if (av::path::remove_file(torrent_file)) {
+				logi("clean {} succ", av::str::toA(torrent_file));
+			}
+		});
+		
 
 		// 上传图片
 		std::vector<std::tstring> img_url;
@@ -331,6 +336,11 @@ namespace mteam {
 			torrent_name.push_back(m_external_source.season);
 			torrent_dir_.push_back(TEXT("Complete"));
 		}
+
+		title_name.push_back(m_external_source.year);
+		video_name.push_back(m_external_source.year);
+		torrent_name.push_back(m_external_source.year);
+		torrent_dir_.push_back(m_external_source.year);
 
 		auto source_text = m_source.getText();
 		if (!source_text.empty()) {
