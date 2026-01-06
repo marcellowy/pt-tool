@@ -5,7 +5,7 @@
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif
+#endif // WIN32_LEAN_AND_MEAN
 
 #include "Windows.h"
 #else
@@ -26,4 +26,4 @@
 
 #endif // _WIN32
 
-#endif
+#endif // AV_BASE_H_
