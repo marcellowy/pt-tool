@@ -46,12 +46,13 @@ struct AVSInfo {
 
 static void from_json(const json& j, AVSInfo& avs);
 
-static std::tstring getTmpDir(Source& obj);
+static std::tstring getTmpDir(const Source& obj);
 
-std::tstring getTmpDir(Source& obj) {
+std::tstring getTmpDir(const Source& obj) {
     std::tstring dir = av::path::get_exe_dir();
     dir = av::path::append(dir, TEXT("tmp"));
     dir = av::path::append(dir, obj.fullpath_md5);
+    return dir;
 }
 
 void from_json(const json& j, AVSInfo& avs) {
