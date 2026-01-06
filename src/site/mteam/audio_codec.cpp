@@ -83,6 +83,9 @@ namespace mteam {
 			case av::media::SourceAudioCodec::_other:
 				return CodecId::_other;
 				break;
+			case av::media::SourceAudioCodec::Unknown:
+				return CodecId::Unknown;
+				break;
 			}
 			return CodecId::Unknown;
 		}

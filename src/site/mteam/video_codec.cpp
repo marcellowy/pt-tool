@@ -64,6 +64,11 @@ namespace mteam {
 			case av::media::SourceVideoCodec::_cavs:
 				return CodecId::_cavs;
 				break;
+			case av::media::SourceVideoCodec::Unknown:
+				return CodecId::Unknown;
+				break;
+			default:
+				break;
 			}
 			return CodecId::Unknown;
 		}

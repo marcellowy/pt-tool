@@ -59,6 +59,11 @@ namespace mteam {
 			case av::media::SourceVideoResolution::_8k:
 				return ResolutionId::_8k;
 				break;
+			case av::media::SourceVideoResolution::Unknown:
+				return ResolutionId::Unknown;
+				break;
+			default:
+				break;
 			}
 			return ResolutionId::Unknown;
 		}

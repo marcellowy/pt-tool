@@ -20,7 +20,5 @@ namespace mteam {
             }
             return groupMapString[static_cast<int64_t>(Id::Unknown)];
         }
-
-
     }
 }

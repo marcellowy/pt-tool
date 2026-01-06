@@ -55,6 +55,9 @@ namespace mteam {
 		case av::media::SourceId::_WebDL:
 			return SourceId::_WebDL;
 			break;
+		case av::media::SourceId::Unknown:
+			return SourceId::Unknown;
+			break;
 		default:
 			break;
 		}
