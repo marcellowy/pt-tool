@@ -29,6 +29,7 @@ namespace av {
 
 		bool send_local_photo_message(const std::string& token, const std::string& chat_id, const std::string& local_img, const std::string& text) {
 			av::http::Client client;
+			client.setRetryTimes(2); // retry 2 times
 			av::http::Form form;
 			form.data[TEXT("chat_id")] = av::str::toT(chat_id);
 			form.data[TEXT("caption")] = av::str::toT(text);
