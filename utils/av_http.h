@@ -44,6 +44,7 @@ namespace av {
 			Response() = default;
 			~Response() = default;
 			bool isOk();
+			bool isTimeout();
 		};
 
 		class Client {
@@ -79,6 +80,8 @@ namespace av {
 		public:
 			void setTimeoutMS(int64_t timeout);
 			void setConnectTimeoutMS(int64_t timeout);
+			void setRetryTimes(int64_t times);
+			void setUserAgent(const std::tstring& user_agent);
 		private:
 			bool request(const Method& method, const std::tstring& url, const Header& header, const RequestBody& request, Response& response);
 			void parseHeader(const std::string& header_str, Response& response);
@@ -86,6 +89,8 @@ namespace av {
 			bool m_need_response_headers = false;
 			int64_t m_timeout_ms = 30000;
 			int64_t m_connect_timeout_ms = 10000;
+			int64_t m_retry_times = 0;
+			std::tstring m_user_agent = TEXT("");
 		};
 	}
 }

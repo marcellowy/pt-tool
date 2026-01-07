@@ -12,6 +12,10 @@ namespace av {
 			return code == 200;
 		}
 
+		bool Response::isTimeout() {
+			return code == static_cast<int64_t>(CURLE_OPERATION_TIMEDOUT);
+		}
+
 		size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp);
 
 		size_t headerCallback(void* ptr, size_t size, size_t nmemb, std::string* data);
@@ -22,6 +26,14 @@ namespace av {
 		
 		void Client::setConnectTimeoutMS(int64_t timeout) {
 			m_connect_timeout_ms = timeout;
+		}
+		
+		void Client::setRetryTimes(int64_t times) {
+			m_retry_times = times;
+		}
+
+		void Client::setUserAgent(const std::tstring& user_agent) {
+			m_user_agent = user_agent;
 		}
 
 		bool Client::get(const std::tstring& url, Response& response) {
@@ -92,10 +104,7 @@ namespace av {
 			
 			// add form data
 			rb.form = form.data;
-
-			// add default User-Agent
-			header.data[TEXT("User-Agent")] = TEXT("M-TEAM TPTV PT-TOOL");
-
+			
 			return request(Method::Post, url, header, rb, response);
 		}
 
@@ -103,7 +112,6 @@ namespace av {
 
 			response.code = 0;
 			response.body = TEXT("");
-			logi("libcurl version: {}", curl_version());
 			CURL* curl = curl_easy_init();
 			if (!curl) {
 				logw("curl_easy_init failed");
@@ -124,6 +132,18 @@ namespace av {
 				logi("add header {}", av::str::toA(s.str()));
 				hds = curl_slist_append(hds, av::str::toA(s.str()).c_str());
 			}
+
+			// add private header
+			std::tstringstream user_agent;
+			user_agent << "User-Agent: MTeam TPTV PT-TOOL";
+			if (!m_user_agent.empty()) {
+				user_agent.str(TEXT(""));
+				user_agent << "User-Agent: " << m_user_agent;
+			}
+			logi("add header {}", av::str::toA(user_agent.str()));
+			hds = curl_slist_append(hds, av::str::toA(user_agent.str()).c_str());
+
+			// add hds to curl
 			if (hds != NULL) {
 				curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hds);
 			}
@@ -152,6 +172,7 @@ namespace av {
 				{
 					tmp_postdata = av::str::toA(request.body);
 					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, tmp_postdata.c_str());
+					logi("add post data {}", tmp_postdata);
 				}
 				else if (request.type == RequestBodyType::Form) {
 					curl_mimepart* part = NULL;
@@ -160,6 +181,7 @@ namespace av {
 						part = curl_mime_addpart(mime);
 						curl_mime_name(part, av::str::toA(data.first).c_str() );
 						curl_mime_data(part, av::str::toA(data.second).c_str(), CURL_ZERO_TERMINATED);
+						logi("add form {} = {}", av::str::toA(data.first), av::str::toA(data.second));
 					}
 
 					// add file
@@ -167,6 +189,7 @@ namespace av {
 						part = curl_mime_addpart(mime);
 						curl_mime_name(part, av::str::toA(f.first).c_str() );
 						curl_mime_filedata(part, av::str::toA(f.second).c_str() );
+						logi("add file {} = {}", av::str::toA(f.first), av::str::toA(f.second));
 					}
 
 					curl_easy_setopt(curl, CURLOPT_MIMEPOST, mime);
@@ -193,9 +216,27 @@ namespace av {
 			curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, static_cast<long>(m_connect_timeout_ms));  // Timeout for connection phase (seconds)
 
 			// 
-			CURLcode res = curl_easy_perform(curl);
-			if (res != CURLE_OK) {
+			int max_retry_times = m_retry_times + 1;
+			bool peform_result = false;
+			do {
+				logi("try send {}", av::str::toA(url));
+				CURLcode res = curl_easy_perform(curl);
+				if (res == CURLE_OK) {
+					peform_result = true;
+					logi("http send ok");
+					break;
+				}
 				loge("curl_easy_perform failed, err: {}", curl_easy_strerror(res));
+
+				// timeout
+				if (res == CURLE_OPERATION_TIMEDOUT) {
+					response.code = static_cast<int64_t>(CURLE_OPERATION_TIMEDOUT);
+				}
+				max_retry_times--;
+			} while (max_retry_times > 0);
+
+			// check result
+			if (!peform_result) {
 				return false;
 			}
 
@@ -207,7 +248,7 @@ namespace av {
 			{
 				parseHeader(response_header, response);
 			}
-			logd("response code {} resonse header \n{} response body \n{}", response_code, response_header, response_string);
+			logd("response code {} \nresponse body \n{}", response_code, response_string);
 
 			// set response
 			response.code = static_cast<int64_t>(response_code);

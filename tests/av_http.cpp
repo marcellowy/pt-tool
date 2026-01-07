@@ -27,14 +27,15 @@ protected:
 	}
 };
 
-TEST_F(AVHttpTest, DISABLED_post_form) {
+TEST_F(AVHttpTest, post_form) {
 	av::http::Client client;
+	client.setRetryTimes(2);
 	av::http::Response resp;
 	av::http::Header header;
 	header.data[TEXT("User-Agent")] = TEXT("M-team TPTV PT Tools");
 	header.data[TEXT("Content-type")] = TEXT("application/json");
 	av::http::FormData form;
-	if (!client.postForm(TEXT("https://api.m-team.cc/api/torrent/createOredit"), 
+	if (!client.postForm(TEXT("http://111.22.11.11/api/torrent/createOredit"), 
 		std::make_tuple(header, form), resp)) {
 		loge("");
 	}
