@@ -19,7 +19,7 @@ namespace av {
 			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendMessage", av::str::toA(token).c_str());
 
 			// http
-			if (!client.postForm(av::str::toT(buff), form, resp)) {
+			if (!client.postForm(av::str::toT(std::string(buff)), form, resp)) {
 				logw("post form failed");
 				return false;
 			}
@@ -48,7 +48,7 @@ namespace av {
 			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
 
 			// http
-			if (!client.postForm(av::str::toT(buff), std::make_tuple(form, file), resp)) {
+			if (!client.postForm(av::str::toT(std::string(buff)), std::make_tuple(form, file), resp)) {
 				logw("post form failed");
 				return false;
 			}
@@ -74,7 +74,7 @@ namespace av {
 			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
 
 			// http
-			if (!client.postForm(av::str::toT(buff), form, resp)) {
+			if (!client.postForm(av::str::toT(std::string(buff)), form, resp)) {
 				logw("post form failed");
 				return false;
 			}
