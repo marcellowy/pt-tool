@@ -11,13 +11,15 @@ namespace av {
 			form.data[TEXT("chat_id")] = av::str::toT(chat_id);
 			form.data[TEXT("text")] = av::str::toT(text);
 
+			// response
 			av::http::Response resp;
 
-			std::string url;
-			url.resize(3172);
-			snprintf(url.data(), url.size(), "https://api.telegram.org/bot%s/sendMessage", av::str::toA(token).c_str());
+			// url buff
+			char buff[1024];
+			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendMessage", av::str::toA(token).c_str());
 
-			if (!client.postForm(av::str::toT(url), form, resp)) {
+			// http
+			if (!client.postForm(av::str::toT(buff), form, resp)) {
 				logw("post form failed");
 				return false;
 			}
@@ -37,13 +39,16 @@ namespace av {
 			av::http::Header header;
 			av::http::File file;
 			file.data[TEXT("photo")] = av::str::toT(local_img);
+			
+			// response
 			av::http::Response resp;
 
-			std::string url;
-			url.resize(3172);
-			snprintf(url.data(), url.size(), "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
+			// url buff
+			char buff[1024];
+			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
 
-			if (!client.postForm(av::str::toT(url), std::make_tuple(form, file), resp)) {
+			// http
+			if (!client.postForm(av::str::toT(buff), std::make_tuple(form, file), resp)) {
 				logw("post form failed");
 				return false;
 			}
@@ -61,14 +66,15 @@ namespace av {
 			form.data[TEXT("photo")] = av::str::toT(net_img);
 			form.data[TEXT("caption")] = av::str::toT(text);
 
-			av::http::Header header;
+			// resposne
 			av::http::Response resp;
 
-			std::string url;
-			url.resize(3172);
-			snprintf(url.data(), url.size(), "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
+			// url buff
+			char buff[1024];
+			snprintf(buff, sizeof(buff) - 1, "https://api.telegram.org/bot%s/sendPhoto", av::str::toA(token).c_str());
 
-			if (!client.postForm(av::str::toT(url), form, resp)) {
+			// http
+			if (!client.postForm(av::str::toT(buff), form, resp)) {
 				logw("post form failed");
 				return false;
 			}

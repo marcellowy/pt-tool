@@ -66,3 +66,32 @@ TEST_F(TGbotTest, DISABLED_(send_net_photo)) {
 	std::abort();
 
 }
+
+
+TEST_F(TGbotTest, DISABLED_(write_byte)) {
+	// 获取chat_id
+	// https://api.telegram.org/bot{your token}/getUpdates
+
+	// bot nezha 可以找botfather查
+	auto& config = Config::instance();
+	//av::tgbot::send_message(av::str::toA(config.tgbot.token), av::str::toA(config.tgbot.chat_id), "测试消息");
+
+	/*av::tgbot::send_net_photo_message(av::str::toA(config.tgbot.token),
+		av::str::toA(config.tgbot.chat_id),
+		av::str::toA("https://img3.doubanio.com/view/photo/l/public/p2928322397.webp"), "这是网络图片");*/
+
+	char buff[1024];
+	snprintf(buff, sizeof(buff), "1,2,3 %s", "aaa");
+
+	logi("{}", av::str::toA(buff));
+
+	std::string test;
+	test.resize(1024);
+	snprintf(test.data(), test.size() - 1, "1,2,3 %s", "aaa");
+	//test.resize(strlen(test.c_str()));
+
+	logi("{}", av::str::toA(test));
+
+	std::abort();
+
+}
