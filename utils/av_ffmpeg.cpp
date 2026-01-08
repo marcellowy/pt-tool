@@ -104,10 +104,12 @@ namespace av {
                     if (pkt->stream_index == video_stream_index) {
                         if (avcodec_send_packet(codec_ctx, pkt) == 0) {
                             if (avcodec_receive_frame(codec_ctx, frame) == 0) {
-                                if (!external_codec.codec(frame)) {
-                                    loge("external_codec.codec failed!");
+                                if(frame->pict_type == AV_PICTURE_TYPE_I){ // use I-frame
+                                    if (!external_codec.codec(frame)) {
+                                        loge("external_codec.codec failed!");
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }

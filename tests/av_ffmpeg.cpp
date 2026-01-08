@@ -31,8 +31,8 @@ protected:
 };
 
 TEST_F(FFmpegTest, DISABLED_captureFrame_stb) {
-
-	const std::vector<int64_t> tt = { 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120 };
+	// 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120
+	const std::vector<int64_t> tt = { 5,10 };
 	int64_t count = 0;
 
 	av::codec::StbPNG stbPng([&count](void* data, int size) {
@@ -43,7 +43,7 @@ TEST_F(FFmpegTest, DISABLED_captureFrame_stb) {
 		count++;
 	});
 
-	if (!av::ffmpeg::captureFrame(TEXT("/home/marcello/tmp/中.mp4"), tt, stbPng)) {
+	if (!av::ffmpeg::captureFrame(TEXT("C:\\Users\\chadwang\\Videos\\2026-01-08_09-55-11.ts"), tt, stbPng)) {
 		loge("captureFrame failed!!!");
 	}
 }
