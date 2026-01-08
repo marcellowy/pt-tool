@@ -55,9 +55,16 @@ cd vcpkg && bootstrap-vcpkg.bat
 ```
 
 Install Dependencies
+Powershell
 ```shell
 cd /path/to/your/vcpkg
-.\vcpkg.exe install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus
+.\vcpkg.exe install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus `
+stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
+```
+Cmd
+```shell
+cd /path/to/your/vcpkg
+.\vcpkg.exe install curl ffmpeg libzen libmediainfo openssl gtest croncpp tomlplusplus ^
 stb nlohmann-json spdlog cpp-httplib libtorrent tgbot-cpp boost-locale
 ```
 Add VCPKG_ROOT=/path/to/your/vcpkg to system environment
