@@ -143,9 +143,12 @@ void Publish::task() {
             if (av::path::remove_dir_all(dir)) {
                 logi("clean tmp dir {} succ", av::str::toA(dir));
             }
+
+            // if succ break,
+            break;
         }
 
-        break;
+        // if incorrect, just use next file keep publish
     }
 }
 

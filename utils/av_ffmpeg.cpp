@@ -97,7 +97,7 @@ namespace av {
                 }
 
                 avcodec_flush_buffers(codec_ctx);
-                av_seek_frame(fmt_ctx, -1, timebase, AVSEEK_FLAG_BACKWARD); // AVSEEK_FLAG_BACKWARD to key frame
+                av_seek_frame(fmt_ctx, -1, timebase, AVSEEK_FLAG_BACKWARD);
 
                 //
                 while (av_read_frame(fmt_ctx, pkt) >= 0) {
