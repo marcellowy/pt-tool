@@ -5,14 +5,14 @@ namespace mteam {
 		static std::map<CodecId, std::tstring> CodecIdMapString = {
 			{CodecId::Unknown, TEXT("Other")},
 			{CodecId::_aac, TEXT("AAC")},
-			{CodecId::_ac3, TEXT("AC3(DD)")},
+			{CodecId::_ac3, TEXT("AC3")},// AC3(DD)
 			{CodecId::_dts, TEXT("DTS")},
 			{CodecId::_dts_hd_ma, TEXT("DTS-HD MA")},
-			{CodecId::_e_ac3_ddp, TEXT("E-AC3(DDP)")},
-			{CodecId::_e_ac3_atoms, TEXT("E-AC3 Atoms(DDP Atoms)")},
+			{CodecId::_e_ac3_ddp, TEXT("E-AC3")}, // E-AC3(DDP)
+			{CodecId::_e_ac3_atoms, TEXT("E-AC3 Atoms")}, // E-AC3 Atoms(DDP Atoms)
 			{CodecId::_true_hd, TEXT("TrueHD)")},
 			{CodecId::_true_hd_atmos, TEXT("TrueHD Atmos")},
-			{CodecId::_lpcm, TEXT("LPCM/PCM")},
+			{CodecId::_lpcm, TEXT("LPCM/PCM")}, // LPCM/PCM
 			{CodecId::_wav, TEXT("WAV")},
 			{CodecId::_flac, TEXT("FLAC")},
 			{CodecId::_ape, TEXT("APE")},
