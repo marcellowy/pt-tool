@@ -62,7 +62,7 @@ namespace av {
                 logw("open {} failed, info {}", av::str::toA(m_video_path), av::str::toA(info));
                 return false;
             }
-            MI.Option(__T("Complete"), __T("1"));
+            MI.Option(__T("Complete_Get"), __T("1"));
             MI.Option(__T("Output"), __T("JSON"));
             m_json = av::str::toT(MI.Inform());
             MI.Option(__T("Output"), __T("TEXT"));

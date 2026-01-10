@@ -27,12 +27,12 @@ protected:
 	}
 };
 
-TEST_F(MediainfoTest, DISABLED_Parse) {
-	av::mediainfo::MediaInfo m(TEXT("C:/Users/Marcello/Downloads/1153734.mp4"));
+TEST_F(MediainfoTest, Parse) {
+	av::mediainfo::MediaInfo m(TEXT("/root/1153734.mp4"));
 	if (!m.parse()) {
 		loge("parse mediainfo failed");
 	}
+	logi("{}", m.getText());
+	std::abort();
 
 }
-
-
