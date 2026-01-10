@@ -20,10 +20,10 @@ namespace av {
             lt::add_files(fs, in);
 
             // 2. 初始化创建对象
-            lt::create_torrent ct(fs);
+            lt::create_torrent ct(fs, 0, lt::create_torrent::v1_only);
             //ct.add_tracker("http://tracker.example.com/announce");
             ct.set_creator("PT TOOL 1.0");
-            
+
             fs::path p = in;
             fs::path parent = p.parent_path();
             lt::error_code ec;
@@ -32,7 +32,7 @@ namespace av {
                 loge("error {}", ec.message());
                 return false;
             }
-            
+
             // 4. 将 Bencode 数据编码为字节流
             std::vector<char> torrent;
             lt::bencode(std::back_inserter(torrent), ct.generate());
