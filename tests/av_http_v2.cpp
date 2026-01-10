@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
-#include "av_mediainfo.h"
 #include "av_env.h"
 #include "logger.h"
 #include "src/config.h"
+#include "av_http_v2.h"
 
-class MediainfoTest : public ::testing::Test {
+class AVHttpV2Test : public ::testing::Test {
 protected:
 	void SetUp() override {
 		if (!Logger::instance().open()) {
@@ -27,12 +27,15 @@ protected:
 	}
 };
 
-TEST_F(MediainfoTest, Parse) {
-	av::mediainfo::MediaInfo m(TEXT("/root/1153734.mp4"));
-	if (!m.parse()) {
-		loge("parse mediainfo failed");
+TEST_F(AVHttpV2Test, get) {
+	av::http_v2::Client c;
+	av::http_v2::Response res;
+	if (c.get("https://www.baidu.com/a/b/c?a=1&b=2", res)) {
+		logi("response status code {}", res.status_code);
+		logi("response body {}", res.body);
+		return;
 	}
-	logi("{}", av::str::toA(m.getText()));
+	logw("get failed");
+	
 	std::abort();
-
 }
