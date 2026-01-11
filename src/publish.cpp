@@ -113,12 +113,12 @@ void Publish::task() {
             }
         }
         else if (tmp.type == SourceType::Dir) {
-            auto ret = processDir(tmp);
-            if (ret == ErrorCode::ErrTimeNotReached) {
+            const auto ret = processDir(tmp);
+            if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
                 logw("{} time not reached", av::str::toA(tmp.name));
                 continue;
             }
-            else if (ret != ErrorCode::Success) {
+            if (ret != static_cast<int>(ErrorCode::Success)) {
                 logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
                 continue;
             }
@@ -373,7 +373,7 @@ int Publish::processDir(Source& obj) {
 
     if (diff_time_seconds < 24 * 3600) { // 24 hours
         logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
-        return ErrorCode::ErrTimeNotReached;
+        return static_cast<int>(ErrorCode::ErrTimeNotReached);
     }
 
     // read dir
@@ -465,7 +465,7 @@ int Publish::processDir(Source& obj) {
     }
     logi("process dir succ");
 
-    return ErrorCode::Success;
+    return static_cast<int>(ErrorCode::Success);
 }
 
 bool Publish::processFile(Source& obj) {

@@ -34,13 +34,13 @@ int main()
 	});
 
 	if (!Logger::instance().open()) {
-		return ErrorCode::ErrOpenLogFailed;
+		return static_cast<int>(ErrorCode::ErrOpenLogFailed);
 	}
 
 	std::tstring config_file = TEXT("config.toml");
 	if (!Config::instance().parse(config_file)) {
 		loge("parse config.toml failed");
-		return ErrorCode::ErrParseConfigFileFailed;
+		return static_cast<int>(ErrorCode::ErrParseConfigFileFailed);
 	}
 	auto& config = Config::instance();
 	logi("server start ==================================");
@@ -52,16 +52,16 @@ int main()
 	);
 	Publish publish(ptr, config.mteam.seed_dir);
 	if (!publish.start()) {
-		return ErrorCode::ErrStartCronFailed;
+		return static_cast<int>(ErrorCode::ErrStartCronFailed);
 	}
 	//publish.task();
 
 	httplib::Server svr;
 	if (!svr.bind_to_port(av::str::toA(config.server.host), config.server.port)) {
 		logw("bind failed");
-		return ErrorCode::ErrOpenLogFailed;
+		return static_cast<int>(ErrorCode::ErrOpenLogFailed);
 	}
 	svr.listen_after_bind();
 
-	return ErrorCode::Success;
+	return static_cast<int>(ErrorCode::Success);
 }
