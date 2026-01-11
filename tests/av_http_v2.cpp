@@ -32,10 +32,10 @@ protected:
 
 TEST_F(AVHttpV2Test, get) {
 	av::http_v2::Client c;
-	av::http_v2::Response res;
-	if (c.get("https://www.baidu.com/a/b/c?a=1&b=2", res)) {
-		logi("response status code {}", res.status);
-		logi("response body {}", res.body);
+	av::http_v2::Result r;
+	if (r = c.get("https://www.baidu.com/a/b/c?a=1&b=2"); r != nullptr) {
+		logi("response status code {}", r->status);
+		logi("response body {}", r->body);
 		return;
 	}
 	logw("get failed");
@@ -49,11 +49,11 @@ TEST_F(AVHttpV2Test, post_form) {
 	form.kv.insert({"username", "admin"});
 	form.kv.insert({"password", "marcello123" });
 	form.file.insert({"ff", "C:\\Users\\Marcello\\Downloads\\1154742.mp4"});
-	av::http_v2::Response resp;
-	if (c.post("http://127.0.0.1:8000/hello", form, resp)) {
-		if (resp.status == 200) {
-			logi("response body {}", resp.body);
-			logi("response status code {}", resp.status);
+	av::http_v2::Result r;
+	if (r = c.post("http://127.0.0.1:8000/hello", form); r != nullptr) {
+		if (r->status == 200) {
+			logi("response body {}", r->body);
+			logi("response status code {}", r->status);
 		}
 		return;
 	}
@@ -77,13 +77,13 @@ TEST_F(AVHttpV2Test, post_raw) {
 	std::string b = j.dump();
 
 	//
-	av::http_v2::Response resp;
+	av::http_v2::Result resp;
 
 	// send
-	if (c.post("http://127.0.0.1:8000/hello", header, b, resp)) {
-		if (resp.status == 200) {
-			logi("response body {}", resp.body);
-			logi("response status code {}", resp.status);
+	if (resp = c.post("http://127.0.0.1:8000/hello", header, b); resp != nullptr) {
+		if (resp->status == 200) {
+			logi("response body {}", resp->body);
+			logi("response status code {}", resp->status);
 		}
 		return;
 	}

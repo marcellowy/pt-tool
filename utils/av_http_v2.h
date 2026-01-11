@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 namespace {
 	enum class Method {
@@ -30,14 +31,14 @@ namespace av {
 		};
 
 		struct Response {
-			int status;
+			int status = -1;
+			std::string reason = "";
 			Header header;
-			std::string body;
-			std::string location;
+			std::string body = "";
+			std::string location = "";
 		};
 
-		// cookie
-		bool parseCookie(const Header& header, Cookie& cookie);
+		typedef std::unique_ptr<Response> Result;
 
 		// http client
 		class Client
@@ -47,16 +48,16 @@ namespace av {
 			~Client();
 		public:
 			// get
-			bool get(const std::string& url, Response& response);
-			bool get(const std::string& url, const Header& header, Response& response);
+			Result get(const std::string& url);
+			Result get(const std::string& url, const Header& header);
 			// post raw
-			bool post(const std::string& url, const std::string& body, Response& response);
-			bool post(const std::string& url, const Header& header, const std::string& body, Response& response);
+			Result post(const std::string& url, const std::string& body);
+			Result post(const std::string& url, const Header& header, const std::string& body);
 			// post form
-			bool post(const std::string& url, const Form& form, Response& response);
-			bool post(const std::string& url, const Header& header, const Form& form, Response& response);
+			Result post(const std::string& url, const Form& form);
+			Result post(const std::string& url, const Header& header, const Form& form);
 		private:
-			bool request(Method method, const std::string& url, const Header* header, const Form* form, const std::string& raw, Response& response);
+			Result request(Method method, const std::string& url, const Header* header, const Form* form, const std::string& raw);
 		};
 	}
 }

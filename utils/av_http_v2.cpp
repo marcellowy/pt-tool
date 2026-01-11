@@ -3,6 +3,7 @@
 #include <regex>
 #include <fstream>
 #include <filesystem>
+#include <memory>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -19,7 +20,11 @@ namespace fs = std::filesystem;
 namespace av {
 	namespace http_v2 {
 
+		// parseUrl
 		static bool parseUrl(const std::string& url, std::string& scheme, std::string& host, int& port, std::string& full_path);
+		
+		// cookie
+		static bool parseCookie(const Header& header, Cookie& cookie);
 
 		bool parseUrl(const std::string& url, std::string& scheme, std::string& host, int& port, std::string& full_path) {
 			std::regex url_regex(R"((http|https)://([^:/\s]+)(:([0-9]+))?(/[^?\s]*)?(\?([^#]*))?)");
@@ -104,31 +109,35 @@ namespace av {
 		}
 
 		// get
-		bool Client::get(const std::string& url, Response& response) {
-			return request(Method::Get, url, nullptr, nullptr, "", response);
+		Result Client::get(const std::string& url) {
+			return request(Method::Get, url, nullptr, nullptr, "");
 		}
-		bool Client::get(const std::string& url, const Header& header, Response& response) {
-			return request(Method::Get, url, &header, nullptr, "", response);
+		Result Client::get(const std::string& url, const Header& header) {
+			return request(Method::Get, url, &header, nullptr, "");
 		}
 		
 		// post raw
-		bool Client::post(const std::string& url, const std::string& body, Response& response) {
-			return request(Method::Post, url, nullptr, nullptr, body, response);
+		Result Client::post(const std::string& url, const std::string& body) {
+			return request(Method::Post, url, nullptr, nullptr, body);
 		}
-		bool Client::post(const std::string& url, const Header& header, const std::string& body, Response& response) {
-			return request(Method::Post, url, &header, nullptr, body, response);
+		Result Client::post(const std::string& url, const Header& header, const std::string& body) {
+			return request(Method::Post, url, &header, nullptr, body);
 		}
 		
 		// post form
-		bool Client::post(const std::string& url, const Form& form, Response& response) {
-			return request(Method::Post, url, nullptr, &form, "", response);
+		Result Client::post(const std::string& url, const Form& form) {
+			return request(Method::Post, url, nullptr, &form, "");
 		}
 
-		bool Client::post(const std::string& url, const Header& header, const Form& form, Response& response) {
-			return request(Method::Post, url, &header, &form, "", response);
+		Result Client::post(const std::string& url, const Header& header, const Form& form) {
+			return request(Method::Post, url, &header, &form, "");
 		}
 
-		bool Client::request(Method method, const std::string& url, const Header* header, const Form* form, const std::string& raw, Response& response) {
+		Result Client::request(Method method, const std::string& url, const Header* header, const Form* form, const std::string& raw) {
+
+			// response
+			Result response = std::make_unique<Response>();
+			
 			// parse url
 			std::string scheme;
 			std::string host;
@@ -136,7 +145,8 @@ namespace av {
 			std::string full_path;
 			if(!parseUrl(url, scheme, host, port, full_path)){
 				logw("parse {} failed", url);
-				return false;
+				response->reason = fmt::format("parse url {} failed", url);
+				return response;
 			}
 			logi("parse url {}, {}, {}, {}", scheme, host, port, full_path);
 			//
@@ -163,7 +173,8 @@ namespace av {
 					break;
 				}
 				logw("scheme {} not support", scheme);
-				return false;
+				response->reason = fmt::format("scheme {} not support", scheme);
+				return response;
 			} while(0);
 			
 			// client
@@ -237,17 +248,20 @@ namespace av {
 			// check res
 			if (!res) {
 				logw("http request failed");
-				return false;
+				response->reason = "http request failed";
+				return response;
 			}
 
 			// response data
-			response.status = res->status;
-			response.body = res->body;
-			response.location = res->location;
+			response->status = res->status;
+			response->body = res->body;
+			response->location = res->location;
+			response->reason = res->reason;
 			for (auto& header : res->headers) {
-				response.header.kv.insert({ header.first, header.second });
+				response->header.kv.insert({ header.first, header.second });
 			}
-			return true;
+			parseCookie(response->header, response->header.cookie);
+			return response;
 		}
 	}
 }
