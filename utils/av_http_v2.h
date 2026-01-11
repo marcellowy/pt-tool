@@ -30,7 +30,7 @@ namespace av {
 		};
 
 		struct Response {
-			int status_code;
+			int status;
 			Header header;
 			std::string body;
 			std::string location;

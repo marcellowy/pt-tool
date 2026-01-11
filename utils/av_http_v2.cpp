@@ -1,14 +1,20 @@
 #include <ctype.h>
 #include <vector>
 #include <regex>
+#include <fstream>
+#include <filesystem>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 
 #include "av_log.h"
 #include "av_string.h"
+#include "av_time.h"
+#include "av_md5.h"
 
 #include "av_http_v2.h"
+
+namespace fs = std::filesystem;
 
 namespace av {
 	namespace http_v2 {
@@ -197,6 +203,7 @@ namespace av {
 				}
 				else if (form != nullptr){
 					// post form
+					
 					httplib::UploadFormDataItems fd;
 					for (auto& f : form->kv) {
 						httplib::UploadFormData d;
@@ -207,10 +214,23 @@ namespace av {
 					for (auto& f : form->file) {
 						httplib::UploadFormData d;
 						d.name = f.first;
-						d.filename = f.second;
+
+						// filename
+						fs::path p = f.second;
+						d.filename = p.filename().string();
+
+						// read file content
+						std::ifstream ifs(f.second, std::ios::binary);
+						d.content = std::string((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+
 						fd.push_back(d);
 					}
-					res = cli.Post(full_path, headers, fd, "");
+					std::string boundary_tmp = fmt::format("boundary{}", av::time::microseconds());
+					std::string boundary;
+					if (!av::hash::md5(boundary_tmp, boundary)) {
+						boundary = boundary_tmp;
+					}
+					res = cli.Post(full_path, headers, fd, boundary);
 				}
 			}
 
@@ -221,7 +241,7 @@ namespace av {
 			}
 
 			// response data
-			response.status_code = res->status;
+			response.status = res->status;
 			response.body = res->body;
 			response.location = res->location;
 			for (auto& header : res->headers) {
