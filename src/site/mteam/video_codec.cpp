@@ -13,8 +13,8 @@ namespace mteam {
 			{CodecId::_vp8, TEXT("VP8/9")},
 			{CodecId::_vp9, TEXT("VP8/9")},
 			{CodecId::_avs, TEXT("AVS")},
-			{CodecId::_avs2, TEXT("AVS")},
-			{CodecId::_cavs, TEXT("AVS")},
+			{CodecId::_avs2, TEXT("AVS2")},
+			{CodecId::_cavs, TEXT("AVS+")},
 		};
 
 		Codec::Codec(const av::media::SourceVideoCodec& codec) : m_codec(codec)

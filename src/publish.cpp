@@ -265,33 +265,38 @@ int Publish::processDir(Source& obj) {
     }
 
     // read file
-    //std::wifstream ifs;
-    
     std::string json_content;
     try {
         {
+#if defined(_UNICODE) || defined(UNICODE)
+            std::wifstream file(media_info_json_path, std::ios::in);
+#else
             std::ifstream file(media_info_json_path, std::ios::in);
+#endif
             if (!file) {
                 loge("open file {} failed", av::str::toA(media_info_json_path));
                 return - 1;
             }
-            std::string line;
-            
+            std::tstring line;
             while (std::getline(file, line)) {
-                std::string utf8_text = boost::locale::conv::to_utf<char>(line, "UTF-8");
+                std::string utf8_text = boost::locale::conv::to_utf<char>(av::str::toA(line), "UTF-8");
                 json_content += utf8_text;
             }
             file.close();
         }
         {
+#if defined(_UNICODE) || defined(UNICODE)
+            std::wifstream file(media_info_text_path, std::ios::in);
+#else
             std::ifstream file(media_info_text_path, std::ios::in);
+#endif
             if (!file) {
                 loge("open file {} failed", av::str::toA(media_info_text_path));
                 return -1;
             }
-            std::string line;
+            std::tstring line;
             while (std::getline(file, line)) {
-                std::string utf8_text = boost::locale::conv::to_utf<char>(line, "UTF-8");
+                std::string utf8_text = boost::locale::conv::to_utf<char>(av::str::toA(line), "UTF-8");
                 obj.mediainfo_text += av::str::toT(utf8_text);
             }
             file.close();
@@ -328,8 +333,21 @@ int Publish::processDir(Source& obj) {
         //
         setResolution(avs_info.width, avs_info.height, scan_type, obj);
 
-        // 
-        obj.video_codec = SourceVideoCodec::_avs;
+        // video codec
+        if (avs_info.video_format == TEXT("AVS2")) {
+            obj.video_codec = SourceVideoCodec::_avs2;
+        } else if (avs_info.video_format == TEXT("CAS")) {
+            obj.video_codec = SourceVideoCodec::_cavs;
+        } else if (avs_info.video_format == TEXT("AVS")) {
+            obj.video_codec = SourceVideoCodec::_avs;
+        } else if (avs_info.video_format == TEXT("MPEG2VIDEO")) {
+            obj.video_codec = SourceVideoCodec::_mpeg2;
+        } else {
+            // default avs
+            obj.video_codec = SourceVideoCodec::_avs;
+        }
+
+        // audio codec
         obj.audio_codec = SourceAudioCodec::_ac3;
 
         obj.title_prefix = avs_info.channel;
