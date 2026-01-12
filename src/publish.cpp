@@ -585,10 +585,16 @@ std::vector<Source> Publish::readDir() {
 #else
         obj.name = av::str::toT(entry.path().filename().string());
 #endif // _UNICODE
-
+        if (obj.name.size() < 5) {
+            continue;
+        }
         // 
         if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
             // published
+            continue;
+        }
+        if (obj.name.substr(0,1) == TEXT(".")) {
+            // tmp file
             continue;
         }
 
