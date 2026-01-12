@@ -20,6 +20,7 @@
 #include "av_translate.h"
 #include "av_env.h"
 #include "av_time.h"
+#include "av_file.h"
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
@@ -266,51 +267,21 @@ int Publish::processDir(Source& obj) {
 
     // read file
     std::string json_content;
-    try {
-        {
-#if defined(_UNICODE) || defined(UNICODE)
-            std::wifstream file(media_info_json_path, std::ios::in);
-#else
-            std::ifstream file(media_info_json_path, std::ios::in);
-#endif
-            if (!file) {
-                loge("open file {} failed", av::str::toA(media_info_json_path));
-                return - 1;
-            }
-            std::tstring line;
-            while (std::getline(file, line)) {
-                std::string utf8_text = boost::locale::conv::to_utf<char>(av::str::toA(line), "UTF-8");
-                json_content += utf8_text;
-            }
-            file.close();
-        }
-        {
-#if defined(_UNICODE) || defined(UNICODE)
-            std::wifstream file(media_info_text_path, std::ios::in);
-#else
-            std::ifstream file(media_info_text_path, std::ios::in);
-#endif
-            if (!file) {
-                loge("open file {} failed", av::str::toA(media_info_text_path));
-                return -1;
-            }
-            std::tstring line;
-            while (std::getline(file, line)) {
-                std::string utf8_text = boost::locale::conv::to_utf<char>(av::str::toA(line), "UTF-8");
-                obj.mediainfo_text += av::str::toT(utf8_text);
-            }
-            file.close();
-        }
+    fs::path json_path(media_info_json_path);
+    if (!av::file::readContent(json_path, json_content)) {
+        logw("read file {} failed", av::str::toA(media_info_json_path));
+        return false;
     }
-    catch (const std::system_error& e) {
-        logw("open {} failed, json::system_error {}", av::str::toA(media_info_json_path), e.what());
-        return -1;
+    std::string text_content;
+    fs::path text_path(media_info_text_path);
+    if (!av::file::readContent(text_path, text_content)) {
+        logw("read file {} failed", av::str::toA(media_info_text_path));
+        return false;
     }
-    catch (const std::exception& e) {
-        logw("open {} failed, std::exception {}", av::str::toA(media_info_json_path), e.what());
-        return -1;
-    }
-    logi("json_content: {}", json_content);
+    obj.mediainfo_text = av::str::toT(text_content);
+    logi("json content: \n{}", json_content);
+    logi("text content: \n{}", text_content);
+
     // parse json file
     AVSInfo avs_info;
     try {
