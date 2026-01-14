@@ -301,7 +301,7 @@ namespace av {
             return tmp;
         }
 
-        std::vector<std::tstring> split(const std::tstring tmp, std::tstring delimiter) {
+        std::vector<std::tstring> split(const std::tstring& tmp, std::tstring delimiter) {
             auto s = tmp;
             std::vector<std::tstring> tokens;
             size_t pos = 0;
@@ -321,6 +321,34 @@ namespace av {
                 tmp.push_back(av::str::toA(t));
             }
             return av::str::toT(fmt::format("{}", fmt::join(tmp, av::str::toA(sep))));
+        }
+
+	    bool s2i(const std::string& s, int& i) {
+            try {
+                i = std::stoi(s);
+                return true;
+            } catch (std::invalid_argument& e) {
+                logw("{} Invalid argument: %s", s, e.what());
+            } catch (std::out_of_range& e) {
+                logw("{} Out of range: %s", s, e.what());
+            } catch (std::exception& e) {
+                logw("{} Exception: %s", s, e.what());
+            }
+            return false;
+        }
+
+	    bool s2ll(const std::string& s, int64_t& i) {
+            try {
+                i = std::stoll(s);
+                return true;
+            } catch (std::invalid_argument& e) {
+                logw("{} Invalid argument: %s", s, e.what());
+            } catch (std::out_of_range& e) {
+                logw("{} Out of range: %s", s, e.what());
+            } catch (std::exception& e) {
+                logw("{} Exception: %s", s, e.what());
+            }
+            return false;
         }
 	}
 }

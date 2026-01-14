@@ -63,8 +63,10 @@ namespace str {
 #endif // _WIN32
 	}
 
-	std::vector<std::tstring> split(const std::tstring s, std::tstring delimiter);
+	std::vector<std::tstring> split(const std::tstring& s, std::tstring delimiter);
 	std::tstring join(const std::vector<std::tstring>& vec, const std::tstring& sep);
+	bool s2i(const std::string& s, int& i);
+	bool s2ll(const std::string& s, int64_t& i);
 }
 };
 
