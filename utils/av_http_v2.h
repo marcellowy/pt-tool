@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <chrono>
 
 namespace {
 	enum class Method {
@@ -40,13 +41,21 @@ namespace av {
 
 		typedef std::unique_ptr<Response> Result;
 
+		// cookie
+		static bool parseCookie(const Header& header, Cookie& cookie);
+
 		// http client
 		class Client
 		{
 		public:
 			Client();
 			~Client();
-		public:
+
+			template <class Rep, class Period>
+			void setTimeout(std::chrono::duration<Rep, Period> duration) {
+				m_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+			}
+
 			// get
 			Result get(const std::string& url);
 			Result get(const std::string& url, const Header& header);
@@ -58,6 +67,7 @@ namespace av {
 			Result post(const std::string& url, const Header& header, const Form& form);
 		private:
 			Result request(Method method, const std::string& url, const Header* header, const Form* form, const std::string& raw);
+			std::optional<int64_t> m_timeout;
 		};
 	}
 }

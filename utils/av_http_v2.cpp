@@ -22,9 +22,6 @@ namespace av {
 
 		// parseUrl
 		static bool parseUrl(const std::string& url, std::string& scheme, std::string& host, int& port, std::string& full_path);
-		
-		// cookie
-		static bool parseCookie(const Header& header, Cookie& cookie);
 
 		bool parseUrl(const std::string& url, std::string& scheme, std::string& host, int& port, std::string& full_path) {
 			std::regex url_regex(R"((http|https)://([^:/\s]+)(:([0-9]+))?(/[^?\s]*)?(\?([^#]*))?)");
@@ -178,9 +175,12 @@ namespace av {
 			} while(0);
 			
 			// client
-			std::string scheme_host = std::string(buff);
+			auto scheme_host = std::string(buff);
 			httplib::Client cli(scheme_host);
-			
+			if (m_timeout.has_value()) {
+				cli.set_max_timeout(m_timeout.value());
+			}
+
 			// header
 			httplib::Headers headers;
 			headers.insert({"User-Agent", "MTeam Http Tool v2"});
@@ -257,10 +257,9 @@ namespace av {
 			response->body = res->body;
 			response->location = res->location;
 			response->reason = res->reason;
-			for (auto& header : res->headers) {
+			for (const auto& header : res->headers) {
 				response->header.kv.insert({ header.first, header.second });
 			}
-			parseCookie(response->header, response->header.cookie);
 			return response;
 		}
 	}
