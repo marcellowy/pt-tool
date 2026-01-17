@@ -21,6 +21,7 @@
 #include "av_env.h"
 #include "av_time.h"
 #include "av_file.h"
+#include "av_pt_gen_mteam.h"
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
@@ -503,7 +504,14 @@ bool Publish::processFile(Source& obj) {
         std::string real_url(buff);
         if (!av::ptgen::get(av::str::toT(real_url), db)) {
             loge("get douban info failed!");
-            return false;
+            // try use m-team api
+            char douban_url_buff[2048];
+            snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/", av::str::toA(obj.douban_id).c_str());
+             std::string real_douban_url_buff(douban_url_buff);
+            if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
+                loge("get douban info failed!");
+                return false;
+            }
         }
 
         // set douban info to obj
