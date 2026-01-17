@@ -42,21 +42,27 @@ set(PT_TOOL_LIB_NAME "pttool_lib")
 project (${PT_TOOL_PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
+
+)
+
+file(GLOB SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/src/*.h
 	${CMAKE_SOURCE_DIR}/src/*.cpp
     ${CMAKE_SOURCE_DIR}/src/site/mteam/*.h
 	${CMAKE_SOURCE_DIR}/src/site/mteam/*.cpp
     ${CMAKE_SOURCE_DIR}/utils/*.h
     ${CMAKE_SOURCE_DIR}/utils/*.cpp
+    ${CMAKE_SOURCE_DIR}/utils/douban/*.h
+    ${CMAKE_SOURCE_DIR}/utils/douban/*.cpp
 )
 
 # remove main from lib
 list(REMOVE_ITEM SOURCE_FILE "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
-
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rdparty/include
 	${CMAKE_SOURCE_DIR}/utils
+    ${CMAKE_SOURCE_DIR}/utils/douban
     ${CMAKE_SOURCE_DIR}/src/site
 )
 

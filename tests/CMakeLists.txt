@@ -4,6 +4,7 @@ project (${PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
     ${CMAKE_SOURCE_DIR}/tests/*.cpp
+        ${CMAKE_SOURCE_DIR}/tests/douban/*.cpp
 )
 
 include_directories(
