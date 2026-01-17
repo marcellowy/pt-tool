@@ -26,6 +26,10 @@ namespace av {
 
 		bool Translate::foo(const std::tstring& source_text, std::tstring& text)
 		{
+			if (source_text.empty()) {
+				logw("source text empty");
+				return false;
+			}
 			json a;
 			a["from"] = "auto";
 			a["to"] = "en";
@@ -55,6 +59,7 @@ namespace av {
 				if (o.contains("trans") && o["trans"].is_string())
 				{
 					text = av::str::toT(o["trans"].get<std::string>());
+					if (text.empty()) return false;
 					return true;
 				}
 				logw("no trans field");
