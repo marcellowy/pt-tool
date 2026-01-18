@@ -1,3 +1,9 @@
+
+#ifndef CPPHTTPLIB_OPENSSL_SUPPORT
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#endif
+#include <httplib.h>
+
 #include "gtest/gtest.h"
 #include "av_env.h"
 #include "logger.h"
@@ -51,7 +57,6 @@ TEST_F(AVHttpV3Test, get) {
 	}
 
 	logi("status {}\n{}", resp->status, resp->body);
-	std::abort();
 }
 
 TEST_F(AVHttpV3Test, post) {

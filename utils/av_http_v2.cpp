@@ -5,8 +5,10 @@
 #include <filesystem>
 #include <memory>
 
+#ifndef CPPHTTPLIB_OPENSSL_SUPPORT
 #define CPPHTTPLIB_OPENSSL_SUPPORT
-#include "httplib.h"
+#endif
+#include <httplib.h>
 
 #include "av_log.h"
 #include "av_string.h"

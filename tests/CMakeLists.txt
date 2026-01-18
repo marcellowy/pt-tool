@@ -13,6 +13,10 @@ include_directories(
 
 find_package(GTest CONFIG REQUIRED)
 
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 macro(setup name)
@@ -37,12 +41,14 @@ macro(setup name)
     endif ()
 
     if (WIN32)
-        add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
+        target_compile_definitions(${name} PRIVATE UNICODE _UNICODE)
     endif ()
 
 endmacro()
 
 setup(${PROJECT_NAME})
+
+message("lib ${PT_TOOL_LIB_NAME}")
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         GTest::gtest

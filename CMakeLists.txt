@@ -1,7 +1,7 @@
 # CMakeList.txt: test 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
-cmake_minimum_required (VERSION 3.25)
+cmake_minimum_required(VERSION 3.25)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,56 +14,60 @@ option(ENABLE_GOOGLE_TEST "enable google tests" ON)
 
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif ()
 
 # FindBoost.cmake
-if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
-endif()
+if (POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif ()
+
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
 
 # linker
 find_program(MOLD_PATH mold)
 find_program(LLD_PATH lld)
 
-if(MOLD_PATH)
+if (MOLD_PATH)
     message("link option mold")
     add_link_options("-fuse-ld=mold")
-elseif(LLD_PATH)
+elseif (LLD_PATH)
     message("link option lld")
     add_link_options("-fuse-ld=lld")
-endif()
+endif ()
 
 set(PT_TOOL_NAME "pt-tool")
 set(PT_TOOL_PROJECT_NAME "pttool")
 set(PT_TOOL_LIB_NAME "pttool_lib")
 
-project (${PT_TOOL_PROJECT_NAME})
+project(${PT_TOOL_PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
 
 )
 
 file(GLOB SOURCE_FILE
-    ${CMAKE_SOURCE_DIR}/src/*.h
-	${CMAKE_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_SOURCE_DIR}/src/site/mteam/*.h
-	${CMAKE_SOURCE_DIR}/src/site/mteam/*.cpp
-    ${CMAKE_SOURCE_DIR}/utils/*.h
-    ${CMAKE_SOURCE_DIR}/utils/*.cpp
-    ${CMAKE_SOURCE_DIR}/utils/douban/*.h
-    ${CMAKE_SOURCE_DIR}/utils/douban/*.cpp
+        ${CMAKE_SOURCE_DIR}/src/*.h
+        ${CMAKE_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_SOURCE_DIR}/src/site/mteam/*.h
+        ${CMAKE_SOURCE_DIR}/src/site/mteam/*.cpp
+        ${CMAKE_SOURCE_DIR}/utils/*.h
+        ${CMAKE_SOURCE_DIR}/utils/*.cpp
+        ${CMAKE_SOURCE_DIR}/utils/douban/*.h
+        ${CMAKE_SOURCE_DIR}/utils/douban/*.cpp
 )
 
 # remove main from lib
 list(REMOVE_ITEM SOURCE_FILE "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 include_directories(
-	${CMAKE_SOURCE_DIR}/3rdparty/include
-	${CMAKE_SOURCE_DIR}/utils
-    ${CMAKE_SOURCE_DIR}/utils/douban
-    ${CMAKE_SOURCE_DIR}/src/site
+        ${CMAKE_SOURCE_DIR}/3rdparty/include
+        ${CMAKE_SOURCE_DIR}/utils
+        ${CMAKE_SOURCE_DIR}/utils/douban
+        ${CMAKE_SOURCE_DIR}/src/site
 )
 
 find_package(OpenSSL REQUIRED)
@@ -83,63 +87,63 @@ find_package(LibtorrentRasterbar CONFIG REQUIRED)
 find_package(Boost 1.70 REQUIRED locale)
 
 # 将源代码添加到此项目的可执行文件。
-add_executable(${PT_TOOL_PROJECT_NAME} 
-    ${SOURCE_FILE}
-    "${CMAKE_SOURCE_DIR}/src/main.cpp"
+add_executable(${PT_TOOL_PROJECT_NAME}
+        ${SOURCE_FILE}
+        "${CMAKE_SOURCE_DIR}/src/main.cpp"
 )
 add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
 
-set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES 
-    OUTPUT_NAME ${PT_TOOL_NAME}
+set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES
+        OUTPUT_NAME ${PT_TOOL_NAME}
 )
 
 set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES
-    OUTPUT_NAME ${PT_TOOL_NAME}
+        OUTPUT_NAME ${PT_TOOL_NAME}
 )
 
 add_library(common_deps INTERFACE)
-target_link_libraries(common_deps INTERFACE 
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    ZLIB::ZLIB
-    CURL::libcurl
-    zen
-    mediainfo
-    croncpp::croncpp
-    tomlplusplus::tomlplusplus
-    nlohmann_json::nlohmann_json
-    spdlog::spdlog_header_only
-    # spdlog::spdlog
-    httplib::httplib
-    ${FFMPEG_LIBRARIES}
-    LibtorrentRasterbar::torrent-rasterbar
-    Boost::locale
+target_link_libraries(common_deps INTERFACE
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        ZLIB::ZLIB
+        CURL::libcurl
+        zen
+        mediainfo
+        croncpp::croncpp
+        tomlplusplus::tomlplusplus
+        nlohmann_json::nlohmann_json
+        spdlog::spdlog_header_only
+        # spdlog::spdlog
+        httplib::httplib
+        ${FFMPEG_LIBRARIES}
+        LibtorrentRasterbar::torrent-rasterbar
+        Boost::locale
 )
 
 macro(setup name)
-    if(MSVC)
+    if (MSVC)
         target_compile_options(${name} PRIVATE /utf-8)
-	    # if use ninja
-	    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # if use ninja
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             set_target_properties(${name} PROPERTIES
-                MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
+                    MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
             )
-        else()
+        else ()
             set_target_properties(${name} PROPERTIES
-                MSVC_RUNTIME_LIBRARY "MultiThreaded"
+                    MSVC_RUNTIME_LIBRARY "MultiThreaded"
             )
-        endif()
-    else()
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        endif ()
+    else ()
+        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             target_compile_definitions(${name} PRIVATE DEBUG=1)
-        endif()
-    endif()
-        
-    if(WIN32)
-        add_compile_definitions(${name} PRIVATE -DUNICODE -D_UNICODE)
-    else()
-        
-    endif()
+        endif ()
+    endif ()
+
+    if (WIN32)
+        target_compile_definitions(${name} PRIVATE UNICODE _UNICODE)
+    else ()
+
+    endif ()
     target_link_libraries(${name} PRIVATE common_deps)
     target_include_directories(${name} PRIVATE
             ${FFMPEG_INCLUDE_DIRS}
@@ -151,45 +155,45 @@ endmacro()
 setup(${PT_TOOL_PROJECT_NAME})
 setup(${PT_TOOL_LIB_NAME})
 
-set(FILES_TO_COPY 
-    ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
+set(FILES_TO_COPY
+        ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
 )
 
 add_custom_command(
-    TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>
+        TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILES_TO_COPY} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     # debug config file
-    if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+    if (CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
         set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_linux.toml)
-    elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    elseif (CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
         set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config_dev_windows.toml)
-    endif()
+    endif ()
 
     if (EXISTS ${CONFIG_FILE})
         add_custom_command(
-            TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
+                TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
         )
     endif ()
-else()
+else ()
     # release config file
     set(CONFIG_FILE ${CMAKE_SOURCE_DIR}/src/config.toml)
-    if(EXISTS ${CONFIG_FILE})
+    if (EXISTS ${CONFIG_FILE})
         add_custom_command(
-            TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
+                TARGET ${PT_TOOL_PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy ${CONFIG_FILE} $<TARGET_FILE_DIR:${PT_TOOL_PROJECT_NAME}>/config.toml
         )
-    endif()
-endif()
+    endif ()
+endif ()
 
 ## Add tests
-if(ENABLE_GOOGLE_TEST)
+if (ENABLE_GOOGLE_TEST)
     message("ENABLE_TEST ON")
     enable_testing()
     add_subdirectory(tests)
-else()
+else ()
     message("ENABLE_TEST OFF")
 endif ()
