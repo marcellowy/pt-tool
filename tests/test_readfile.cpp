@@ -20,9 +20,6 @@ protected:
 		}
 
 		std::tstring config_file = TEXT("config.toml");
-		if (av::env::is_dev()) {
-			config_file = TEXT("config_dev.toml");
-		}
 		if (!Config::instance().parse(config_file)) {
 			loge("parse config.toml failed");
 			return;
@@ -30,7 +27,6 @@ protected:
 	}
 
 	void TearDown() override {
-
 	}
 };
 
@@ -38,7 +34,7 @@ TEST_F(TestReadfileTest, read) {
 	std::tstring p = TEXT("D:\\Downloads\\media_info中.json");
 	fs::path p1 = p;
 	std::string mm;
-	if (!av::file::readContent(p1, mm)) {
+	if (!av::file::read(p1, mm)) {
 		logw("read file err");
 		return;
 	}
