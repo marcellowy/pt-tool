@@ -6,12 +6,10 @@
 #include <memory>
 #include <chrono>
 
-namespace {
-	enum class Method {
-		Get,
-		Post
-	};
-}
+enum class Method {
+	Get,
+	Post
+};
 
 namespace av {
 	namespace http_v2 {

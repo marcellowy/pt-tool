@@ -53,24 +53,16 @@ namespace av {
 			if (header.kv.size() == 0) return true;
 
 			// lookup set-cookie
-			bool found = false;
 			std::string cookie_str;
 			for (auto& h : header.kv) {
-				std::vector<char> vec;
-				for (int i = 0; i < h.first.size(); ++i) {
-					auto c = ::tolower(h.first[i]);
-					vec.push_back(c);
-				}
-				auto key = std::string(vec.data());
-				if (key == "set-cookie") {
+				if (str::toLower(h.first) == "set-cookie") {
 					cookie_str = h.second;
-					found = true;
 					break;
 				}
 			}
 
 			//
-			if (!found) {
+			if (cookie_str.empty()) {
 				return true;
 			}
 

@@ -40,7 +40,7 @@ namespace av {
 			int64_t code = 0;
 			Header header;
 			std::tstring body;
-		public:
+
 			Response() = default;
 			~Response() = default;
 			bool isOk();
