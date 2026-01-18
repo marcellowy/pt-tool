@@ -6,6 +6,7 @@
 #include <memory>
 #include <chrono>
 #include <optional>
+#include <vector>
 
 namespace av::http_v3 {
 		enum class Method {
