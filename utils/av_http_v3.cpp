@@ -1,3 +1,4 @@
+#include <optional>
 #include <curl/curl.h>
 
 #include "av_log.h"

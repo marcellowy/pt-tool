@@ -140,7 +140,6 @@ macro(setup name)
     else()
         
     endif()
-
     target_link_libraries(${name} PRIVATE common_deps)
     target_include_directories(${name} PRIVATE
             ${FFMPEG_INCLUDE_DIRS}

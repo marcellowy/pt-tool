@@ -1,7 +1,7 @@
 #include "av_pt_gen.h"
 
-#include "av_http_v3.h"
-namespace http_ = av::http_v3;
+#include "av_http.h"
+namespace http_ = av::http;
 namespace av {
 	namespace ptgen {
 		static void from_json(const nlohmann::json& j, Director& item);

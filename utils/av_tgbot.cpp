@@ -3,8 +3,9 @@
 #include "av_http.h"
 #include "av_http_v3.h"
 #include "av_log.h"
+#include "av_string.h"
 
-namespace http_ = av::http_v3;
+namespace http_ = av::http;
 
 namespace av {
 	namespace tgbot {

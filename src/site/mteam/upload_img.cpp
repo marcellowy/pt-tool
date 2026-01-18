@@ -1,13 +1,12 @@
 #include <tuple>
 #include "upload_img.h"
 #include "av_http.h"
-#include "av_http_v3.h"
 #include "av_log.h"
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
-namespace http_ = av::http_v3;
+namespace http_ = av::http;
 
 namespace mteam {
 	UploadImg::UploadImg(const std::tstring& url, const std::tstring& key) : 

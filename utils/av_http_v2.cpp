@@ -1,4 +1,4 @@
-#include <ctype.h>
+#include <cctype>
 #include <vector>
 #include <regex>
 #include <fstream>

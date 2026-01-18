@@ -5,13 +5,14 @@
 #include <string>
 #include <memory>
 #include <chrono>
-
-enum class Method {
-	Get,
-	Post
-};
+#include <optional>
 
 namespace av::http_v3 {
+		enum class Method {
+			Get,
+			Post
+		};
+
 		struct Form {
 			std::map<std::string, std::string> kv;
 			std::map<std::string, std::string> file;
@@ -29,10 +30,10 @@ namespace av::http_v3 {
 
 		struct Response {
 			int status = -1;
-			std::string reason = "";
+			std::string reason;
 			Header header;
-			std::string body = "";
-			std::string location = "";
+			std::string body;
+			std::string location;
 		};
 
 		typedef std::unique_ptr<Response> Result;

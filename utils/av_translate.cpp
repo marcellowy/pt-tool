@@ -6,10 +6,9 @@
 #include "av_log.h"
 #include "av_async.h"
 #include "av_http.h"
-#include "av_http_v3.h"
 
 using json = nlohmann::json;
-namespace http_ = av::http_v3;
+namespace http_ = av::http;
 namespace av {
 	namespace translate {
 

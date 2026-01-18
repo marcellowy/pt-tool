@@ -7,10 +7,9 @@
 
 #include "av_async.h"
 #include "av_http.h"
-#include "av_http_v3.h"
 #include "av_log.h"
 
-namespace http_ = av::http_v3;
+namespace http_ = av::http;
 
 namespace av {
 	namespace qbittorrent {

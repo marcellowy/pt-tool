@@ -11,14 +11,13 @@
 #include "av_http.h"
 #include "av_tgbot.h"
 #include "av_async.h"
-#include "av_http_v3.h"
 
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
-namespace http_ = av::http_v3;
+namespace http_ = av::http;
 namespace mteam {
 
 	static std::vector<std::tstring> ex_include = {
