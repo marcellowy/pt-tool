@@ -101,11 +101,22 @@ namespace av::http_v3 {
     	// set url
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
+		bool userAgent = false;
     	// header
 	    curl_slist* hds = nullptr;
 		for (const auto& h : header->kv) {
 			std::stringstream s;
 			s << h.first << ": " << h.second;
+			logi("add header {}", s.str());
+			auto key_lower = av::str::toLower(h.first);
+			if (key_lower == "user-agent") {
+				userAgent = true;
+			}
+			hds = curl_slist_append(hds, s.str().c_str());
+		}
+		if (!userAgent) {
+			std::stringstream s;
+			s << "User-Agent: " << "MTeam Http Tool v3";
 			logi("add header {}", s.str());
 			hds = curl_slist_append(hds, s.str().c_str());
 		}
