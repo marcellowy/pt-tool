@@ -11,13 +11,14 @@
 #include "av_http.h"
 #include "av_tgbot.h"
 #include "av_async.h"
+#include "av_http_v3.h"
 
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
-
+namespace http_ = av::http_v3;
 namespace mteam {
 
 	static std::vector<std::tstring> ex_include = {
@@ -129,52 +130,50 @@ namespace mteam {
 		}
 
 		// 发布到 m-team
-		av::http::Client client;
-		av::http::Response resp;
-		av::http::FormData form;
+		http_::Client client;
+		http_::Form form;
 		{
 			auto category_id = category.getid();
-			form.data[TEXT("category")] = av::str::toT(std::to_string(static_cast<int64_t>(category_id)));
-			form.data[TEXT("name")] = title;
-			form.data[TEXT("smallDescr")] = m_external_source.sub_title;
-			form.data[TEXT("dmmCode")] = TEXT("");
+			form.kv["category"] = std::to_string(static_cast<int64_t>(category_id));
+			form.kv["name"] = av::str::toA(title);
+			form.kv["smallDescr"] = av::str::toA(m_external_source.sub_title);
+			form.kv["dmmCode"] = "";
 			auto source_id = m_source.getid();
-			form.data[TEXT("source")] = av::str::toT(std::to_string(static_cast<int64_t>(source_id)));
+			form.kv["source"] = std::to_string(static_cast<int64_t>(source_id));
 			auto standard_id = m_video_resolution.getid();
-			form.data[TEXT("standard")] = av::str::toT(std::to_string(static_cast<int64_t>(standard_id)));
-			form.data[TEXT("videoCodec")] = av::str::toT(std::to_string(static_cast<int64_t>(m_video_codec.getid())));
-			form.data[TEXT("audioCodec")] = av::str::toT(std::to_string(static_cast<int64_t>(m_audio_codec.getid())));
-			form.data[TEXT("team")] = av::str::toT(std::to_string(m_external_source.group_id));
-			form.data[TEXT("imdb")] = m_external_source.imdb_link;
+			form.kv["standard"] = std::to_string(static_cast<int64_t>(standard_id));
+			form.kv["videoCodec"] = std::to_string(static_cast<int64_t>(m_video_codec.getid()));
+			form.kv["audioCodec"] = std::to_string(static_cast<int64_t>(m_audio_codec.getid()));
+			form.kv["team"] = std::to_string(m_external_source.group_id);
+			form.kv["imdb"] = av::str::toA(m_external_source.imdb_link);
 			char buff[2048];
 			snprintf(buff, sizeof(buff)-1, "https://movie.douban.com/subject/%s/", av::str::toA(m_external_source.douban_id).c_str());
-			form.data[TEXT("douban")] = av::str::toT(std::string(buff));
-			form.data[TEXT("labelsNew")] = TEXT("");
-			form.data[TEXT("mediainfo")] = m_external_source.mediainfo_text;
-			form.data[TEXT("tags")] = TEXT("");
-			form.data[TEXT("anonymous")] = TEXT("true");
-			form.data[TEXT("aids")] = TEXT("");
-			form.data[TEXT("descr")] = description;
-			form.data[TEXT("mediaInfoAnalysisResult")] = TEXT("true");
+			form.kv["douban"] = std::string(buff);
+			form.kv["labelsNew"] = "";
+			form.kv["mediainfo"] = av::str::toA(m_external_source.mediainfo_text);
+			form.kv["tags"] = "";
+			form.kv["anonymous"] = "true";
+			form.kv["aids"] = "";
+			form.kv["descr"] = av::str::toA(description);
+			form.kv["mediaInfoAnalysisResult"] = "true";
 			if (category.getid() == CategoryId::Movie) {
-				form.data[TEXT("labels")] = TEXT("0");
-				form.data[TEXT("labelsNew")] = TEXT("中配");
+				form.kv["labels"] = "0";
+				form.kv["labelsNew"] = "中配";
 			}
 		}
-		av::http::Header header;
-		header.data[TEXT("x-api-key")] = m_api_key;
-
-		av::http::File file;
-		file.data[TEXT("file")] = torrent_file;
+		http_::Header header;
+		header.kv["x-api-key"] = av::str::toA(m_api_key);
+		form.file["file"] = av::str::toA(torrent_file);
 			
 		// 上传到网站
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
 		logi("post url {}", av::str::toA(url));
-		if (!client.postForm(url, std::make_tuple(header, form, file), resp)) {
+		const auto resp = client.post(av::str::toA(url), header, form);
+		if (!resp) {
 			loge("send http failed");
 			return false;
 		}
-		if (!resp.isOk()) {
+		if (resp->status != 200) {
 			loge("post not ok");
 			return false;
 		}
@@ -186,9 +185,9 @@ namespace mteam {
 		std::tstring response_create_date = TEXT("");
 		try {
 			json obj;
-			auto j = obj.parse(av::str::toA( resp.body));
+			auto j = obj.parse(resp->body);
 			if (!j.contains("code")) {
-				logw("parse error {}", av::str::toA(resp.body));
+				logw("parse error {}", resp->body);
 				return false;
 			}
 			std::string message;
@@ -217,11 +216,11 @@ namespace mteam {
 			}
 		}
 		catch (const json::parse_error& e) {
-			logw("parse_error {}, {}", e.what(), av::str::toA(resp.body));
+			logw("parse_error {}, {}", e.what(), resp->body);
 			return false;
 		}
 		catch (const std::exception& e) {
-			logw("exception {}, {}", e.what(), av::str::toA(resp.body));
+			logw("exception {}, {}", e.what(), resp->body);
 			return false;
 		}
 			

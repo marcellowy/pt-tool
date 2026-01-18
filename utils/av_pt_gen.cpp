@@ -1,4 +1,7 @@
 #include "av_pt_gen.h"
+
+#include "av_http_v3.h"
+namespace http_ = av::http_v3;
 namespace av {
 	namespace ptgen {
 		static void from_json(const nlohmann::json& j, Director& item);
@@ -46,33 +49,33 @@ namespace av {
 
 		bool get(const std::tstring& url, Douban& douban) {
 			std::string a;
-			av::http::Client client;
-			av::http::Response resp;
+			http_::Client client;
 			logi("douban url = {}", av::str::toA(url));
-			if (!client.get(url, resp)) {
+			const auto resp = client.get(av::str::toA(url));
+			if (!resp) {
 				loge("http failed");
 				return false;
 			}
-			if (!resp.isOk()) {
+			if (resp->status != 200) {
 				loge("http failed");
 				return false;
 			}
 			Data d;
 			try {
 				json obj;
-				auto j = obj.parse(av::str::toA(resp.body));
+				auto j = obj.parse(resp->body);
 				d = j.get<Data>();
 				if (!d.success) {
-					loge("parse failed; {}", av::str::toA(resp.body));
+					loge("parse failed; {}", resp->body);
 					return false;
 				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
-				loge("parse error {}, {}", e.what(), av::str::toA(resp.body));
+				loge("parse error {}, {}", e.what(), resp->body);
 				return false;
 			}
 			catch (const std::exception& e) {
-				loge("parse error {}, {}", e.what(), av::str::toA(resp.body));
+				loge("parse error {}, {}", e.what(), resp->body);
 			}
 
 #ifdef DEBUG_PT_GEN
@@ -139,7 +142,7 @@ namespace av {
 				};
 
 			if (d.director.size() > 0) {
-				std::string cn_name = "";
+				std::string cn_name;
 				size_t count = 0;
 				for (auto& direc : d.director) {
 					cn_name += " " + filter_name(direc.name);

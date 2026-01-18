@@ -16,9 +16,6 @@ protected:
 		}
 
 		std::tstring config_file = TEXT("config.toml");
-		if (av::env::is_dev()) {
-			config_file = TEXT("config_dev.toml");
-		}
 		if (!Config::instance().parse(config_file)) {
 			loge("parse config.toml failed");
 			return;
@@ -30,7 +27,7 @@ protected:
 	}
 };
 
-TEST_F(TranslateTest, DISABLED_foo) {
+TEST_F(TranslateTest, foo) {
 #ifdef _WIN32
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleCP(CP_UTF8);

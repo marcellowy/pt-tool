@@ -6,9 +6,10 @@
 #include "av_log.h"
 #include "av_async.h"
 #include "av_http.h"
+#include "av_http_v3.h"
 
 using json = nlohmann::json;
-
+namespace http_ = av::http_v3;
 namespace av {
 	namespace translate {
 
@@ -39,15 +40,15 @@ namespace av {
 			auto data = a.dump(4);
 			logi("post json: {}", data);
 
-			av::http::Client client;
-			av::http::Header header;
-			header.data[TEXT("x-rapidapi-key")] = m_rapidapi_key;
-			header.data[TEXT("x-rapidapi-host")] = m_rapidapi_host;
-			header.data[TEXT("User-Agent")] = TEXT("team tptv");
-			header.data[TEXT("Content-Type")] = TEXT("application/json");
-			av::http::Response resp;
-			std::tstring tmp = av::str::toT(data);
-			if (!client.post(m_rapidapi_url, header, tmp, resp)) {
+			http_::Client client;
+			http_::Header header;
+			header.kv["x-rapidapi-key"] = av::str::toA(m_rapidapi_key);
+			header.kv["x-rapidapi-host"] = av::str::toA(m_rapidapi_host);
+			header.kv["User-Agent"] = "team tptv";
+			header.kv["Content-Type"] = "application/json";
+
+			const auto resp = client.post(av::str::toA(m_rapidapi_url), header, data);
+			if (!resp) {
 				loge("post data failed");
 				return false;
 			}
@@ -55,7 +56,7 @@ namespace av {
 			// parse response body
 			try {
 				json b;
-				auto o = b.parse(av::str::toA(resp.body));
+				auto o = b.parse(resp->body);
 				if (o.contains("trans") && o["trans"].is_string())
 				{
 					text = av::str::toT(o["trans"].get<std::string>());
@@ -66,11 +67,11 @@ namespace av {
 				return false;
 			}
 			catch (const json::parse_error& e) {
-				loge("{} exception {}", av::str::toA(resp.body), e.what());
+				loge("{} exception {}", resp->body, e.what());
 				return false;
 			}
 			catch (const std::exception& e) {
-				loge("{} exception {}", av::str::toA(resp.body), e.what());
+				loge("{} exception {}", resp->body, e.what());
 				return false;
 			}
 			return false;
