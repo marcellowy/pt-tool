@@ -269,13 +269,13 @@ int Publish::processDir(Source& obj) {
     // read file
     std::string json_content;
     fs::path json_path(media_info_json_path);
-    if (!av::file::readContent(json_path, json_content)) {
+    if (!av::file::read(json_path, json_content)) {
         logw("read file {} failed", av::str::toA(media_info_json_path));
         return false;
     }
     std::string text_content;
     fs::path text_path(media_info_text_path);
-    if (!av::file::readContent(text_path, text_content)) {
+    if (!av::file::read(text_path, text_content)) {
         logw("read file {} failed", av::str::toA(media_info_text_path));
         return false;
     }
