@@ -8,7 +8,7 @@
 #include "nlohmann/json.hpp"
 
 using json = nlohmann::json;
-namespace http = av::http_v3;
+namespace http = av::http_v2;
 
 class AVHttpV3Test : public ::testing::Test {
 protected:
@@ -60,6 +60,35 @@ TEST_F(AVHttpV3Test, post) {
 	http::Form form;
 	form.kv["username"] = "admin";
 	form.kv["password"] = "marcello123";
+	const auto resp = client.post(av::str::toA(url), form);
+	if (!resp) {
+		loge("http request error");
+		return;
+	}
+	if (resp->status == 200) {
+		logi("is ok");
+		for (auto &aa: resp->header.kv) {
+			logi("response header {}: {}", aa.first, aa.second);
+		}
+		http::Cookie cookie;
+		http::parseCookie(resp->header, cookie);
+		for (auto &aa: cookie.kv) {
+			logi("cookie {}: {}", aa.first, aa.second);
+		}
+		for (auto &aa: cookie.val) {
+			logi("cookie {}", aa);
+		}
+		logi("body {}", resp->body);
+	}
+}
+
+TEST_F(AVHttpV3Test, file_upload) {
+	http::Client client;
+	const std::tstring url = TEXT("http://127.0.0.1:8000/hello");
+	http::Form form;
+	form.kv["username"] = "admin";
+	form.kv["password"] = "marcello123";
+	form.file["ff"] = "11.txt";
 	const auto resp = client.post(av::str::toA(url), form);
 	if (!resp) {
 		loge("http request error");
