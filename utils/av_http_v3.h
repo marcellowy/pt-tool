@@ -51,7 +51,7 @@ namespace av::http_v3 {
 
 			template <class Rep, class Period>
 			void setTimeout(std::chrono::duration<Rep, Period> duration) {
-				m_timeout = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+				m_timeout = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 			}
 
 			// get
