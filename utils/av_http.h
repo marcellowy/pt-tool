@@ -5,7 +5,7 @@
 #include "av_http_v2.h" // use httplib
 
 namespace av {
-    namespace http = http_v2;
+    namespace http = http_v3;
 }
 
 #endif

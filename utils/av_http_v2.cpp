@@ -234,7 +234,7 @@ namespace av::http_v2 {
 
 		// check res
 		if (!res) {
-			logw("http request failed");
+			logw("http request failed, code {}", static_cast<int>( res.error()) );
 			response->reason = "http request failed";
 			return response;
 		}

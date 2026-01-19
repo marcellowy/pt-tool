@@ -32,7 +32,7 @@ TEST_F(AVUtilsTest, retry_backoff) {
 #endif
 
 	auto a = std::chrono::steady_clock::now();
-	av::utils::retry_backoff([] -> int {
+	av::utils::retry_backoff([]() -> int {
 		throw std::runtime_error("aaa");
 	}, 10,1000);
 
