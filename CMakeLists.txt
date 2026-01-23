@@ -46,10 +46,6 @@ set(PT_TOOL_LIB_NAME "pttool_lib")
 project(${PT_TOOL_PROJECT_NAME})
 
 file(GLOB SOURCE_FILE
-
-)
-
-file(GLOB SOURCE_FILE
         ${CMAKE_SOURCE_DIR}/src/*.h
         ${CMAKE_SOURCE_DIR}/src/*.cpp
         ${CMAKE_SOURCE_DIR}/src/site/mteam/*.h
@@ -62,13 +58,6 @@ file(GLOB SOURCE_FILE
 
 # remove main from lib
 list(REMOVE_ITEM SOURCE_FILE "${CMAKE_SOURCE_DIR}/src/main.cpp")
-
-include_directories(
-        ${CMAKE_SOURCE_DIR}/3rdparty/include
-        ${CMAKE_SOURCE_DIR}/utils
-        ${CMAKE_SOURCE_DIR}/utils/douban
-        ${CMAKE_SOURCE_DIR}/src/site
-)
 
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -91,8 +80,8 @@ add_executable(${PT_TOOL_PROJECT_NAME}
         ${SOURCE_FILE}
         "${CMAKE_SOURCE_DIR}/src/main.cpp"
 )
-add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
 
+add_library(${PT_TOOL_LIB_NAME} STATIC ${SOURCE_FILE})
 set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES
         OUTPUT_NAME ${PT_TOOL_NAME}
 )
@@ -100,13 +89,6 @@ set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES
 set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES
         OUTPUT_NAME ${PT_TOOL_NAME}
 )
-
-if (MSVC)
-    # if Generator is Visual Studio 2022
-    set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif ()
-
 add_library(common_deps INTERFACE)
 target_link_libraries(common_deps INTERFACE
         OpenSSL::SSL
@@ -127,31 +109,22 @@ target_link_libraries(common_deps INTERFACE
 )
 
 macro(setup name)
+
     if (MSVC)
         target_compile_options(${name} PRIVATE /utf-8)
-        # if use ninja
-        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set_target_properties(${name} PROPERTIES
-                    MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
-            )
-        else ()
-            set_target_properties(${name} PROPERTIES
-                    MSVC_RUNTIME_LIBRARY "MultiThreaded"
-            )
-        endif ()
-    else ()
-        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-            target_compile_definitions(${name} PRIVATE DEBUG=1)
-        endif ()
+        set_target_properties(${name} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif ()
 
     if (WIN32)
         target_compile_definitions(${name} PRIVATE UNICODE _UNICODE)
-    else ()
-
     endif ()
+
     target_link_libraries(${name} PRIVATE common_deps)
     target_include_directories(${name} PRIVATE
+            ${CMAKE_SOURCE_DIR}/3rdparty/include
+            ${CMAKE_SOURCE_DIR}/utils
+            ${CMAKE_SOURCE_DIR}/utils/douban
+            ${CMAKE_SOURCE_DIR}/src/site
             ${FFMPEG_INCLUDE_DIRS}
             ${Stb_INCLUDE_DIR}
     )
@@ -160,7 +133,6 @@ endmacro()
 
 setup(${PT_TOOL_PROJECT_NAME})
 setup(${PT_TOOL_LIB_NAME})
-
 
 set(FILES_TO_COPY
         ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
