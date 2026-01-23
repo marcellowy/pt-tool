@@ -19,6 +19,11 @@ endif ()
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
+if (MSVC)
+    # if Generator is Visual Studio 2022
+    set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+
 macro(setup name)
     if (MSVC)
 

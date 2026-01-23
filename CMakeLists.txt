@@ -101,6 +101,12 @@ set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES
         OUTPUT_NAME ${PT_TOOL_NAME}
 )
 
+if (MSVC)
+    # if Generator is Visual Studio 2022
+    set_target_properties(${PT_TOOL_LIB_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_target_properties(${PT_TOOL_PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+
 add_library(common_deps INTERFACE)
 target_link_libraries(common_deps INTERFACE
         OpenSSL::SSL
@@ -154,6 +160,7 @@ endmacro()
 
 setup(${PT_TOOL_PROJECT_NAME})
 setup(${PT_TOOL_LIB_NAME})
+
 
 set(FILES_TO_COPY
         ${CMAKE_SOURCE_DIR}/src/config_tv_name.toml
