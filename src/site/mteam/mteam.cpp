@@ -18,37 +18,34 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 namespace http_ = av::http;
-namespace mteam {
 
+namespace mteam {
 	static std::vector<std::tstring> ex_include = {
-				TEXT("\\"),
-				TEXT("/"),
-				TEXT(":"),
-				TEXT("*"),
-				TEXT("?"),
-				TEXT("\""),
-				TEXT("<"),
-				TEXT(">"),
-				TEXT("|"),
+		TEXT("\\"),
+		TEXT("/"),
+		TEXT(":"),
+		TEXT("*"),
+		TEXT("?"),
+		TEXT("\""),
+		TEXT("<"),
+		TEXT(">"),
+		TEXT("|"),
 	};
 
-	Mteam::Mteam(const std::tstring& api_url,
-		const std::tstring& api_key,
-		const std::tstring& img_api_url,
-		const std::tstring& img_api_key,
-		const std::tstring& tgbot_token,
-		const std::tstring& tgbot_chat_id ) :
-		m_api_url(api_url),
-		m_api_key(api_key),
-		m_img_api_url(img_api_url),
-		m_img_api_key(img_api_key),
-		m_tgbot_token(tgbot_token),
-		m_tgbot_chat_id(tgbot_chat_id)
-	{
-		
+	Mteam::Mteam(const std::tstring &api_url,
+	             const std::tstring &api_key,
+	             const std::tstring &img_api_url,
+	             const std::tstring &img_api_key,
+	             const std::tstring &tgbot_token,
+	             const std::tstring &tgbot_chat_id) : m_api_url(api_url),
+	                                                  m_api_key(api_key),
+	                                                  m_img_api_url(img_api_url),
+	                                                  m_img_api_key(img_api_key),
+	                                                  m_tgbot_token(tgbot_token),
+	                                                  m_tgbot_chat_id(tgbot_chat_id) {
 	}
 
-	bool Mteam::publish(const av::media::Source& source) {
+	bool Mteam::publish(const av::media::Source &source) {
 		m_external_source = source;
 		Category category(source.category);
 
@@ -79,22 +76,22 @@ namespace mteam {
 				loge("move file{} to {} failed", av::str::toA(m_external_source.fullpath), av::str::toA(video_file));
 				return false;
 			}
-		}
-		else if (source.type == av::media::SourceType::Dir) {
+		} else if (source.type == av::media::SourceType::Dir) {
 			// 如果是目录,修改名称即可
 			try {
 				fs::rename(m_external_source.fullpath, seed_dir);
-			}
-			catch (const fs::filesystem_error& e) {
-				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir), e.what());
+			} catch (const fs::filesystem_error &e) {
+				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
+				     e.what());
 				return false;
 			}
-			catch (const std::exception& e) {
-				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir), e.what());
+			catch (const std::exception &e) {
+				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
+				     e.what());
 				return false;
 			}
 		}
-				
+
 		// 制作种子文件
 		auto torrent_file = av::path::append(m_external_source.dir, torrent_filename);
 		if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(torrent_file))) {
@@ -106,19 +103,19 @@ namespace mteam {
 				logi("clean {} succ", av::str::toA(torrent_file));
 			}
 		});
-		
+
 
 		// 上传图片
 		std::vector<std::tstring> img_url;
 		UploadImg img(m_img_api_url, m_img_api_key);
-		for (auto& i : m_external_source.screenshot_local) {
+		for (auto &i: m_external_source.screenshot_local) {
 			std::tstring tmp;
 			if (!img.Upload(i, tmp)) {
 				loge("upload img {} failed", av::str::toA(i));
 				continue;
 			}
 			if (!tmp.empty()) {
-				tmp = av::str::toT( fmt::format("![]({})", av::str::toA(tmp)));
+				tmp = av::str::toT(fmt::format("![]({})", av::str::toA(tmp)));
 				img_url.push_back(tmp);
 			}
 		}
@@ -130,8 +127,7 @@ namespace mteam {
 
 		// 发布到 m-team
 		http_::Client client;
-		http_::Form form;
-		{
+		http_::Form form; {
 			auto category_id = category.getid();
 			form.kv["category"] = std::to_string(static_cast<int64_t>(category_id));
 			form.kv["name"] = av::str::toA(title);
@@ -146,7 +142,8 @@ namespace mteam {
 			form.kv["team"] = std::to_string(m_external_source.group_id);
 			form.kv["imdb"] = av::str::toA(m_external_source.imdb_link);
 			char buff[2048];
-			snprintf(buff, sizeof(buff)-1, "https://movie.douban.com/subject/%s/", av::str::toA(m_external_source.douban_id).c_str());
+			snprintf(buff, sizeof(buff) - 1, "https://movie.douban.com/subject/%s/",
+			         av::str::toA(m_external_source.douban_id).c_str());
 			form.kv["douban"] = std::string(buff);
 			form.kv["labelsNew"] = "";
 			form.kv["mediainfo"] = av::str::toA(m_external_source.mediainfo_text);
@@ -163,7 +160,7 @@ namespace mteam {
 		http_::Header header;
 		header.kv["x-api-key"] = av::str::toA(m_api_key);
 		form.file["file"] = av::str::toA(torrent_file);
-			
+
 		// 上传到网站
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
 		logi("post url {}", av::str::toA(url));
@@ -193,11 +190,27 @@ namespace mteam {
 			if (j.contains("message") && j["message"].is_string()) {
 				message = j["message"].get<std::string>();
 			}
+
+			// 网站返回不标准,所以这里要分两次判断
+			if (j["code"].is_number_integer()) {
+				// 这可能是返回错误
+				const auto code_i = j["code"].get<int>();
+				if (code_i != 0) {
+					std::tstring msg = TEXT("发布 ");
+					msg += title + TEXT("\n");
+					msg += m_external_source.sub_title + TEXT(" 失败\n");
+					msg += TEXT("错误消息: ") + av::str::toT(message);
+					sendTGWaringMessage(msg);
+					return false;
+				}
+			}
+
 			auto code = j["code"].get<std::string>();
-			if (code != "0") { // here, the website result string
+			if (code != "0") {
+				// here, the website result string
 				logw("code {} message {}", code, message);
 			}
-				
+
 			if (j.contains("data")) {
 				json data = j["data"];
 				if (data.contains("id") && data["id"].is_string()) {
@@ -213,33 +226,30 @@ namespace mteam {
 					response_create_date = av::str::toT(data["createdDate"].get<std::string>());
 				}
 			}
-		}
-		catch (const json::parse_error& e) {
+		} catch (const json::parse_error &e) {
 			logw("parse_error {}, {}", e.what(), resp->body);
 			return false;
 		}
-		catch (const std::exception& e) {
+		catch (const std::exception &e) {
 			logw("exception {}, {}", e.what(), resp->body);
 			return false;
 		}
-			
+
 		if (!sendTGMessage(m_external_source.poster_img, m_external_source.screenshot_local, response_id, response_name,
-			response_sub_title, response_create_date)) {
+		                   response_sub_title, response_create_date)) {
 			logw("sendTGMessage failed");
 		}
 		return true;
 	}
 
-	bool Mteam::sendTGMessage(std::tstring& douban_poster_img,
-		std::vector<std::tstring>& screenshots,
-		std::tstring& publish_id,
-		std::tstring& title,
-		std::tstring& sub_title,
-		std::tstring& create_date) {
-
+	bool Mteam::sendTGMessage(std::tstring &douban_poster_img,
+	                          std::vector<std::tstring> &screenshots,
+	                          std::tstring &publish_id,
+	                          std::tstring &title,
+	                          std::tstring &sub_title,
+	                          std::tstring &create_date) {
 		// 发送tg消息
-		std::tstring text;
-		{
+		std::tstring text; {
 			std::string text_tmp = R"(
 🔗 链接: https://kp.m-team.cc/detail/%s
 🔧 標題: %s
@@ -247,8 +257,8 @@ namespace mteam {
 ⏲ 发布时间: %s
 )";
 			char buff[32768];
-			sprintf(buff, text_tmp.c_str(), av::str::toA(publish_id).c_str(), av::str::toA(title).c_str(), 
-				av::str::toA(sub_title).c_str(), av::str::toA(create_date).c_str());
+			sprintf(buff, text_tmp.c_str(), av::str::toA(publish_id).c_str(), av::str::toA(title).c_str(),
+			        av::str::toA(sub_title).c_str(), av::str::toA(create_date).c_str());
 			text = av::str::toT(std::string(buff));
 		}
 
@@ -257,9 +267,10 @@ namespace mteam {
 			logi("try use douban poster img: {}", av::str::toA(douban_poster_img));
 			while (true) {
 				if (!av::tgbot::send_net_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-					av::str::toA(douban_poster_img), av::str::toA(text))) {
-					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-						av::str::toA(douban_poster_img), av::str::toA(text));
+				                                       av::str::toA(douban_poster_img), av::str::toA(text))) {
+					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token),
+					     av::str::toA(m_tgbot_chat_id),
+					     av::str::toA(douban_poster_img), av::str::toA(text));
 					break;
 				}
 				return true;
@@ -272,9 +283,10 @@ namespace mteam {
 			logi("try use screenshots img: {}", av::str::toA(img));
 			while (true) {
 				if (!av::tgbot::send_local_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-					av::str::toA(img), av::str::toA(text))) {
-					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-						av::str::toA(img), av::str::toA(text));
+				                                         av::str::toA(img), av::str::toA(text))) {
+					logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token),
+					     av::str::toA(m_tgbot_chat_id),
+					     av::str::toA(img), av::str::toA(text));
 					break;
 				}
 				return true;
@@ -285,28 +297,29 @@ namespace mteam {
 		std::tstring img = TEXT("https://static.m-team.cc/static/media/logo.80b63235eaf702e44a8d.png");
 		logi("try use default img: {}", av::str::toA(img));
 		if (!av::tgbot::send_net_photo_message(av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-			av::str::toA(img), av::str::toA(text))) {
-			logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token), av::str::toA(m_tgbot_chat_id),
-				av::str::toA(img), av::str::toA(text));
+		                                       av::str::toA(img), av::str::toA(text))) {
+			logw("send_net_photo_message send failed!!! {}, {}, {}, {}", av::str::toA(m_tgbot_token),
+			     av::str::toA(m_tgbot_chat_id),
+			     av::str::toA(img), av::str::toA(text));
 		}
 
 		return true;
 	}
 
-	bool Mteam::parseName(std::tstring& torrent_dir, 
-			std::tstring& title, 
-			std::tstring& video_filename,
-			std::tstring& torrent_filename
+	bool Mteam::parseName(std::tstring &torrent_dir,
+	                      std::tstring &title,
+	                      std::tstring &video_filename,
+	                      std::tstring &torrent_filename
 	) {
 		m_video_codec.setSourceVideoCodec(m_external_source.video_codec);
 		m_video_resolution.setSourceResolution(m_external_source.video_resolution);
 		m_audio_codec.setSourceCodec(m_external_source.audio_codec);
-		m_cateogry.setSourceCategory(m_external_source.category);
+		m_category.setSourceCategory(m_external_source.category);
 		m_source.setExternalSourceId(m_external_source.source_id);
 
 		auto title_name_vec = av::str::split(m_external_source.name_eng, TEXT(" "));
 		std::tstring new_name = av::str::join(title_name_vec, TEXT("."));
-		for (auto& t : ex_include) {
+		for (auto &t: ex_include) {
 			av::str::replace_all(new_name, t, TEXT(""));
 		}
 
@@ -354,8 +367,7 @@ namespace mteam {
 		torrent_dir_.push_back(m_video_resolution.getText());
 
 
-		title_name.push_back(m_audio_codec.getText());
-		{
+		title_name.push_back(m_audio_codec.getText()); {
 			auto tmp = m_audio_codec.getText();
 			av::str::replace_all(tmp, TEXT(" "), TEXT("."));
 			video_name.push_back(tmp);
@@ -370,28 +382,32 @@ namespace mteam {
 		torrent_name.push_back(m_video_codec.getText() + TEXT("-") + team_name);
 
 		// 做种目录名
-		if(!m_external_source.season.empty()){
+		if (!m_external_source.season.empty()) {
 			torrent_dir = av::str::join(torrent_dir_, TEXT(".")); // 剧集
-		}
-		else {
+		} else {
 			torrent_dir = av::str::join(video_name, TEXT("."));
 		}
-		
+
 		// 标题
 		title = av::str::join(title_name, TEXT(" "));
-		
+
 		// 视频文件名
 		video_name.push_back(m_external_source.file_suffix);
 		video_filename = av::str::join(video_name, TEXT("."));
-		
+
 		// 种子文件名
 		torrent_name.push_back(TEXT("torrent"));
 		torrent_filename = av::str::join(torrent_name, TEXT("."));
 		return true;
 	}
 
-	Mteam::~Mteam()
-	{
+	void Mteam::sendTGWaringMessage(const std::tstring &msg) const {
+		const std::string text = "失败警告: " + av::str::toA(msg);
+		av::tgbot::send_message(av::str::toA(m_tgbot_token),
+		                        av::str::toA(m_tgbot_chat_id),
+		                        text);
+	}
 
+	Mteam::~Mteam() {
 	}
 }

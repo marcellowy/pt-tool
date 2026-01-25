@@ -15,19 +15,19 @@
 #include "group.h"
 
 namespace mteam {
-
-	class Mteam : public Site
-	{
+	class Mteam : public Site {
 	public:
-		Mteam(const std::tstring& api_url,
-			const std::tstring& api_key, 
-			const std::tstring& img_api_url, 
-			const std::tstring& img_api_key,
-			const std::tstring& tgbot_token,
-			const std::tstring& tgbot_chat_id);
+		Mteam(const std::tstring &api_url,
+		      const std::tstring &api_key,
+		      const std::tstring &img_api_url,
+		      const std::tstring &img_api_key,
+		      const std::tstring &tgbot_token,
+		      const std::tstring &tgbot_chat_id);
 
-		bool publish(const av::media::Source& source) override;
-		~Mteam();
+		bool publish(const av::media::Source &source) override;
+
+		~Mteam() override;
+
 	private:
 		std::tstring m_api_url;
 		std::tstring m_api_key;
@@ -41,22 +41,25 @@ namespace mteam {
 		mteam::video::Codec m_video_codec;
 		mteam::video::Resolution m_video_resolution;
 		mteam::audio::Codec m_audio_codec;
-		mteam::Category m_cateogry;
+		mteam::Category m_category;
 		int64_t group_id = 0;
 		mteam::Source m_source;
+
 	private:
-		bool sendTGMessage(std::tstring& douban_poster_img,
-			std::vector<std::tstring>& screenshots,
-			std::tstring& publish_id,
-			std::tstring& title,
-			std::tstring& sub_title,
-			std::tstring& create_date);
-		bool parseName(std::tstring& torrent_dir,
-			std::tstring& title,
-			std::tstring& video_filename,
-			std::tstring& torrent_filename
+		bool sendTGMessage(std::tstring &douban_poster_img,
+		                   std::vector<std::tstring> &screenshots,
+		                   std::tstring &publish_id,
+		                   std::tstring &title,
+		                   std::tstring &sub_title,
+		                   std::tstring &create_date);
+
+		void sendTGWaringMessage(const std::tstring &msg) const;
+
+		bool parseName(std::tstring &torrent_dir,
+		               std::tstring &title,
+		               std::tstring &video_filename,
+		               std::tstring &torrent_filename
 		);
 	};
-
 }
 #endif
