@@ -84,8 +84,7 @@ namespace mteam {
 				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
 				     e.what());
 				return false;
-			}
-			catch (const std::exception &e) {
+			} catch (const std::exception &e) {
 				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
 				     e.what());
 				return false;
@@ -123,6 +122,12 @@ namespace mteam {
 		if (!m_external_source.description.empty()) {
 			// 组合豆瓣的描述
 			description = m_external_source.description + TEXT("\n\n") + description;
+		}
+
+		// 没有描述
+		if (description.empty()) {
+			sendTGWaringMessage(TEXT("请稍后补充描述和截图"));
+			description = TEXT("稍后补充描述与截图");
 		}
 
 		// 发布到 m-team
@@ -229,8 +234,7 @@ namespace mteam {
 		} catch (const json::parse_error &e) {
 			logw("parse_error {}, {}", e.what(), resp->body);
 			return false;
-		}
-		catch (const std::exception &e) {
+		} catch (const std::exception &e) {
 			logw("exception {}, {}", e.what(), resp->body);
 			return false;
 		}

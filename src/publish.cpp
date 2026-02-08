@@ -46,18 +46,18 @@ struct AVSInfo {
     std::tstring created_time;
 };
 
-static void from_json(const json& j, AVSInfo& avs);
+static void from_json(const json &j, AVSInfo &avs);
 
-static std::tstring getTmpDir(const Source& obj);
+static std::tstring getTmpDir(const Source &obj);
 
-std::tstring getTmpDir(const Source& obj) {
+std::tstring getTmpDir(const Source &obj) {
     std::tstring dir = av::path::get_exe_dir();
     dir = av::path::append(dir, TEXT("tmp"));
     dir = av::path::append(dir, obj.fullpath_md5);
     return dir;
 }
 
-void from_json(const json& j, AVSInfo& avs) {
+void from_json(const json &j, AVSInfo &avs) {
     if (j.contains("width") && j["width"].is_number_integer()) {
         avs.width = j["width"].get<int64_t>();
     }
@@ -90,31 +90,25 @@ void from_json(const json& j, AVSInfo& avs) {
     }
 }
 
-Publish::Publish()
-{
-    
+Publish::Publish() {
 }
 
-Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir): m_site(std::move(site)), m_dir(dir) {
-
+Publish::Publish(std::shared_ptr<Site> &site, const std::tstring &dir) : m_site(std::move(site)), m_dir(dir) {
 }
 
-Publish::~Publish()
-{
+Publish::~Publish() {
     stop();
 }
 
 void Publish::task() {
-
     auto arr = readDir();
-    for (auto& tmp : arr) {
+    for (auto &tmp: arr) {
         if (tmp.type == SourceType::File) {
             if (!processFile(tmp)) {
                 logw("process file failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
                 continue;
             }
-        }
-        else if (tmp.type == SourceType::Dir) {
+        } else if (tmp.type == SourceType::Dir) {
             const auto ret = processDir(tmp);
             if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
                 logw("{} time not reached", av::str::toA(tmp.name));
@@ -134,7 +128,7 @@ void Publish::task() {
             tmp.source_id == SourceId::Unknown ||
             tmp.video_codec == SourceVideoCodec::Unknown ||
             tmp.video_resolution == SourceVideoResolution::Unknown
-            ) {
+        ) {
             logw("{} param error, please check", av::str::toA(tmp.fullpath));
             continue;
         }
@@ -154,9 +148,9 @@ void Publish::task() {
     }
 }
 
-bool Publish::start(){
-    auto& config = Config::instance();
-    for (auto& cycle : config.mteam.publish_cycle) {
+bool Publish::start() {
+    auto &config = Config::instance();
+    for (auto &cycle: config.mteam.publish_cycle) {
         auto c = std::make_shared<av::cron::Cron>(cycle.name, cycle.pattern, [this] {
             logi("do task");
             task();
@@ -171,14 +165,13 @@ bool Publish::start(){
 }
 
 bool Publish::stop() {
-    for (auto& c: m_cron) {
+    for (auto &c: m_cron) {
         c->stop();
     }
     return true;
 }
 
-bool Publish::getSiteType(Source& obj) {
-
+bool Publish::getSiteType(Source &obj) {
     if (obj.type == SourceType::Dir) {
         return false;
     }
@@ -190,7 +183,7 @@ bool Publish::getSiteType(Source& obj) {
     std::tstring pre = TEXT("");
 
     // Sport
-    pre = obj.name.substr(0,2);
+    pre = obj.name.substr(0, 2);
     if (pre == publishPrefixSport) {
         obj.category = av::media::SourceCategory::Sport;
         //obj.category_id = mteam::category::Id::Sport;
@@ -200,7 +193,7 @@ bool Publish::getSiteType(Source& obj) {
         }
         return true;
     }
-        
+
     // Variety
     pre = obj.name.substr(0, 3);
     if (pre == publishPrefixVariety) {
@@ -248,8 +241,8 @@ bool Publish::getSiteType(Source& obj) {
     return false;
 }
 
-int Publish::processDir(Source& obj) {
-    auto& config = Config::instance();
+int Publish::processDir(Source &obj) {
+    auto &config = Config::instance();
     logi("process {}", av::str::toA(obj.fullpath));
 
     //
@@ -261,8 +254,8 @@ int Publish::processDir(Source& obj) {
     auto media_info_json_path = av::path::append(obj.fullpath, TEXT("media_info.json"));
     auto media_info_text_path = av::path::append(obj.fullpath, TEXT("media_info.txt"));
     if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
-        logw("{} or {} not exists", 
-            av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
+        logw("{} or {} not exists",
+             av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
         return -1;
     }
 
@@ -292,14 +285,11 @@ int Publish::processDir(Source& obj) {
         av::media::ScanType scan_type;
         if (avs_info.scan_type == TEXT("Interlaced")) {
             scan_type = av::media::ScanType::Interlaced;
-        }
-        else if (avs_info.scan_type == TEXT("MBAFF")) {
+        } else if (avs_info.scan_type == TEXT("MBAFF")) {
             scan_type = av::media::ScanType::MBAFF;
-        }
-        else if (avs_info.scan_type == TEXT("Progressive")) {
+        } else if (avs_info.scan_type == TEXT("Progressive")) {
             scan_type = av::media::ScanType::Progressive;
-        }
-        else {
+        } else {
             scan_type = av::media::ScanType::Unknown;
         }
         //
@@ -331,22 +321,17 @@ int Publish::processDir(Source& obj) {
         obj.category = SourceCategory::Unknown; // default
         if (avs_info.category == 402) {
             obj.category = SourceCategory::TVSeries;
-        }
-        else if (avs_info.category == 404) {
+        } else if (avs_info.category == 404) {
             obj.category = SourceCategory::Discover;
-        }
-        else if (avs_info.category == 407) {
+        } else if (avs_info.category == 407) {
             obj.category = SourceCategory::Sport;
-        }
-        else if (avs_info.category == 419) {
+        } else if (avs_info.category == 419) {
             obj.category = SourceCategory::Movie;
         }
-    }
-    catch (const json::parse_error& e) {
+    } catch (const json::parse_error &e) {
         logw("json::parse_error {}", e.what());
         return -1;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         logw("std::exception {}", e.what());
         return -1;
     }
@@ -361,7 +346,8 @@ int Publish::processDir(Source& obj) {
         return -1;
     }
 
-    if (diff_time_seconds < 24 * 3600) { // 24 hours
+    if (diff_time_seconds < 24 * 3600) {
+        // 24 hours
         logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
         return static_cast<int>(ErrorCode::ErrTimeNotReached);
     }
@@ -369,7 +355,7 @@ int Publish::processDir(Source& obj) {
     // read dir
     int64_t ts_count = 0;
     std::vector<std::tstring> img_vec;
-    for (const auto& entry : fs::directory_iterator(obj.fullpath)) {
+    for (const auto &entry: fs::directory_iterator(obj.fullpath)) {
 #ifdef _UNICODE
         std::tstring name = entry.path().filename().wstring();
         std::tstring ext = entry.path().extension().wstring();
@@ -385,8 +371,8 @@ int Publish::processDir(Source& obj) {
         }
 
         // process image file
-        if (ext == TEXT(".jpg") || 
-            ext == TEXT(".jpeg") || 
+        if (ext == TEXT(".jpg") ||
+            ext == TEXT(".jpeg") ||
             ext == TEXT(".png")) {
             img_vec.push_back(fullpath);
         }
@@ -409,7 +395,7 @@ int Publish::processDir(Source& obj) {
         }
 
         // move
-        for (auto& img: img_vec) {
+        for (auto &img: img_vec) {
             fs::path i = img;
 #ifdef _UNICODE
             std::tstring tmp_name = i.filename().wstring();
@@ -458,8 +444,8 @@ int Publish::processDir(Source& obj) {
     return static_cast<int>(ErrorCode::Success);
 }
 
-bool Publish::processFile(Source& obj) {
-    auto& config = Config::instance();
+bool Publish::processFile(Source &obj) {
+    auto &config = Config::instance();
     logi("process {}", av::str::toA(obj.fullpath));
 
     obj.source_id = av::media::from(config.mteam.source_id);
@@ -506,8 +492,9 @@ bool Publish::processFile(Source& obj) {
             loge("get douban info failed!");
             // try use m-team api
             char douban_url_buff[2048];
-            snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/", av::str::toA(obj.douban_id).c_str());
-             std::string real_douban_url_buff(douban_url_buff);
+            snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
+                     av::str::toA(obj.douban_id).c_str());
+            std::string real_douban_url_buff(douban_url_buff);
             if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
                 loge("get douban info failed!");
                 return false;
@@ -521,14 +508,14 @@ bool Publish::processFile(Source& obj) {
         obj.sub_title = av::str::toT(db.sub_title);
         obj.imdb_link = av::str::toT(db.imdb_link);
         obj.description = av::str::toT(db.description);
-        obj.poster_img = av::str::toT( db.poster_img);
+        obj.poster_img = av::str::toT(db.poster_img);
     }
 
     // add screenshot
     // 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
-    const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
+    const std::vector<int64_t> capture_time = {60, 120, 180, 240};
     int capture_count = 0;
-    av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
+    av::codec::StbPNG stbPng([&obj, &capture_count](void *data, int size) {
         // screenshots dir
         auto dir = getTmpDir(obj);
         if (!av::path::create_dir(dir)) {
@@ -539,7 +526,7 @@ bool Publish::processFile(Source& obj) {
         oo << TEXT("screenshot_") << capture_count << TEXT(".png");
         std::tstring filename = av::path::append(dir, oo.str());
         std::ofstream out_file(av::str::toA(filename), std::ios::binary);
-        out_file.write(static_cast<char*>(data), size);  // 写入数据到文件
+        out_file.write(static_cast<char *>(data), size); // 写入数据到文件
 
         obj.screenshot_local.push_back(filename);
 
@@ -548,6 +535,11 @@ bool Publish::processFile(Source& obj) {
     if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
         loge("capture frame failed");
         return false;
+    }
+
+    // if capture frame failed
+    if (obj.screenshot_local.empty()) {
+        logw("capture frame failed");
     }
 
     // add english name
@@ -562,7 +554,7 @@ bool Publish::processFile(Source& obj) {
         capitalizeWords(obj.name_eng);
     }
 
-    return true; 
+    return true;
 }
 
 std::vector<Source> Publish::readDir() {
@@ -575,7 +567,7 @@ std::vector<Source> Publish::readDir() {
     }
 
     // read
-    for (const auto& entry : fs::directory_iterator(m_dir)) {
+    for (const auto &entry: fs::directory_iterator(m_dir)) {
         Source obj;
 #ifdef _UNICODE
         obj.name = av::str::toT(entry.path().filename().wstring());
@@ -585,12 +577,12 @@ std::vector<Source> Publish::readDir() {
         if (obj.name.size() < 5) {
             continue;
         }
-        // 
+        //
         if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
             // published
             continue;
         }
-        if (obj.name.substr(0,1) == TEXT(".")) {
+        if (obj.name.substr(0, 1) == TEXT(".")) {
             // tmp file
             continue;
         }
@@ -604,8 +596,7 @@ std::vector<Source> Publish::readDir() {
             obj.file_suffix = entry.path().extension().string();
 #endif
             av::str::replace(obj.file_suffix, TEXT("."), TEXT(""));
-        }
-        else if (entry.is_directory()) {
+        } else if (entry.is_directory()) {
             obj.type = SourceType::Dir; // 目前传目录的只有AVS, AVS就特殊处理
         }
         obj.dir = m_dir;
@@ -615,8 +606,7 @@ std::vector<Source> Publish::readDir() {
             std::string tmp_md5;
             av::hash::md5(av::str::toA(obj.fullpath), tmp_md5);
             obj.fullpath_md5 = av::str::toT(tmp_md5);
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             loge("exception {}", e.what());
         }
 
@@ -625,12 +615,12 @@ std::vector<Source> Publish::readDir() {
     return v;
 }
 
-void Publish::tvname(Source& obj) {
+void Publish::tvname(Source &obj) {
     if (obj.title_prefix.empty()) {
         return;
     }
-    auto& tvs = Config::instance().tv_name;
-    for (auto& tv : tvs) {
+    auto &tvs = Config::instance().tv_name;
+    for (auto &tv: tvs) {
         if (tv.match == obj.title_prefix) {
             obj.title_prefix = tv.title_prefix;
             if (obj.category != av::media::SourceCategory::Movie) {
@@ -642,46 +632,41 @@ void Publish::tvname(Source& obj) {
     obj.title_prefix = TEXT("");
 }
 
-void Publish::setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj) {
+void Publish::setResolution(int64_t width, int64_t height, const av::media::ScanType &scan_type, Source &obj) {
     obj.video_resolution = SourceVideoResolution::_1080p; // default
     if (height == 4320) {
         obj.video_resolution = SourceVideoResolution::_8k;
-    }
-    else if (height == 2160 || (width == 3840 && height >= 1500 && height <= 2160)) {
+    } else if (height == 2160 || (width == 3840 && height >= 1500 && height <= 2160)) {
         obj.video_resolution = SourceVideoResolution::_4k;
-    }
-    else if (height > 720 && height <= 1080) {
+    } else if (height > 720 && height <= 1080) {
         switch (scan_type) {
-        case av::media::ScanType::Interlaced:
-            obj.video_resolution = SourceVideoResolution::_1080i;
-            break;
-            obj.video_resolution = SourceVideoResolution::_1080p;
-        case av::media::ScanType::MBAFF:
-            break;
-        case av::media::ScanType::Progressive:
-            obj.video_resolution = SourceVideoResolution::_1080p;
-            break;
-        default:
-            obj.video_resolution = SourceVideoResolution::Unknown;
-            break;
+            case av::media::ScanType::Interlaced:
+                obj.video_resolution = SourceVideoResolution::_1080i;
+                break;
+                obj.video_resolution = SourceVideoResolution::_1080p;
+            case av::media::ScanType::MBAFF:
+                break;
+            case av::media::ScanType::Progressive:
+                obj.video_resolution = SourceVideoResolution::_1080p;
+                break;
+            default:
+                obj.video_resolution = SourceVideoResolution::Unknown;
+                break;
         }
-    }
-    else if (height <= 720 && height > 480) {
+    } else if (height <= 720 && height > 480) {
         obj.video_resolution = SourceVideoResolution::_720;
-    }
-    else if (height <= 480) {
+    } else if (height <= 480) {
         obj.video_resolution = SourceVideoResolution::_480;
     }
 }
 
 
-void Publish::capitalizeWords(std::tstring& s) {
+void Publish::capitalizeWords(std::tstring &s) {
     bool newWord = true;
-    for (tchar& c : s) {
+    for (tchar &c: s) {
         if (std::isspace(c)) {
             newWord = true;
-        }
-        else if (newWord) {
+        } else if (newWord) {
             c = std::toupper(static_cast<tchar>(c));
             newWord = false;
         }
