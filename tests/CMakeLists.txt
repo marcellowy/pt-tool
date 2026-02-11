@@ -10,35 +10,13 @@ file(GLOB SOURCE_FILE
 include_directories(
         ${CMAKE_SOURCE_DIR}
 )
-
 find_package(GTest CONFIG REQUIRED)
-
-if (MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif ()
-
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
-
-if (MSVC)
-    # if Generator is Visual Studio 2022
-    set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif ()
-
 macro(setup name)
     if (MSVC)
 
         target_compile_options(${name} PRIVATE /utf-8)
-
-        # if use ninja
-        if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set_target_properties(${name} PROPERTIES
-                    MSVC_RUNTIME_LIBRARY "MultiThreadedDebug"
-            )
-        else ()
-            set_target_properties(${name} PROPERTIES
-                    MSVC_RUNTIME_LIBRARY "MultiThreaded"
-            )
-        endif ()
+        set_target_properties(${name} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     else ()
         if (CMAKE_BUILD_TYPE STREQUAL "Debug")
             target_compile_definitions(${name} PRIVATE DEBUG=1)
@@ -48,7 +26,11 @@ macro(setup name)
     if (WIN32)
         target_compile_definitions(${name} PRIVATE UNICODE _UNICODE)
     endif ()
-
+    target_include_directories(${name} PRIVATE
+            ${CMAKE_SOURCE_DIR}/utils
+            ${CMAKE_SOURCE_DIR}/utils/douban
+            ${CMAKE_SOURCE_DIR}/src/site
+    )
 endmacro()
 
 setup(${PROJECT_NAME})

@@ -26,20 +26,25 @@ protected:
 	}
 
 	void TearDown() override {
-
 	}
 };
 
+TEST_F(FFmpegTest, test_ffmpeg) {
+	if (!av::ffmpeg::captureFrame(TEXT("C:\\Users\\chadwang\\Videos\\2026-01-08_09-55-11.ts"))) {
+		loge("captureFrame failed!!!");
+	}
+}
+
 TEST_F(FFmpegTest, DISABLED_captureFrame_stb) {
 	// 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120
-	const std::vector<int64_t> tt = { 5,10 };
+	const std::vector<int64_t> tt = {5, 10};
 	int64_t count = 0;
 
-	av::codec::StbPNG stbPng([&count](void* data, int size) {
+	av::codec::StbPNG stbPng([&count](void *data, int size) {
 		std::tstringstream oo;
 		oo << TEXT("test_") << count << TEXT(".png");
 		std::ofstream out_file(av::str::toA(oo.str()), std::ios::binary);
-		out_file.write(static_cast<char*>(data), size);  // 写入数据到文件
+		out_file.write(static_cast<char *>(data), size); // 写入数据到文件
 		count++;
 	});
 
@@ -50,15 +55,16 @@ TEST_F(FFmpegTest, DISABLED_captureFrame_stb) {
 
 
 TEST_F(FFmpegTest, DISABLED_captureFrame_jpg) {
-
-	const std::vector<int64_t> tt = { 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120 };
+	const std::vector<int64_t> tt = {
+		60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 120
+	};
 	int64_t count = 0;
 
-	av::codec::JPG jpg([&count](uint8_t* data, size_t size) {
+	av::codec::JPG jpg([&count](uint8_t *data, size_t size) {
 		logi("capture freame callback, {}", count);
 		// 
 		std::string filename = fmt::format("frame_{}.jpg", count);
-		FILE* f = fopen(filename.c_str(), "wb");
+		FILE *f = fopen(filename.c_str(), "wb");
 		if (f == NULL) {
 			loge("open {} failed", av::str::toA(filename));
 			return;

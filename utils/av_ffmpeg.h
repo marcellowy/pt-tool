@@ -22,7 +22,11 @@ extern "C" {
 
 namespace av {
 	namespace ffmpeg {
-		bool captureFrame(const std::tstring& video, const std::vector<int64_t>& time_seconds, av::codec::Codec& codec);
+		bool captureFrame(const std::tstring &video, const std::vector<int64_t> &time_seconds, av::codec::Codec &codec);
+
+		inline bool captureFrame(const std::tstring &video) {
+			return true;
+		}
 	}
 }
 
