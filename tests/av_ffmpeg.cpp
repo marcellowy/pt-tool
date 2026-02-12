@@ -6,6 +6,7 @@
 #include "av_codec_stb_image_jpg.h"
 #include "av_codec_jpg.h"
 #include "av_codec_png.h"
+#include  "matroska_ffmpeg_save_frames.h"
 
 class FFmpegTest : public ::testing::Test {
 protected:
@@ -30,9 +31,29 @@ protected:
 };
 
 TEST_F(FFmpegTest, test_ffmpeg) {
-	if (!av::ffmpeg::captureFrame(TEXT("C:\\Users\\chadwang\\Videos\\2026-01-08_09-55-11.ts"))) {
-		loge("captureFrame failed!!!");
+	const char *path = "d:\\ff.mkv";
+
+	// 保存4张图片：30秒、60秒、120秒、180秒
+	int time_points[] = {30, 60, 120, 180};
+	int num_points = sizeof(time_points) / sizeof(time_points[0]);
+
+	fprintf(stderr, "[main] Saving %d frames at specified time points from: %s\n", num_points, path);
+	fflush(stderr);
+
+	for (int i = 0; i < num_points; i++) {
+		char output_path[512];
+		snprintf(output_path, sizeof(output_path), "frame_%03ds.png", time_points[i]);
+
+		fprintf(stderr, "\n[main] Processing time point %d: %d seconds -> %s\n", i + 1, time_points[i], output_path);
+		fflush(stderr);
+
+		int ret = save_frame_at_time(path, output_path, time_points[i]);
+		if (ret < 0) {
+			fprintf(stderr, "[main] Failed to save frame at %d seconds\n", time_points[i]);
+		}
 	}
+
+	fprintf(stderr, "\n[main] Completed saving all frames.\n");
 }
 
 TEST_F(FFmpegTest, DISABLED_captureFrame_stb) {
