@@ -540,6 +540,24 @@ bool Publish::processFile(Source &obj) {
     // if capture frame failed
     if (obj.screenshot_local.empty()) {
         logw("capture frame failed");
+        // try use ffmpeg command capture
+        auto dir = getTmpDir(obj);
+        if (!av::path::create_dir(dir)) {
+            loge("create dir {} failed", av::str::toA(dir));
+            return false;
+        }
+        std::vector<std::string> tt = {"00:00:30", "00:00:45", "00:01:00", "00:01:30"};
+        std::string save_path = av::str::toA(dir);
+        std::vector<std::string> files;
+        av::ffmpeg::captureFrame(obj.fullpath, tt, save_path, files);
+        if (!files.empty()) {
+            for (const auto &file: files) {
+                obj.screenshot_local.emplace_back(av::str::toT(file));
+            }
+        } else {
+            logw("use ffmpeg command capture frame failed");
+        }
+        logi("capture screenshot local size {}", obj.screenshot_local.size());
     } else {
         logi("capture screenshot local size {}", obj.screenshot_local.size());
     }
