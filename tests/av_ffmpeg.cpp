@@ -98,3 +98,19 @@ TEST_F(FFmpegTest, DISABLED_captureFrame_jpg) {
 		loge("captureFrame failed!!!");
 	}
 }
+
+TEST_F(FFmpegTest, captureFrame_jpg2) {
+	const std::vector<std::string> tt = {
+		"00:00:10",
+		"00:00:20",
+	};
+	std::vector<std::tstring> files;
+
+	if (!av::ffmpeg::captureFrame(TEXT("D:\\Downloads\\a.ts"), tt, TEXT("D:\\Downloads"),
+	                              files)) {
+		loge("captureFrame failed!!!");
+	}
+	for (auto &a: files) {
+		logi("{}", av::str::toA(a));
+	}
+}

@@ -540,6 +540,8 @@ bool Publish::processFile(Source &obj) {
     // if capture frame failed
     if (obj.screenshot_local.empty()) {
         logw("capture frame failed");
+    } else {
+        logi("capture screenshot local size {}", obj.screenshot_local.size());
     }
 
     // add english name

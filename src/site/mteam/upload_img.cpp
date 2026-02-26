@@ -9,26 +9,22 @@ using json = nlohmann::json;
 namespace http_ = av::http;
 
 namespace mteam {
-	UploadImg::UploadImg(const std::tstring& url, const std::tstring& key) : 
-		m_api_img_key(key),
-		m_api_img_url(url)
-	{
+	UploadImg::UploadImg(const std::tstring &url, const std::tstring &key) : m_api_img_key(key),
+	                                                                         m_api_img_url(url) {
 	}
 
-	UploadImg::~UploadImg()
-	{
+	UploadImg::~UploadImg() {
 	}
 
 
-	bool UploadImg::Upload(const std::tstring& img_path, std::tstring& url) {
-
+	bool UploadImg::Upload(const std::tstring &img_path, std::tstring &url) {
 		// client
 		http_::Client client;
 
 		// header
 		http_::Header header;
 		header.kv["x-api-key"] = av::str::toA(m_api_img_key);
-		
+
 		// form
 		http_::Form form;
 		form.file["source"] = av::str::toA(img_path);
@@ -41,7 +37,7 @@ namespace mteam {
 		}
 
 		if (resp->status != 200) {
-			loge("post form failed, code = {}, body = {}", resp->status, resp->body );
+			loge("post form failed, code = {}, body = {}", resp->status, resp->body);
 			return false;
 		}
 
@@ -49,7 +45,7 @@ namespace mteam {
 
 		json j;
 		try {
-			auto r = j.parse(resp->body);
+			auto r = json::parse(resp->body);
 			if (!r.contains("status_code")) {
 				loge("no status_code field, {}", resp->body);
 				return false;
@@ -74,12 +70,10 @@ namespace mteam {
 
 			url = av::str::toT(image_url);
 			return true;
-		}
-		catch (const nlohmann::json::parse_error& e) {
+		} catch (const nlohmann::json::parse_error &e) {
 			loge("parse_error {}, {}", e.what(), resp->body);
 			return false;
-		}
-		catch (const std::exception& e) {
+		} catch (const std::exception &e) {
 			loge("parse_error {}, {}", e.what(), resp->body);
 			return false;
 		}

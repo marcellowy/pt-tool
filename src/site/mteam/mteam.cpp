@@ -106,19 +106,33 @@ namespace mteam {
 
 		// 上传图片
 		std::vector<std::tstring> img_url;
-		UploadImg img(m_img_api_url, m_img_api_key);
-		for (auto &i: m_external_source.screenshot_local) {
-			std::tstring tmp;
-			if (!img.Upload(i, tmp)) {
-				loge("upload img {} failed", av::str::toA(i));
-				continue;
+		if (!m_external_source.screenshot_local.empty()) {
+			logi("m_external_source.screenshot_local size = {}", m_external_source.screenshot_local.size());
+			UploadImg img(m_img_api_url, m_img_api_key);
+			for (auto &i: m_external_source.screenshot_local) {
+				std::tstring tmp;
+				if (!img.Upload(i, tmp)) {
+					loge("upload img {} failed", av::str::toA(i));
+					continue;
+				}
+				if (!tmp.empty()) {
+					tmp = av::str::toT(fmt::format("![]({})", av::str::toA(tmp)));
+					img_url.push_back(tmp);
+				}
 			}
-			if (!tmp.empty()) {
-				tmp = av::str::toT(fmt::format("![]({})", av::str::toA(tmp)));
-				img_url.push_back(tmp);
-			}
+		} else {
+			logw("m_external_source.screenshot_local size = {}", m_external_source.screenshot_local.size());
 		}
-		std::tstring description = av::str::join(img_url, TEXT("\n"));
+
+		// description
+		std::tstring description;
+
+		// uploaded img_url
+		if (!img_url.empty()) {
+			description = description + av::str::join(img_url, TEXT("\n"));
+		}
+
+		// append douban description
 		if (!m_external_source.description.empty()) {
 			// 组合豆瓣的描述
 			description = m_external_source.description + TEXT("\n\n") + description;
@@ -126,9 +140,13 @@ namespace mteam {
 
 		// 没有描述
 		if (description.empty()) {
-			sendTGWaringMessage(TEXT("请稍后补充描述和截图"));
-			description = TEXT("稍后补充描述与截图");
+			std::tstring msg = title + TEXT("\n");
+			msg += m_external_source.sub_title + TEXT("\n");
+			msg += TEXT("请补充描述");
+			sendTGWaringMessage(msg);
+			description = TEXT("稍后补充截图");
 		}
+
 
 		// 发布到 m-team
 		http_::Client client;
@@ -146,10 +164,14 @@ namespace mteam {
 			form.kv["audioCodec"] = std::to_string(static_cast<int64_t>(m_audio_codec.getid()));
 			form.kv["team"] = std::to_string(m_external_source.group_id);
 			form.kv["imdb"] = av::str::toA(m_external_source.imdb_link);
-			char buff[2048];
-			snprintf(buff, sizeof(buff) - 1, "https://movie.douban.com/subject/%s/",
-			         av::str::toA(m_external_source.douban_id).c_str());
-			form.kv["douban"] = std::string(buff);
+			if (!m_external_source.douban_id.empty()) {
+				char buff[2048];
+				snprintf(buff, sizeof(buff) - 1, "https://movie.douban.com/subject/%s/",
+				         av::str::toA(m_external_source.douban_id).c_str());
+				form.kv["douban"] = std::string(buff);
+			} else {
+				form.kv["douban"] = "";
+			}
 			form.kv["labelsNew"] = "";
 			form.kv["mediainfo"] = av::str::toA(m_external_source.mediainfo_text);
 			form.kv["tags"] = "";

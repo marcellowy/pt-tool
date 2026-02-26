@@ -24,6 +24,9 @@ namespace av {
 	namespace ffmpeg {
 		bool captureFrame(const std::tstring &video, const std::vector<int64_t> &time_seconds, av::codec::Codec &codec);
 
+		bool captureFrame(const std::tstring &video, const std::vector<std::string> &time_seconds,
+		                  const std::tstring &save_path, std::vector<std::tstring> &files);
+
 		inline bool captureFrame(const std::tstring &video) {
 			return true;
 		}

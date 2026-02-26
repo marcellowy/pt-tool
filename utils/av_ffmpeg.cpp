@@ -9,18 +9,53 @@
 #include "av_codec.h"
 
 #include <codecvt>
+#include <sstream>
 
 namespace av {
     namespace ffmpeg {
-
-        bool captureFrame(const std::tstring& video, const std::vector<int64_t>& time_seconds, av::codec::Codec& external_codec)
-        {
-            if (!av::path::exists(video))
-            {
+        bool captureFrame(const std::tstring &video, const std::vector<std::string> &time_seconds,
+                          const std::tstring &save_path, std::vector<std::tstring> &files) {
+            if (!av::path::exists(video)) {
                 loge("file {} not exists", av::str::toA(video));
                 return false;
             }
-            AVFormatContext* fmt_ctx = nullptr;
+
+            //
+            int n = 0;
+            for (auto &time_second: time_seconds) {
+                // filename
+                std::tstringstream ss;
+                ss << TEXT("output_") << n << TEXT(".jpg");
+                auto filename = av::path::append(save_path, ss.str());
+                if (av::path::exists(filename)) {
+                    av::path::remove_file(filename);
+                }
+
+                // command
+                char buff[2048];
+                sprintf(
+                    buff,
+                    "ffmpeg -ss %s -i \"%s\" -vf \"select='eq(pict_type,I)',scale=in_color_matrix=bt2020:out_color_matrix=bt709,format=yuv420p\" -vsync vfr -frames:v 1 %s",
+                    time_second.c_str(), av::str::toA(video).c_str(), av::str::toA(filename).c_str());
+                logi("system buff {}", buff);
+                int result = std::system(buff);
+                if (result == 0) {
+                    if (av::path::exists(filename)) {
+                        files.emplace_back(filename);
+                    }
+                }
+                n++;
+            }
+            return true;
+        }
+
+        bool captureFrame(const std::tstring &video, const std::vector<int64_t> &time_seconds,
+                          av::codec::Codec &external_codec) {
+            if (!av::path::exists(video)) {
+                loge("file {} not exists", av::str::toA(video));
+                return false;
+            }
+            AVFormatContext *fmt_ctx = nullptr;
             if (avformat_open_input(&fmt_ctx, av::str::toA(video).c_str(), nullptr, nullptr) != 0) {
                 loge("avformat_open_input failed!");
                 return false;
@@ -47,14 +82,14 @@ namespace av {
             }
 
             //
-            AVCodecParameters* codec_par = fmt_ctx->streams[video_stream_index]->codecpar;
-            const AVCodec* codec = avcodec_find_decoder(codec_par->codec_id);
+            AVCodecParameters *codec_par = fmt_ctx->streams[video_stream_index]->codecpar;
+            const AVCodec *codec = avcodec_find_decoder(codec_par->codec_id);
             if (!codec) {
                 logw("no video decoder");
                 return false;
             }
 
-            AVCodecContext* codec_ctx = avcodec_alloc_context3(codec);
+            AVCodecContext *codec_ctx = avcodec_alloc_context3(codec);
             avcodec_parameters_to_context(codec_ctx, codec_par);
             if (avcodec_open2(codec_ctx, codec, nullptr) < 0) {
                 logw("can not open decoder");
@@ -62,14 +97,14 @@ namespace av {
             }
             av::async::Exit exit_codec_ctx([&codec_ctx] {
                 avcodec_free_context(&codec_ctx);
-                });
+            });
 
-            AVPacket* pkt = av_packet_alloc();
-            AVFrame* frame = av_frame_alloc();
+            AVPacket *pkt = av_packet_alloc();
+            AVFrame *frame = av_frame_alloc();
             av::async::Exit exit_frame([&frame, &pkt] {
                 if (frame != nullptr) av_frame_free(&frame);
                 if (pkt != nullptr) av_packet_free(&pkt);
-                });
+            });
 
             if (!external_codec.init(codec_ctx)) {
                 loge("external_codec failed");
@@ -77,18 +112,18 @@ namespace av {
             }
 
             // read video duration
-            AVStream* st;
+            AVStream *st;
             int i;
             int64_t duration = 0;
             for (i = 0; i < fmt_ctx->nb_streams; i++) {
                 st = fmt_ctx->streams[i];
-                if(st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO){
+                if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
                     duration = st->duration * AV_TIME_BASE;
                     break;
-                }   
+                }
             }
 
-            // 
+            //
             for (int i = 0; i < time_seconds.size(); i++) {
                 auto timebase = time_seconds[i] * AV_TIME_BASE;
                 if (timebase > duration) {
@@ -104,7 +139,8 @@ namespace av {
                     if (pkt->stream_index == video_stream_index) {
                         if (avcodec_send_packet(codec_ctx, pkt) == 0) {
                             if (avcodec_receive_frame(codec_ctx, frame) == 0) {
-                                if(frame->pict_type == AV_PICTURE_TYPE_I){ // use I-frame
+                                if (frame->pict_type == AV_PICTURE_TYPE_I) {
+                                    // use I-frame
                                     if (!external_codec.codec(frame)) {
                                         loge("external_codec.codec failed!");
                                     }

@@ -210,7 +210,7 @@ extern "C" int matroska_ffmpeg_save_frames(const char *input_mkv,
     // 使用 FFmpeg 的 avformat API 打开文件（与 mpv 一致）
     AVFormatContext *fmt_ctx = nullptr;
     const AVInputFormat *ifmt = av_find_input_format("matroska");
-    int ret = avformat_open_input(&fmt_ctx, input_mkv, ifmt, nullptr);
+    int ret = avformat_open_input(&fmt_ctx, input_mkv, nullptr, nullptr);
     if (ret < 0) {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, sizeof(errbuf));
@@ -510,8 +510,8 @@ static int init_video_filter_graph(AVCodecContext *dec_ctx,
  */
 int save_frame_at_time(const char *input_mkv, const char *output_path, int64_t time_seconds) {
     AVFormatContext *fmt_ctx = nullptr;
-    const AVInputFormat *ifmt = av_find_input_format("matroska");
-    int ret = avformat_open_input(&fmt_ctx, input_mkv, ifmt, nullptr);
+    // const AVInputFormat *ifmt = av_find_input_format("matroska");
+    int ret = avformat_open_input(&fmt_ctx, input_mkv, nullptr, nullptr);
     if (ret < 0) {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, sizeof(errbuf));
@@ -849,30 +849,30 @@ int save_frame_at_time(const char *input_mkv, const char *output_path, int64_t t
     return frame_saved ? 0 : -1;
 }
 
-int main(int argc, char *argv[]) {
-    const char *path = (argc > 1) ? argv[1] : "d:\\ff.mkv";
-
-    // 保存4张图片：30秒、60秒、120秒、180秒
-    int time_points[] = {30, 60, 120, 180};
-    int num_points = sizeof(time_points) / sizeof(time_points[0]);
-
-    fprintf(stderr, "[main] Saving %d frames at specified time points from: %s\n", num_points, path);
-    fflush(stderr);
-
-    for (int i = 0; i < num_points; i++) {
-        char output_path[512];
-        snprintf(output_path, sizeof(output_path), "frame_%03ds.png", time_points[i]);
-
-        fprintf(stderr, "\n[main] Processing time point %d: %d seconds -> %s\n", i + 1, time_points[i], output_path);
-        fflush(stderr);
-
-        int ret = save_frame_at_time(path, output_path, time_points[i]);
-        if (ret < 0) {
-            fprintf(stderr, "[main] Failed to save frame at %d seconds\n", time_points[i]);
-        }
-    }
-
-    fprintf(stderr, "\n[main] Completed saving all frames.\n");
-    return 0;
-}
+// int main(int argc, char *argv[]) {
+//     const char *path = (argc > 1) ? argv[1] : "d:\\ff.mkv";
+//
+//     // 保存4张图片：30秒、60秒、120秒、180秒
+//     int time_points[] = {30, 60, 120, 180};
+//     int num_points = sizeof(time_points) / sizeof(time_points[0]);
+//
+//     fprintf(stderr, "[main] Saving %d frames at specified time points from: %s\n", num_points, path);
+//     fflush(stderr);
+//
+//     for (int i = 0; i < num_points; i++) {
+//         char output_path[512];
+//         snprintf(output_path, sizeof(output_path), "frame_%03ds.png", time_points[i]);
+//
+//         fprintf(stderr, "\n[main] Processing time point %d: %d seconds -> %s\n", i + 1, time_points[i], output_path);
+//         fflush(stderr);
+//
+//         int ret = save_frame_at_time(path, output_path, time_points[i]);
+//         if (ret < 0) {
+//             fprintf(stderr, "[main] Failed to save frame at %d seconds\n", time_points[i]);
+//         }
+//     }
+//
+//     fprintf(stderr, "\n[main] Completed saving all frames.\n");
+//     return 0;
+// }
 #endif
