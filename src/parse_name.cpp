@@ -8,11 +8,14 @@
 #include "av_string.h"
 #include "av_log.h"
 #include "mteam/category.h"
+#include "mteam/video_codec.h"
 
 
-bool parseCustomName(Source& obj) {
+bool parseCustomName(Source &obj) {
     // 0000@[402][标题][标题前缀][副标题][年份][豆瓣id][剧集][英文名].ts
-    std::regex r(av::str::toA(publishPrefixCustom) + "\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]");
+    std::regex r(
+        av::str::toA(publishPrefixCustom) +
+        "\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]\\[(.*?)\\]");
     std::smatch match;
     std::string start_tmp = av::str::toA(obj.name);
     std::string::const_iterator start = start_tmp.begin();
@@ -30,9 +33,33 @@ bool parseCustomName(Source& obj) {
                 obj.season = av::str::toT(match[7]);
                 obj.name_eng = av::str::toT(match[8]);
 
-                // category id
-                auto tmp = av::str::toT(match[1]);
-                //obj.category_id = mteam::category::from_string(tmp);
+                // category id, 这里是特殊逻辑
+                // 以前的前端是对照m-team做的
+                // 所以解析出来是m-team的category id
+                // 这里硬转到公共的id上，后面才方便使用
+                const auto tmp = av::str::toA(match[1]);
+                int a = 0;
+                av::str::s2i(tmp, a);
+                if (a == 0) {
+                    logw("{} can not convert to int", av::str::toA(match[1]));
+                }
+                switch (a) {
+                    case 419:
+                        obj.category = av::media::SourceCategory::Movie;
+                        break;
+                    case 407:
+                        obj.category = av::media::SourceCategory::Sport;
+                        break;
+                    case 404:
+                        obj.category = av::media::SourceCategory::Discover;
+                        break;
+                    case 402:
+                        obj.category = av::media::SourceCategory::TVSeries;
+                        break;
+                    default:
+                        obj.category = av::media::SourceCategory::Unknown;
+                        break;
+                }
 
                 logi("year: {}", av::str::toA(obj.year));
                 logi("name_chs: {}", av::str::toA(obj.name_chs));
@@ -42,10 +69,10 @@ bool parseCustomName(Source& obj) {
                 //logi("category_id: {}", av::str::toA(mteam::category::to_string(obj.category_id)));
                 logi("season: {}", av::str::toA(obj.season));
                 logi("name_eng: {}", av::str::toA(obj.name_eng));
+                logi("category id: {}", static_cast<int>( obj.category));
 
                 return true;
-            }
-            catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 std::cout << " exception: " << e.what() << std::endl;
                 loge("exception {}", e.what());
                 return false;
@@ -56,8 +83,7 @@ bool parseCustomName(Source& obj) {
     return false;
 }
 
-bool parseMovieName(Source& obj) {
-    
+bool parseMovieName(Source &obj) {
     // 一代妖后1989€1437318.ts
     std::regex r("\\s*(.*?)\\s*(\\d+)\\s*€\\s*(\\d+)\\s*\\.");
     std::smatch match;
@@ -82,8 +108,7 @@ bool parseMovieName(Source& obj) {
                 logi("douban_id: {}", av::str::toA(obj.douban_id));
 
                 return true;
-            }
-            catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 std::cout << " exception: " << e.what() << std::endl;
                 loge("exception {}", e.what());
                 return false;
@@ -94,11 +119,11 @@ bool parseMovieName(Source& obj) {
     return false;
 }
 
-bool parseTVSeriesName(Source& obj) {
+bool parseTVSeriesName(Source &obj) {
     return false;
 }
 
-bool parseDiscoverName(Source& obj) {
+bool parseDiscoverName(Source &obj) {
     // 000@嫦娥六号1(4K)_CCTV4K_04_11_17_57.ts
     std::regex r(av::str::toA(publishPrefixDiscover) + "(.*?)\\_(.*?)\\_([\\d]+)\\_([\\d]+)\\_[\\d]+\\_[\\d]+\\.");
     std::smatch match;
@@ -111,8 +136,9 @@ bool parseDiscoverName(Source& obj) {
         if (match.size() == 5) {
             try {
                 auto today = floor<std::chrono::days>(std::chrono::system_clock::now());
-                std::chrono::year_month_day ymd = std::chrono::year_month_day{ today };
-                obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(match[4]);
+                std::chrono::year_month_day ymd = std::chrono::year_month_day{today};
+                obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(
+                               match[4]);
                 obj.name_chs = av::str::toT(match[1]);
                 obj.sub_title = obj.name_chs;
                 obj.title_prefix = av::str::toT(match[2]);
@@ -123,8 +149,7 @@ bool parseDiscoverName(Source& obj) {
                 logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                 return true;
-            }
-            catch (const std::exception& e) {
+            } catch (const std::exception &e) {
                 std::cout << " exception: " << e.what() << std::endl;
                 loge("exception {}", e.what());
                 return false;
@@ -135,10 +160,10 @@ bool parseDiscoverName(Source& obj) {
     return false;
 }
 
-bool parseVarietyName(Source& obj) {
-    {
+bool parseVarietyName(Source &obj) { {
         // 00@边陲新风——全民国家安全教育日特别节目-1_CCTV12_04_15_20_37.ts
-        std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_(.*?)_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})\\.");
+        std::regex r(
+            av::str::toA(publishPrefixVariety) + "(.*?)_(.*?)_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})_([\\d]{1,})\\.");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -153,8 +178,9 @@ bool parseVarietyName(Source& obj) {
                     av::str::remove_suffix(tmp, TEXT("-2"));
                     av::str::remove_suffix(tmp, TEXT("-3"));
                     auto today = floor<std::chrono::days>(std::chrono::system_clock::now());
-                    std::chrono::year_month_day ymd = std::chrono::year_month_day{ today };
-                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(match[4]);
+                    std::chrono::year_month_day ymd = std::chrono::year_month_day{today};
+                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(
+                                   match[4]);
                     obj.name_chs = tmp;
                     obj.sub_title = obj.name_chs;
                     obj.title_prefix = av::str::toT(match[2]);
@@ -165,8 +191,7 @@ bool parseVarietyName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -174,10 +199,7 @@ bool parseVarietyName(Source& obj) {
             }
             start = match.suffix().first;
         }
-
-    }
-
-    {
+    } {
         // 00@第27届上海国际电影节金爵奖颁奖典礼_06_21_20_00.ts
         std::regex r(av::str::toA(publishPrefixVariety) + "(.*?)_([\\d]{2})_([\\d]{2})_([\\d]{2})_([\\d]{2})\\.");
         std::smatch match;
@@ -191,8 +213,9 @@ bool parseVarietyName(Source& obj) {
                 try {
                     std::tstring tmp = av::str::toT(match[1]);
                     auto today = floor<std::chrono::days>(std::chrono::system_clock::now());
-                    std::chrono::year_month_day ymd = std::chrono::year_month_day{ today };
-                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[2]) + av::str::toT(match[3]);
+                    std::chrono::year_month_day ymd = std::chrono::year_month_day{today};
+                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[2]) + av::str::toT(
+                                   match[3]);
                     obj.name_chs = tmp;
                     obj.sub_title = obj.name_chs;
                     obj.title_prefix = TEXT("");
@@ -203,8 +226,7 @@ bool parseVarietyName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -212,16 +234,15 @@ bool parseVarietyName(Source& obj) {
             }
             start = match.suffix().first;
         }
-
     }
     return false;
 }
 
-bool parseSportName(Source& obj) {
-
-    {
+bool parseSportName(Source &obj) { {
         // 0@2024-2025赛季中国男子篮球职业联赛-总决赛第四场(北京北汽-浙江方兴渡)_CCTV5_05_14_18_57.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})[\\-\\_]{1,}([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.");
+        std::regex r(
+            av::str::toA(publishPrefixSport) +
+            "([0-9]{4})[\\-\\_]{1,}([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -242,8 +263,7 @@ bool parseSportName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -251,12 +271,11 @@ bool parseSportName(Source& obj) {
             }
             start = match.suffix().first;
         }
-
-    }
-
-    {
+    } {
         // 0@2025年世界泳联花样游泳世界杯(埃及站) - 双人自由自选决赛_CCTV5_04_12_16_57.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
+        std::regex r(
+            av::str::toA(publishPrefixSport) +
+            "([0-9]{4})(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -277,8 +296,7 @@ bool parseSportName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -286,11 +304,11 @@ bool parseSportName(Source& obj) {
             }
             start = match.suffix().first;
         }
-    }
-
-    {
+    } {
         // 0@现场直播(高清体育) - 2025年十堰马拉松_CCTV5 + _04_13_07_22.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\-([\\d]+)(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
+        std::regex r(
+            av::str::toA(publishPrefixSport) +
+            "(.*?)\\-([\\d]+)(.*?)\\_(CCTV[\\d]{1,}[\\+]{0,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -311,8 +329,7 @@ bool parseSportName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -320,11 +337,11 @@ bool parseSportName(Source& obj) {
             }
             start = match.suffix().first;
         }
-    }
-
-    {
+    } {
         // 0@北京国际长跑节北京半程马拉松_北京卫视_04_20_06_59.ts
-        std::regex r(av::str::toA(publishPrefixSport) + "(.*?)\\_(.*)\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
+        std::regex r(
+            av::str::toA(publishPrefixSport) +
+            "(.*?)\\_(.*)\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\_([\\d]{1,})\\.*");
         std::smatch match;
         std::string start_tmp = av::str::toA(obj.name);
         std::string::const_iterator start = start_tmp.begin();
@@ -335,8 +352,9 @@ bool parseSportName(Source& obj) {
             if (match.size() == 7) {
                 try {
                     auto today = floor<std::chrono::days>(std::chrono::system_clock::now());
-                    std::chrono::year_month_day ymd = std::chrono::year_month_day{ today };
-                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(match[4]);
+                    std::chrono::year_month_day ymd = std::chrono::year_month_day{today};
+                    obj.year = av::str::toT(std::to_string(int(ymd.year()))) + av::str::toT(match[3]) + av::str::toT(
+                                   match[4]);
                     obj.name_chs = av::str::toT(match[1]);
                     obj.sub_title = obj.name_chs;
                     obj.title_prefix = av::str::toT(match[2]);
@@ -347,8 +365,7 @@ bool parseSportName(Source& obj) {
                     logi("title_prefix: {}", av::str::toA(obj.title_prefix));
 
                     return true;
-                }
-                catch (const std::exception& e) {
+                } catch (const std::exception &e) {
                     std::cout << " exception: " << e.what() << std::endl;
                     loge("exception {}", e.what());
                     return false;
@@ -358,8 +375,6 @@ bool parseSportName(Source& obj) {
         }
     }
 
-    
 
-    
     return false;
 }

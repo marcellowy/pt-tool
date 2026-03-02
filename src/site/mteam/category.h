@@ -10,7 +10,6 @@
 #include "av_media_info.h"
 
 namespace mteam {
-
 	enum class CategoryId {
 		Unknown = 0,
 		TVSeries = 402,
@@ -22,10 +21,14 @@ namespace mteam {
 	class Category {
 	public:
 		Category() = default;
-		Category(const av::media::SourceCategory category);
+
+		Category(av::media::SourceCategory category);
+
 		~Category();
-		void setSourceCategory(const av::media::SourceCategory category);
-		mteam::CategoryId getid();
+
+		void setSourceCategory(av::media::SourceCategory category);
+
+		CategoryId getid();
 
 	private:
 		av::media::SourceCategory m_category;
