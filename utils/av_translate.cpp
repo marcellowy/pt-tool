@@ -9,23 +9,15 @@
 
 using json = nlohmann::json;
 namespace http_ = av::http;
+
 namespace av {
 	namespace translate {
-
-		size_t CURLWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-			((std::string*)userp)->append((char*)contents, size * nmemb);
-			return size * nmemb;
+		Translate::Translate(const std::tstring &rapidapi_key,
+		                     const std::tstring &rapidapi_host) : m_rapidapi_key(rapidapi_key),
+		                                                          m_rapidapi_host(rapidapi_host) {
 		}
 
-		Translate::Translate(const std::tstring& rapidapi_key, const std::tstring& rapidapi_host) :
-			m_rapidapi_key(rapidapi_key),
-			m_rapidapi_host(rapidapi_host)
-		{
-
-		}
-
-		bool Translate::foo(const std::tstring& source_text, std::tstring& text)
-		{
+		bool Translate::foo(const std::tstring &source_text, std::tstring &text) {
 			if (source_text.empty()) {
 				logw("source text empty");
 				return false;
@@ -34,7 +26,7 @@ namespace av {
 			a["from"] = "auto";
 			a["to"] = "en";
 			a["text"] = av::str::toA(source_text);
-			
+
 			// dump
 			auto data = a.dump(4);
 			logi("post json: {}", data);
@@ -51,25 +43,22 @@ namespace av {
 				loge("post data failed");
 				return false;
 			}
+			logi("translate json: {}", resp->body);
 
 			// parse response body
 			try {
-				json b;
-				auto o = b.parse(resp->body);
-				if (o.contains("trans") && o["trans"].is_string())
-				{
+				const nlohmann::json o = json::parse(resp->body);
+				if (o.contains("trans") && o["trans"].is_string()) {
 					text = av::str::toT(o["trans"].get<std::string>());
 					if (text.empty()) return false;
 					return true;
 				}
 				logw("no trans field");
 				return false;
-			}
-			catch (const json::parse_error& e) {
+			} catch (const json::parse_error &e) {
 				loge("{} exception {}", resp->body, e.what());
 				return false;
-			}
-			catch (const std::exception& e) {
+			} catch (const std::exception &e) {
 				loge("{} exception {}", resp->body, e.what());
 				return false;
 			}

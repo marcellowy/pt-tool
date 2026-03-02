@@ -129,6 +129,16 @@ void Publish::task() {
             tmp.video_codec == SourceVideoCodec::Unknown ||
             tmp.video_resolution == SourceVideoResolution::Unknown
         ) {
+            logi(
+                "audio_codec {}, category {}, group id {}, name eng {}, source id {}, video codec {}, video resolution {}",
+                static_cast<int>(tmp.audio_codec),
+                static_cast<int>(tmp.category),
+                tmp.group_id,
+                av::str::toA(tmp.name_eng),
+                static_cast<int>(tmp.source_id),
+                static_cast<int>(tmp.video_codec),
+                static_cast<int>(tmp.video_resolution)
+            );
             logw("{} param error, please check", av::str::toA(tmp.fullpath));
             continue;
         }
@@ -547,8 +557,8 @@ bool Publish::processFile(Source &obj) {
             return false;
         }
         std::vector<std::string> tt = {"00:00:30", "00:00:45", "00:01:00", "00:01:30"};
-        std::string save_path = av::str::toA(dir);
-        std::vector<std::string> files;
+        std::tstring save_path = av::str::toT(dir);
+        std::vector<std::tstring> files;
         av::ffmpeg::captureFrame(obj.fullpath, tt, save_path, files);
         if (!files.empty()) {
             for (const auto &file: files) {
