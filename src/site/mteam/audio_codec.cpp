@@ -2,25 +2,27 @@
 
 namespace mteam {
 	namespace audio {
-		static std::map<CodecId, std::tstring> CodecIdMapString = {
-			{CodecId::Unknown, TEXT("Other")},
-			{CodecId::_aac, TEXT("AAC")},
-			{CodecId::_ac3, TEXT("AC3")},// AC3(DD)
-			{CodecId::_dts, TEXT("DTS")},
-			{CodecId::_dts_hd_ma, TEXT("DTS-HD MA")},
-			{CodecId::_e_ac3_ddp, TEXT("E-AC3")}, // E-AC3(DDP)
-			{CodecId::_e_ac3_atoms, TEXT("E-AC3 Atoms")}, // E-AC3 Atoms(DDP Atoms)
-			{CodecId::_true_hd, TEXT("TrueHD)")},
-			{CodecId::_true_hd_atmos, TEXT("TrueHD Atmos")},
-			{CodecId::_lpcm, TEXT("LPCM/PCM")}, // LPCM/PCM
-			{CodecId::_wav, TEXT("WAV")},
-			{CodecId::_flac, TEXT("FLAC")},
-			{CodecId::_ape, TEXT("APE")},
-			{CodecId::_mp1, TEXT("MP1")},
-			{CodecId::_mp2, TEXT("MP2")},
-			{CodecId::_mp3, TEXT("MP3")},
-			{CodecId::_ogg, TEXT("OGG")},
-			{CodecId::_other, TEXT("Other")},
+		
+		// SourceAudioCodec to string
+		static std::map<av::media::SourceAudioCodec, std::tstring> SourceAudioCodecMapString = {
+			{av::media::SourceAudioCodec::Unknown, TEXT("Other")},
+			{av::media::SourceAudioCodec::_aac, TEXT("AAC")},
+			{av::media::SourceAudioCodec::_ac3, TEXT("AC3")},// AC3(DD)
+			{av::media::SourceAudioCodec::_dts, TEXT("DTS")},
+			{av::media::SourceAudioCodec::_dts_hd_ma, TEXT("DTS-HD MA")},
+			{av::media::SourceAudioCodec::_e_ac3_ddp, TEXT("E-AC3")}, // E-AC3(DDP)
+			{av::media::SourceAudioCodec::_e_ac3_atoms, TEXT("E-AC3 Atoms")}, // E-AC3 Atoms(DDP Atoms)
+			{av::media::SourceAudioCodec::_true_hd, TEXT("TrueHD)")},
+			{av::media::SourceAudioCodec::_true_hd_atmos, TEXT("TrueHD Atmos")},
+			{av::media::SourceAudioCodec::_lpcm, TEXT("LPCM/PCM")}, // LPCM/PCM
+			{av::media::SourceAudioCodec::_wav, TEXT("WAV")},
+			{av::media::SourceAudioCodec::_flac, TEXT("FLAC")},
+			{av::media::SourceAudioCodec::_ape, TEXT("APE")},
+			{av::media::SourceAudioCodec::_mp1, TEXT("MP1")},
+			{av::media::SourceAudioCodec::_mp2, TEXT("MP2")},
+			{av::media::SourceAudioCodec::_mp3, TEXT("MP3")},
+			{av::media::SourceAudioCodec::_ogg, TEXT("OGG")},
+			{av::media::SourceAudioCodec::_other, TEXT("Other")},
 		};
 
 		Codec::Codec(const av::media::SourceAudioCodec& codec) :m_codec(codec) {}
@@ -91,11 +93,10 @@ namespace mteam {
 		}
 
 		std::tstring Codec::getText() {
-			auto id = getid();
-			if (CodecIdMapString.find(id) != CodecIdMapString.end()) {
-				return CodecIdMapString[id];
+			if(SourceAudioCodecMapString.contains(m_codec)) {
+				return SourceAudioCodecMapString[m_codec];
 			}
-			return CodecIdMapString[CodecId::Unknown];
+			return SourceAudioCodecMapString[av::media::SourceAudioCodec::Unknown];
 		}
 	}
 }

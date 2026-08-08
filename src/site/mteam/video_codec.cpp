@@ -2,19 +2,19 @@
 
 namespace mteam {
 	namespace video {
-		static std::map<CodecId, std::tstring> CodecIdMapString = {
-			{CodecId::Unknown, TEXT("Other")},
-			{CodecId::_h264, TEXT("H.264")},
-			{CodecId::_h265, TEXT("H.265")},
-			{CodecId::_vc1, TEXT("VC-1")},
-			{CodecId::_mpeg2, TEXT("MPEG-2")},
-			{CodecId::_xvid, TEXT("Xvid")},
-			{CodecId::_av1, TEXT("AV1")},
-			{CodecId::_vp8, TEXT("VP8/9")},
-			{CodecId::_vp9, TEXT("VP8/9")},
-			{CodecId::_avs, TEXT("AVS")},
-			{CodecId::_avs2, TEXT("AVS2")},
-			{CodecId::_cavs, TEXT("AVS+")},
+		static std::unordered_map<av::media::SourceVideoCodec, std::tstring> sourceVideoCodecMapString = {
+			{av::media::SourceVideoCodec::Unknown, TEXT("Other")},
+			{av::media::SourceVideoCodec::_h264, TEXT("H.264")},
+			{av::media::SourceVideoCodec::_h265, TEXT("H.265")},
+			{av::media::SourceVideoCodec::_vc1, TEXT("VC-1")},
+			{av::media::SourceVideoCodec::_mpeg2, TEXT("MPEG-2")},
+			{av::media::SourceVideoCodec::_xvid, TEXT("Xvid")},
+			{av::media::SourceVideoCodec::_av1, TEXT("AV1")},
+			{av::media::SourceVideoCodec::_vp8, TEXT("VP8/9")},
+			{av::media::SourceVideoCodec::_vp9, TEXT("VP8/9")},
+			{av::media::SourceVideoCodec::_avs, TEXT("AVS")},
+			{av::media::SourceVideoCodec::_avs2, TEXT("AVS2")},
+			{av::media::SourceVideoCodec::_cavs, TEXT("AVS+")},
 		};
 
 		Codec::Codec(const av::media::SourceVideoCodec& codec) : m_codec(codec)
@@ -74,11 +74,11 @@ namespace mteam {
 		}
 
 		std::tstring Codec::getText() {
-			auto id = getid();
-			if (CodecIdMapString.find(id) != CodecIdMapString.end()) {
-				return CodecIdMapString[id];
+			if (sourceVideoCodecMapString.contains(m_codec))
+			{
+				return sourceVideoCodecMapString[m_codec];
 			}
-			return CodecIdMapString[CodecId::Unknown];
+			return sourceVideoCodecMapString[av::media::SourceVideoCodec::Unknown];
 		}
 	}
 }

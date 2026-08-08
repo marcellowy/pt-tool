@@ -4,7 +4,7 @@
         {
             "name": "windows-base",
             "hidden": true,
-            "generator": "Visual Studio 17 2022",
+            "generator": "Visual Studio 18 2026",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
             "cacheVariables": {
@@ -12,7 +12,7 @@
                 "CMAKE_CXX_COMPILER": "cl.exe",
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_PREFIX_PATH": "$env{VCPKG_ROOT}/installed/x64-windows-static/share",
-                "VCPKG_TARGET_TRIPLET":"x64-windows-static"
+                "VCPKG_TARGET_TRIPLET":"x64-windows-static" 
             },
             "condition": {
                 "type": "equals",
