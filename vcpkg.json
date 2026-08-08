@@ -1,0 +1,30 @@
+{
+  "name": "pt-tool",
+  "version": "1.0.0",
+  "builtin-baseline": "ea1a7396b05637a53bf23c078647ecc0edee4b80",
+  "dependencies": [
+    "cpp-httplib",
+    "croncpp",
+    "curl",
+    "ffmpeg",
+    "libmediainfo",
+    "libtorrent",
+    "libzen",
+    "nlohmann-json",
+    "openssl",
+    "spdlog",
+    "stb",
+    "tomlplusplus",
+    "boost-locale"
+  ],
+  "overrides": [
+    {
+      "name": "libmediainfo",
+      "version": "26.1"
+    },
+    {
+      "name": "ffmpeg",
+      "version": "7.1.2"
+    }
+  ]
+}
