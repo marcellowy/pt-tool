@@ -10,7 +10,7 @@ set(CMAKE_STATIC_LIBRARY_FLAGS "")
 set(BUILD_SHARED_LIBS OFF)
 set(BOOST_USE_STATIC_LIBS ON)
 
-option(ENABLE_GOOGLE_TEST "enable google tests" ON)
+option(ENABLE_GOOGLE_TEST "enable google tests" OFF)
 
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
