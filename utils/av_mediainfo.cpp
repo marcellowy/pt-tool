@@ -104,7 +104,10 @@ namespace av {
                                         }
                                         else if (scan_type == TEXT("MBAFF")) {
                                             m_video.scan_type = av::media::ScanType::MBAFF;
-                                        }
+										}
+										else if (scan_type == TEXT("PAFF")) {
+											m_video.scan_type = av::media::ScanType::PAFF;
+										}
                                     }
                                     if (track.contains("Format")) {
                                         auto format = av::str::toT(track["Format"].get<std::string>());

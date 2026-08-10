@@ -71,7 +71,8 @@ namespace av {
 		enum class ScanType {
 			Unknown,
 			Interlaced,	// 1080i
-			MBAFF,		// 1080p
+			MBAFF,		// 1080i
+			PAFF,		// 1080i
 			Progressive	// 1080p
 		};
 
