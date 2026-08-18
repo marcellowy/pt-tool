@@ -69,6 +69,11 @@ int64_t Download::getDirSize(const std::tstring& dir) {
 }
 
 bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
+
+	//
+	auto& config = Config::instance();
+	if (!config.download.enable) return true;
+
 	// 复制目录
 	auto copy_dir = [this](const fs::path& src_dir, const fs::path& dst_dir) -> bool {
 		try {
@@ -212,7 +217,13 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 
 	//
 	std::error_code ec;
+	int count_of_downloads = 0;	// 下载数量计数器
 	for (const auto& entry : std::filesystem::directory_iterator(src_dir, ec)) {
+		if (count_of_downloads >= config.download.numberOfDownloadPerTime) {
+			break;
+		}
+
+		//
 		if (entry.is_regular_file()) {
 			// 
 			logi("file {}", av::str::toA(entry.path()));
@@ -240,6 +251,7 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 #else
 			av::path::remove_file(entry.path().string());
 #endif
+			count_of_downloads++;
 		}
 		else if (entry.is_directory()) {
 			logi("dir {}", av::str::toA(entry.path()));
@@ -274,6 +286,7 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 			if (!av::path::remove_dir_all(entry_path)) {
 				logw("remove dir {} failed!", av::str::toA(entry_path));
 			}
+			count_of_downloads++;
 		}
 		else {
 			// 不处理其他类型的文件

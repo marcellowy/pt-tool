@@ -61,6 +61,10 @@ struct PTGen {
 	std::tstring url = TEXT("");
 };
 
+struct DownloadConfig {
+	bool enable = false;
+	int numberOfDownloadPerTime = 1;
+};
 
 
 class Config: public av::Singleton<Config> {
@@ -73,6 +77,7 @@ public:
 	Mteam mteam;
 	TGBot tgbot;
 	PTGen ptgen;
+	DownloadConfig download;
 public:
 	bool parse(const std::tstring& toml_file);
 };
