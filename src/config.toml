@@ -1,4 +1,4 @@
-[server]
+﻿[server]
 host = "0.0.0.0"
 port = 8080
 
@@ -30,6 +30,10 @@ pattern = "0 0 */3 * * *"
 [[mteam.publish_cycle.pattern]]
 name = "2"
 pattern = "0 30 1-23/3 * * *"
+
+[[mteam.download_cycle.pattern]]
+name = "1"
+pattern = "0 0 */3 * * *"
 
 [tgbot]
 token = ""

@@ -1,4 +1,4 @@
-// test.cpp: 定义应用程序的入口点。
+﻿// test.cpp: 定义应用程序的入口点。
 //
 
 #include <csignal>
@@ -11,12 +11,14 @@
 #include "av_async.h"
 #include "av_env.h"
 #include "av_log.h"
+#include "av_worker.h"
 
 #include "config.h"
 #include "logger.h"
 #include "error_code.h"
 
 #include "publish.h"
+#include "download.h"
 #include "mteam/mteam.h"
 
 using namespace std;
@@ -29,8 +31,13 @@ int main()
 #endif
 
 	curl_global_init(CURL_GLOBAL_DEFAULT);
-	av::async::Exit exit_curl_g([] {
+	av::async::Exit exit([] {
+
+		// 停止curl
 		curl_global_cleanup();
+
+		// 停止全局工作线程
+		av::worker::shutdown_global_worker();
 	});
 
 	if (!Logger::instance().open()) {
@@ -52,10 +59,19 @@ int main()
 	);
 	Publish publish(ptr, config.mteam.seed_dir);
 	if (!publish.start()) {
+		logw("start publish cron failed");
 		return static_cast<int>(ErrorCode::ErrStartCronFailed);
 	}
 	//publish.task();
 
+	//
+	Download download;
+	if (!download.start()) {
+		logw("start download cron failed");
+		return static_cast<int>(ErrorCode::ErrStartCronFailed);
+	}
+
+	//
 	httplib::Server svr;
 	if (!svr.bind_to_port(av::str::toA(config.server.host), config.server.port)) {
 		logw("bind failed");

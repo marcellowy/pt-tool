@@ -1,4 +1,4 @@
-{
+﻿{
   "version": 3,
   "configurePresets": [
     {
@@ -31,7 +31,8 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_GOOGLE_TEST": "ON"
       }
     },
     {

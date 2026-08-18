@@ -1,4 +1,4 @@
-#include "publish.h"
+﻿#include "publish.h"
 
 #include <filesystem>
 #include <fstream>
@@ -22,6 +22,7 @@
 #include "av_time.h"
 #include "av_file.h"
 #include "av_pt_gen_mteam.h"
+#include "av_worker.h"
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
@@ -29,65 +30,13 @@
 #include "config.h"
 #include "parse_name.h"
 
-namespace fs = std::filesystem;
-using json = nlohmann::json;
-
-// AVS
-struct AVSInfo {
-	int64_t width;
-	int64_t height;
-	std::tstring video_format;
-	std::tstring scan_type;
-	std::tstring audio_format;
-	std::tstring title;
-	std::tstring channel;
-	std::tstring year;
-	int64_t category;
-	std::tstring created_time;
-};
-
-static void from_json(const json& j, AVSInfo& avs);
-
 static std::tstring getTmpDir(const Source& obj);
 
 std::tstring getTmpDir(const Source& obj) {
-	std::tstring dir = av::path::get_exe_dir();
-	dir = av::path::append(dir, TEXT("tmp"));
-	dir = av::path::append(dir, obj.fullpath_md5);
-	return dir;
-}
-
-void from_json(const json& j, AVSInfo& avs) {
-	if (j.contains("width") && j["width"].is_number_integer()) {
-		avs.width = j["width"].get<int64_t>();
-	}
-	if (j.contains("height") && j["height"].is_number_integer()) {
-		avs.height = j["height"].get<int64_t>();
-	}
-	if (j.contains("videoFormat") && j["videoFormat"].is_string()) {
-		avs.video_format = av::str::toT(j["videoFormat"].get<std::string>());
-	}
-	if (j.contains("scanType") && j["scanType"].is_string()) {
-		avs.scan_type = av::str::toT(j["scanType"].get<std::string>());
-	}
-	if (j.contains("audioFormat") && j["audioFormat"].is_string()) {
-		avs.audio_format = av::str::toT(j["audioFormat"].get<std::string>());
-	}
-	if (j.contains("title") && j["title"].is_string()) {
-		avs.title = av::str::toT(j["title"].get<std::string>());
-	}
-	if (j.contains("channel") && j["channel"].is_string()) {
-		avs.channel = av::str::toT(j["channel"].get<std::string>());
-	}
-	if (j.contains("year") && j["year"].is_string()) {
-		avs.year = av::str::toT(j["year"].get<std::string>());
-	}
-	if (j.contains("category") && j["category"].is_number_integer()) {
-		avs.category = j["category"].get<int64_t>();
-	}
-	if (j.contains("createdTime") && j["createdTime"].is_string()) {
-		avs.created_time = av::str::toT(j["createdTime"].get<std::string>());
-	}
+    std::tstring dir = av::path::get_exe_dir();
+    dir = av::path::append(dir, TEXT("tmp"));
+    dir = av::path::append(dir, obj.fullpath_md5);
+    return dir;
 }
 
 Publish::Publish() {
@@ -97,628 +46,629 @@ Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir) : m_site(
 }
 
 Publish::~Publish() {
-	stop();
+    stop();
 }
 
 void Publish::task() {
-	auto arr = readDir();
-	for (auto& tmp : arr) {
-		if (tmp.type == SourceType::File) {
-			if (!processFile(tmp)) {
-				logw("process file failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-				continue;
-			}
-		}
-		else if (tmp.type == SourceType::Dir) {
-			const auto ret = processDir(tmp);
-			if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
-				logw("{} time not reached", av::str::toA(tmp.name));
-				continue;
-			}
-			if (ret != static_cast<int>(ErrorCode::Success)) {
-				logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-				continue;
-			}
-		}
+    auto arr = readDir();
+    for (auto& tmp : arr) {
+        if (tmp.type == SourceType::File) {
+            if (!processFile(tmp)) {
+                logw("process file failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+                continue;
+            }
+        }
+        else if (tmp.type == SourceType::Dir) {
+            const auto ret = processDir(tmp);
+            if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
+                logw("{} time not reached", av::str::toA(tmp.name));
+                continue;
+            }
+            if (ret != static_cast<int>(ErrorCode::Success)) {
+                logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+                continue;
+            }
+        }
 
-		// check param
-		if (tmp.audio_codec == SourceAudioCodec::Unknown ||
-			tmp.category == SourceCategory::Unknown ||
-			tmp.group_id == 0 ||
-			tmp.name_eng.empty() ||
-			tmp.source_id == SourceId::Unknown ||
-			tmp.video_codec == SourceVideoCodec::Unknown ||
-			tmp.video_resolution == SourceVideoResolution::Unknown
-			) {
-			logi(
-				"audio_codec {}, category {}, group id {}, name eng {}, source id {}, video codec {}, video resolution {}",
-				static_cast<int>(tmp.audio_codec),
-				static_cast<int>(tmp.category),
-				tmp.group_id,
-				av::str::toA(tmp.name_eng),
-				static_cast<int>(tmp.source_id),
-				static_cast<int>(tmp.video_codec),
-				static_cast<int>(tmp.video_resolution)
-			);
-			logw("{} param error, please check", av::str::toA(tmp.fullpath));
-			continue;
-		}
+        // check param
+        if (tmp.audio_codec == SourceAudioCodec::Unknown ||
+            tmp.category == SourceCategory::Unknown ||
+            tmp.group_id == 0 ||
+            tmp.name_eng.empty() ||
+            tmp.source_id == SourceId::Unknown ||
+            tmp.video_codec == SourceVideoCodec::Unknown ||
+            tmp.video_resolution == SourceVideoResolution::Unknown
+            ) {
+            logi(
+                "audio_codec {}, category {}, group id {}, name eng {}, source id {}, video codec {}, video resolution {}",
+                static_cast<int>(tmp.audio_codec),
+                static_cast<int>(tmp.category),
+                tmp.group_id,
+                av::str::toA(tmp.name_eng),
+                static_cast<int>(tmp.source_id),
+                static_cast<int>(tmp.video_codec),
+                static_cast<int>(tmp.video_resolution)
+            );
+            logw("{} param error, please check", av::str::toA(tmp.fullpath));
+            continue;
+        }
 
-		// preprocess succ
-		if (m_site->publish(tmp)) {
-			auto dir = getTmpDir(tmp);
-			if (av::path::remove_dir_all(dir)) {
-				logi("clean tmp dir {} succ", av::str::toA(dir));
-			}
+        // preprocess succ
+        if (m_site->publish(tmp)) {
+            auto dir = getTmpDir(tmp);
+            if (av::path::remove_dir_all(dir)) {
+                logi("clean tmp dir {} succ", av::str::toA(dir));
+            }
 
-			// if succ break,
-			break;
-		}
+            // if succ break,
+            break;
+        }
 
-		// if incorrect, just use next file keep publish
-	}
+        // if incorrect, just use next file keep publish
+    }
 }
 
 bool Publish::start() {
-	auto& config = Config::instance();
-	for (auto& cycle : config.mteam.publish_cycle) {
-		auto c = std::make_shared<av::cron::Cron>(cycle.name, cycle.pattern, [this] {
-			logi("do task");
-			task();
-			});
-		if (!c->start()) {
-			logw("add cron {} failed!", av::str::toA(cycle.name));
-			return false;
-		}
-		m_cron.push_back(c);
-	}
-	return true;
+    auto& config = Config::instance();
+    for (auto& cycle : config.mteam.publish_cycle) {
+        auto c = std::make_shared<av::cron::Cron>(cycle.name, cycle.pattern, [this] {
+            logi("do task");
+            av::worker::global_worker().sync([this] { task();}, 1000 * 60 * 10);    // 10 minutes
+            });
+        if (!c->start()) {
+            logw("add cron {} failed!", av::str::toA(cycle.name));
+            return false;
+        }
+        m_cron.push_back(c);
+    }
+    return true;
 }
 
 bool Publish::stop() {
-	for (auto& c : m_cron) {
-		c->stop();
-	}
-	return true;
+    for (auto& c : m_cron) {
+        c->stop();
+    }
+	m_cron.clear();
+    return true;
 }
 
 bool Publish::getSiteType(Source& obj) {
-	if (obj.type == SourceType::Dir) {
-		return false;
-	}
+    if (obj.type == SourceType::Dir) {
+        return false;
+    }
 
-	av::async::Exit exit_filter_name([&obj] {
-		av::str::replace_all(obj.name_chs, TEXT("(4k)"), TEXT("（4K）"));
-		});
+    av::async::Exit exit_filter_name([&obj] {
+        av::str::replace_all(obj.name_chs, TEXT("(4k)"), TEXT("（4K）"));
+        });
 
-	std::tstring pre = TEXT("");
+    std::tstring pre = TEXT("");
 
-	// Sport
-	pre = obj.name.substr(0, 2);
-	if (pre == publishPrefixSport) {
-		obj.category = av::media::SourceCategory::Sport;
-		//obj.category_id = mteam::category::Id::Sport;
-		if (!parseSportName(obj)) {
-			loge("publishSportName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
-			return false;
-		}
-		return true;
-	}
+    // Sport
+    pre = obj.name.substr(0, 2);
+    if (pre == publishPrefixSport) {
+        obj.category = av::media::SourceCategory::Sport;
+        //obj.category_id = mteam::category::Id::Sport;
+        if (!parseSportName(obj)) {
+            loge("publishSportName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
+            return false;
+        }
+        return true;
+    }
 
-	// Variety
-	pre = obj.name.substr(0, 3);
-	if (pre == publishPrefixVariety) {
-		obj.category = av::media::SourceCategory::Variety;
-		//obj.category_id = mteam::category::Id::TVSeries;
-		if (!parseVarietyName(obj)) {
-			loge("parseVarietyName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
-			return false;
-		}
-		return true;
-	}
+    // Variety
+    pre = obj.name.substr(0, 3);
+    if (pre == publishPrefixVariety) {
+        obj.category = av::media::SourceCategory::Variety;
+        //obj.category_id = mteam::category::Id::TVSeries;
+        if (!parseVarietyName(obj)) {
+            loge("parseVarietyName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
+            return false;
+        }
+        return true;
+    }
 
-	// Discover
-	pre = obj.name.substr(0, 4);
-	if (pre == publishPrefixDiscover) {
-		obj.category = av::media::SourceCategory::Discover;
-		//obj.category_id = mteam::category::Id::Discover;
-		if (!parseDiscoverName(obj)) {
-			loge("parseDiscoverName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
-			return false;
-		}
-		return true;
-	}
+    // Discover
+    pre = obj.name.substr(0, 4);
+    if (pre == publishPrefixDiscover) {
+        obj.category = av::media::SourceCategory::Discover;
+        //obj.category_id = mteam::category::Id::Discover;
+        if (!parseDiscoverName(obj)) {
+            loge("parseDiscoverName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
+            return false;
+        }
+        return true;
+    }
 
-	// Custom
-	pre = obj.name.substr(0, 5);
-	if (pre == publishPrefixCustom) {
-		if (!parseCustomName(obj)) {
-			loge("parseCustomName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
-			return false;
-		}
-		return true;
-	}
+    // Custom
+    pre = obj.name.substr(0, 5);
+    if (pre == publishPrefixCustom) {
+        if (!parseCustomName(obj)) {
+            loge("parseCustomName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
+            return false;
+        }
+        return true;
+    }
 
-	// Movie
-	if (obj.name.find(TEXT("€")) != std::tstring::npos) {
-		obj.category = av::media::SourceCategory::Movie;
-		//obj.category_id = mteam::category::Id::Movie;
-		if (!parseMovieName(obj)) {
-			loge("parseMovieName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
-			return false;
-		}
-		return true;
-	}
-	return false;
+    // Movie
+    if (obj.name.find(TEXT("€")) != std::tstring::npos) {
+        obj.category = av::media::SourceCategory::Movie;
+        //obj.category_id = mteam::category::Id::Movie;
+        if (!parseMovieName(obj)) {
+            loge("parseMovieName failed! {},{}", av::str::toA(obj.dir), av::str::toA(obj.name));
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 int Publish::processDir(Source& obj) {
-	auto& config = Config::instance();
-	logi("process {}", av::str::toA(obj.fullpath));
+    auto& config = Config::instance();
+    logi("process {}", av::str::toA(obj.fullpath));
 
-	//
-	obj.source_id = av::media::from(config.mteam.source_id);
-	obj.group_id = config.mteam.group_id;
-	obj.seed_dir = config.mteam.seed_dir;
+    //
+    obj.source_id = av::media::from(config.mteam.source_id);
+    obj.group_id = config.mteam.group_id;
+    obj.seed_dir = config.mteam.seed_dir;
 
-	// media_info.json, media_info.txt
-	auto media_info_json_path = av::path::append(obj.fullpath, TEXT("media_info.json"));
-	auto media_info_text_path = av::path::append(obj.fullpath, TEXT("media_info.txt"));
-	if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
-		logw("{} or {} not exists",
-			av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
-		return -1;
-	}
+    // media_info.json, media_info.txt
+    auto media_info_json_path = av::path::append(obj.fullpath, TEXT("media_info.json"));
+    auto media_info_text_path = av::path::append(obj.fullpath, TEXT("media_info.txt"));
+    if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
+        logw("{} or {} not exists",
+            av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
+        return -1;
+    }
 
-	// read file
-	std::string json_content;
-	fs::path json_path(media_info_json_path);
-	if (!av::file::read(json_path, json_content)) {
-		logw("read file {} failed", av::str::toA(media_info_json_path));
-		return false;
-	}
-	std::string text_content;
-	fs::path text_path(media_info_text_path);
-	if (!av::file::read(text_path, text_content)) {
-		logw("read file {} failed", av::str::toA(media_info_text_path));
-		return false;
-	}
-	obj.mediainfo_text = av::str::toT(text_content);
-	logi("json content: \n{}", json_content);
-	logi("text content: \n{}", text_content);
+    // read file
+    std::string json_content;
+    fs::path json_path(media_info_json_path);
+    if (!av::file::read(json_path, json_content)) {
+        logw("read file {} failed", av::str::toA(media_info_json_path));
+        return false;
+    }
+    std::string text_content;
+    fs::path text_path(media_info_text_path);
+    if (!av::file::read(text_path, text_content)) {
+        logw("read file {} failed", av::str::toA(media_info_text_path));
+        return false;
+    }
+    obj.mediainfo_text = av::str::toT(text_content);
+    logi("json content: \n{}", json_content);
+    logi("text content: \n{}", text_content);
 
-	// parse json file
-	AVSInfo avs_info;
-	try {
-		json _o;
-		auto j = _o.parse(json_content);
-		avs_info = j.get<AVSInfo>();
-		av::media::ScanType scan_type;
-		if (avs_info.scan_type == TEXT("Interlaced")) {
-			scan_type = av::media::ScanType::Interlaced;
-		}
-		else if (avs_info.scan_type == TEXT("MBAFF")) {
-			scan_type = av::media::ScanType::MBAFF;
-		}
-		else if (avs_info.scan_type == TEXT("Progressive")) {
-			scan_type = av::media::ScanType::Progressive;
-		}
-		else {
-			scan_type = av::media::ScanType::Unknown;
-		}
-		//
-		setResolution(avs_info.width, avs_info.height, scan_type, obj);
+    // parse json file
+    AVSInfo avs_info;
+    try {
+        json _o;
+        auto j = _o.parse(json_content);
+        avs_info = j.get<AVSInfo>();
+        av::media::ScanType scan_type;
+        if (avs_info.scan_type == TEXT("Interlaced")) {
+            scan_type = av::media::ScanType::Interlaced;
+        }
+        else if (avs_info.scan_type == TEXT("MBAFF")) {
+            scan_type = av::media::ScanType::MBAFF;
+        }
+        else if (avs_info.scan_type == TEXT("Progressive")) {
+            scan_type = av::media::ScanType::Progressive;
+        }
+        else {
+            scan_type = av::media::ScanType::Unknown;
+        }
+        //
+        setResolution(avs_info.width, avs_info.height, scan_type, obj);
 
-		// video codec
-		if (avs_info.video_format == TEXT("AVS2")) {
-			obj.video_codec = SourceVideoCodec::_avs2;
-		}
-		else if (avs_info.video_format == TEXT("CAS")) {
-			obj.video_codec = SourceVideoCodec::_cavs;
-		}
-		else if (avs_info.video_format == TEXT("AVS")) {
-			obj.video_codec = SourceVideoCodec::_avs;
-		}
-		else if (avs_info.video_format == TEXT("MPEG2VIDEO")) {
-			obj.video_codec = SourceVideoCodec::_mpeg2;
-		}
-		else {
-			// default avs
-			obj.video_codec = SourceVideoCodec::_avs;
-		}
+        // video codec
+        if (avs_info.video_format == TEXT("AVS2")) {
+            obj.video_codec = SourceVideoCodec::_avs2;
+        }
+        else if (avs_info.video_format == TEXT("CAS")) {
+            obj.video_codec = SourceVideoCodec::_cavs;
+        }
+        else if (avs_info.video_format == TEXT("AVS")) {
+            obj.video_codec = SourceVideoCodec::_avs;
+        }
+        else if (avs_info.video_format == TEXT("MPEG2VIDEO")) {
+            obj.video_codec = SourceVideoCodec::_mpeg2;
+        }
+        else {
+            // default avs
+            obj.video_codec = SourceVideoCodec::_avs;
+        }
 
-		// audio codec
-		obj.audio_codec = SourceAudioCodec::_ac3;
+        // audio codec
+        obj.audio_codec = SourceAudioCodec::_ac3;
 
-		obj.title_prefix = avs_info.channel;
-		obj.name_chs = avs_info.title;
-		obj.sub_title = avs_info.title;
-		obj.year = avs_info.year;
+        obj.title_prefix = avs_info.channel;
+        obj.name_chs = avs_info.title;
+        obj.sub_title = avs_info.title;
+        obj.year = avs_info.year;
 
-		// category
-		obj.category = SourceCategory::Unknown; // default
-		if (avs_info.category == 402) {
-			obj.category = SourceCategory::TVSeries;
-		}
-		else if (avs_info.category == 404) {
-			obj.category = SourceCategory::Discover;
-		}
-		else if (avs_info.category == 407) {
-			obj.category = SourceCategory::Sport;
-		}
-		else if (avs_info.category == 419) {
-			obj.category = SourceCategory::Movie;
-		}
-	}
-	catch (const json::parse_error& e) {
-		logw("json::parse_error {}", e.what());
-		return -1;
-	}
-	catch (const std::exception& e) {
-		logw("std::exception {}", e.what());
-		return -1;
-	}
+        // category
+        obj.category = SourceCategory::Unknown; // default
+        if (avs_info.category == 402) {
+            obj.category = SourceCategory::TVSeries;
+        }
+        else if (avs_info.category == 404) {
+            obj.category = SourceCategory::Discover;
+        }
+        else if (avs_info.category == 407) {
+            obj.category = SourceCategory::Sport;
+        }
+        else if (avs_info.category == 419) {
+            obj.category = SourceCategory::Movie;
+        }
+    }
+    catch (const json::parse_error& e) {
+        logw("json::parse_error {}", e.what());
+        return -1;
+    }
+    catch (const std::exception& e) {
+        logw("std::exception {}", e.what());
+        return -1;
+    }
 
-	//
-	tvname(obj);
+    //
+    tvname(obj);
 
-	// check time
-	int64_t diff_time_seconds;
-	if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
-		logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
-		return -1;
-	}
+    // check time
+    int64_t diff_time_seconds;
+    if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
+        logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
+        return -1;
+    }
 
-	if (diff_time_seconds < 24 * 3600) {
-		// 24 hours
-		logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
-		return static_cast<int>(ErrorCode::ErrTimeNotReached);
-	}
+    if (diff_time_seconds < 24 * 3600) {
+        // 24 hours
+        logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
+        return static_cast<int>(ErrorCode::ErrTimeNotReached);
+    }
 
-	// read dir
-	int64_t ts_count = 0;
-	std::vector<std::tstring> img_vec;
-	for (const auto& entry : fs::directory_iterator(obj.fullpath)) {
+    // read dir
+    int64_t ts_count = 0;
+    std::vector<std::tstring> img_vec;
+    for (const auto& entry : fs::directory_iterator(obj.fullpath)) {
 #ifdef _UNICODE
-		std::tstring name = entry.path().filename().wstring();
-		std::tstring ext = entry.path().extension().wstring();
+        std::tstring name = entry.path().filename().wstring();
+        std::tstring ext = entry.path().extension().wstring();
 #else
-		std::tstring name = entry.path().filename().string();
-		std::tstring ext = entry.path().extension().string();
+        std::tstring name = entry.path().filename().string();
+        std::tstring ext = entry.path().extension().string();
 #endif // _UNICODE
-		std::tstring fullpath = av::path::append(obj.fullpath, name);
+        std::tstring fullpath = av::path::append(obj.fullpath, name);
 
-		// process ts file
-		if (ext == TEXT(".ts")) {
-			ts_count++;
-		}
+        // process ts file
+        if (ext == TEXT(".ts")) {
+            ts_count++;
+        }
 
-		// process image file
-		if (ext == TEXT(".jpg") ||
-			ext == TEXT(".jpeg") ||
-			ext == TEXT(".png")) {
-			img_vec.push_back(fullpath);
-		}
-	}
+        // process image file
+        if (ext == TEXT(".jpg") ||
+            ext == TEXT(".jpeg") ||
+            ext == TEXT(".png")) {
+            img_vec.push_back(fullpath);
+        }
+    }
 
-	if (ts_count == 0) {
-		// no ts
-		logw("no ts file");
-		return -1;
-	}
+    if (ts_count == 0) {
+        // no ts
+        logw("no ts file");
+        return -1;
+    }
 
-	auto move_image = [&obj, &img_vec]() -> bool {
-		// create dir
-		auto dir = getTmpDir(obj);
-		if (!av::path::exists(dir)) {
-			if (!av::path::create_dir(dir)) {
-				loge("create dir {} failed", av::str::toA(dir));
-				return false;
-			}
-		}
+    auto move_image = [&obj, &img_vec]() -> bool {
+        // create dir
+        auto dir = getTmpDir(obj);
+        if (!av::path::exists(dir)) {
+            if (!av::path::create_dir(dir)) {
+                loge("create dir {} failed", av::str::toA(dir));
+                return false;
+            }
+        }
 
-		// move
-		for (auto& img : img_vec) {
-			fs::path i = img;
+        // move
+        for (auto& img : img_vec) {
+            fs::path i = img;
 #ifdef _UNICODE
-			std::tstring tmp_name = i.filename().wstring();
+            std::tstring tmp_name = i.filename().wstring();
 #else
-			std::tstring tmp_name = i.filename().string();
+            std::tstring tmp_name = i.filename().string();
 #endif // _UNICODE
 
-			auto tmp = av::path::append(dir, tmp_name);
-			if (!av::path::move_file(img, tmp, true)) {
-				loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
-				return false;
-			}
-			obj.screenshot_local.push_back(tmp);
-		}
-		logi("move_image succ");
-		return true;
-		};
+            auto tmp = av::path::append(dir, tmp_name);
+            if (!av::path::move_file(img, tmp, true)) {
+                loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
+                return false;
+            }
+            obj.screenshot_local.push_back(tmp);
+        }
+        logi("move_image succ");
+        return true;
+        };
 
-	// move img
-	if (!move_image()) {
-		logw("move image failed");
-		return -1;
-	}
+    // move img
+    if (!move_image()) {
+        logw("move image failed");
+        return -1;
+    }
 
-	if (!av::path::remove_file(media_info_json_path)) {
-		logw("remove file {} failed", av::str::toA(media_info_json_path));
-	}
+    if (!av::path::remove_file(media_info_json_path)) {
+        logw("remove file {} failed", av::str::toA(media_info_json_path));
+    }
 
-	if (!av::path::remove_file(media_info_text_path)) {
-		logw("remove file {} failed", av::str::toA(media_info_text_path));
-	}
+    if (!av::path::remove_file(media_info_text_path)) {
+        logw("remove file {} failed", av::str::toA(media_info_text_path));
+    }
 
-	// add english name
-	if (obj.name_eng.empty()) {
-		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
-		if (!t.foo(obj.name_chs, obj.name_eng)) {
-			loge("translate failed");
-			return false;
-		}
-	}
-	if (!empty(obj.name_eng)) {
-		capitalizeWords(obj.name_eng);
-	}
-	logi("process dir succ");
+    // add english name
+    if (obj.name_eng.empty()) {
+        av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
+        if (!t.foo(obj.name_chs, obj.name_eng)) {
+            loge("translate failed");
+            return false;
+        }
+    }
+    if (!empty(obj.name_eng)) {
+        capitalizeWords(obj.name_eng);
+    }
+    logi("process dir succ");
 
-	return static_cast<int>(ErrorCode::Success);
+    return static_cast<int>(ErrorCode::Success);
 }
 
 bool Publish::processFile(Source& obj) {
-	auto& config = Config::instance();
-	logi("process {}", av::str::toA(obj.fullpath));
+    auto& config = Config::instance();
+    logi("process {}", av::str::toA(obj.fullpath));
 
-	obj.source_id = av::media::from(config.mteam.source_id);
-	obj.group_id = config.mteam.group_id;
-	obj.seed_dir = config.mteam.seed_dir;
+    obj.source_id = av::media::from(config.mteam.source_id);
+    obj.group_id = config.mteam.group_id;
+    obj.seed_dir = config.mteam.seed_dir;
 
-	// site type
-	if (!getSiteType(obj)) {
-		logw("dir {}, name {} get site type failed", av::str::toA(obj.dir), av::str::toA(obj.name));
-		return false;
-	}
+    // site type
+    if (!getSiteType(obj)) {
+        logw("dir {}, name {} get site type failed", av::str::toA(obj.dir), av::str::toA(obj.name));
+        return false;
+    }
 
-	// tv name
-	tvname(obj);
+    // tv name
+    tvname(obj);
 
-	// mediainfo
-	av::mediainfo::MediaInfo m(obj.fullpath);
-	if (!m.parse()) {
-		logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
-		return false;
-	}
+    // mediainfo
+    av::mediainfo::MediaInfo m(obj.fullpath);
+    if (!m.parse()) {
+        logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
+        return false;
+    }
 
-	// video resolution
-	auto video_height = m.getVideo().height;
-	auto video_width = m.getVideo().width;
-	setResolution(video_width, video_height, m.getVideo().scan_type, obj);
+    // video resolution
+    auto video_height = m.getVideo().height;
+    auto video_width = m.getVideo().width;
+    setResolution(video_width, video_height, m.getVideo().scan_type, obj);
 
-	// video codec
-	obj.video_codec = m.getVideo().codec;
+    // video codec
+    obj.video_codec = m.getVideo().codec;
 
-	// audio codec
-	obj.audio_codec = m.getAudio().codec;
+    // audio codec
+    obj.audio_codec = m.getAudio().codec;
 
-	// mediainfo text
-	obj.mediainfo_text = m.getText();
+    // mediainfo text
+    obj.mediainfo_text = m.getText();
 
-	// add douban info
-	if (!obj.douban_id.empty()) {
-		av::ptgen::Douban db;
-		char buff[2048];
-		snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
-		std::string real_url(buff);
-		if (!av::ptgen::get(av::str::toT(real_url), db)) {
-			loge("get douban info failed!");
-			// try use m-team api
-			char douban_url_buff[2048];
-			snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
-				av::str::toA(obj.douban_id).c_str());
-			std::string real_douban_url_buff(douban_url_buff);
-			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
-				loge("get douban info failed!");
-				return false;
-			}
-		}
+    // add douban info
+    if (!obj.douban_id.empty()) {
+        av::ptgen::Douban db;
+        char buff[2048];
+        snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
+        std::string real_url(buff);
+        if (!av::ptgen::get(av::str::toT(real_url), db)) {
+            loge("get douban info failed!");
+            // try use m-team api
+            char douban_url_buff[2048];
+            snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
+                av::str::toA(obj.douban_id).c_str());
+            std::string real_douban_url_buff(douban_url_buff);
+            if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
+                loge("get douban info failed!");
+                return false;
+            }
+        }
 
-		// set douban info to obj
-		obj.year = av::str::toT(db.year);
-		obj.name_chs = av::str::toT(db.name_chs);
-		obj.name_eng = av::str::toT(db.name_eng);
-		obj.sub_title = av::str::toT(db.sub_title);
-		obj.imdb_link = av::str::toT(db.imdb_link);
-		obj.description = av::str::toT(db.description);
-		obj.poster_img = av::str::toT(db.poster_img);
-	}
+        // set douban info to obj
+        obj.year = av::str::toT(db.year);
+        obj.name_chs = av::str::toT(db.name_chs);
+        obj.name_eng = av::str::toT(db.name_eng);
+        obj.sub_title = av::str::toT(db.sub_title);
+        obj.imdb_link = av::str::toT(db.imdb_link);
+        obj.description = av::str::toT(db.description);
+        obj.poster_img = av::str::toT(db.poster_img);
+    }
 
-	// add screenshot
-	// 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
-	const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
-	int capture_count = 0;
-	av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
-		// screenshots dir
-		auto dir = getTmpDir(obj);
-		if (!av::path::create_dir(dir)) {
-			loge("create dir {} failed", av::str::toA(dir));
-			return;
-		}
-		std::tstringstream oo;
-		oo << TEXT("screenshot_") << capture_count << TEXT(".png");
-		std::tstring filename = av::path::append(dir, oo.str());
-		std::ofstream out_file(av::str::toA(filename), std::ios::binary);
-		out_file.write(static_cast<char*>(data), size); // 写入数据到文件
+    // add screenshot
+    // 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
+    const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
+    int capture_count = 0;
+    av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
+        // screenshots dir
+        auto dir = getTmpDir(obj);
+        if (!av::path::create_dir(dir)) {
+            loge("create dir {} failed", av::str::toA(dir));
+            return;
+        }
+        std::tstringstream oo;
+        oo << TEXT("screenshot_") << capture_count << TEXT(".png");
+        std::tstring filename = av::path::append(dir, oo.str());
+        std::ofstream out_file(av::str::toA(filename), std::ios::binary);
+        out_file.write(static_cast<char*>(data), size); // 写入数据到文件
 
-		obj.screenshot_local.push_back(filename);
+        obj.screenshot_local.push_back(filename);
 
-		capture_count++;
-		});
-	if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
-		loge("capture frame failed");
-		return false;
-	}
+        capture_count++;
+        });
+    if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
+        loge("capture frame failed");
+        return false;
+    }
 
-	// if capture frame failed
-	if (obj.screenshot_local.empty()) {
-		logw("capture frame failed");
-		// try use ffmpeg command capture
-		auto dir = getTmpDir(obj);
-		if (!av::path::create_dir(dir)) {
-			loge("create dir {} failed", av::str::toA(dir));
-			return false;
-		}
-		std::vector<std::string> tt = { "00:00:30", "00:00:45", "00:01:00", "00:01:30" };
-		std::tstring save_path = av::str::toT(dir);
-		std::vector<std::tstring> files;
-		av::ffmpeg::captureFrame(obj.fullpath, tt, save_path, files);
-		if (!files.empty()) {
-			for (const auto& file : files) {
-				obj.screenshot_local.emplace_back(av::str::toT(file));
-			}
-		}
-		else {
-			logw("use ffmpeg command capture frame failed");
-		}
-		logi("capture screenshot local size {}", obj.screenshot_local.size());
-	}
-	else {
-		logi("capture screenshot local size {}", obj.screenshot_local.size());
-	}
+    // if capture frame failed
+    if (obj.screenshot_local.empty()) {
+        logw("capture frame failed");
+        // try use ffmpeg command capture
+        auto dir = getTmpDir(obj);
+        if (!av::path::create_dir(dir)) {
+            loge("create dir {} failed", av::str::toA(dir));
+            return false;
+        }
+        std::vector<std::string> tt = { "00:00:30", "00:00:45", "00:01:00", "00:01:30" };
+        std::tstring save_path = av::str::toT(dir);
+        std::vector<std::tstring> files;
+        av::ffmpeg::captureFrame(obj.fullpath, tt, save_path, files);
+        if (!files.empty()) {
+            for (const auto& file : files) {
+                obj.screenshot_local.emplace_back(av::str::toT(file));
+            }
+        }
+        else {
+            logw("use ffmpeg command capture frame failed");
+        }
+        logi("capture screenshot local size {}", obj.screenshot_local.size());
+    }
+    else {
+        logi("capture screenshot local size {}", obj.screenshot_local.size());
+    }
 
-	// add english name
-	if (obj.name_eng.empty()) {
-		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
-		if (!t.foo(obj.name_chs, obj.name_eng)) {
-			loge("translate failed");
-			return false;
-		}
-	}
-	if (!empty(obj.name_eng)) {
-		capitalizeWords(obj.name_eng);
-	}
+    // add english name
+    if (obj.name_eng.empty()) {
+        av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
+        if (!t.foo(obj.name_chs, obj.name_eng)) {
+            loge("translate failed");
+            return false;
+        }
+    }
+    if (!empty(obj.name_eng)) {
+        capitalizeWords(obj.name_eng);
+    }
 
-	return true;
+    return true;
 }
 
 std::vector<Source> Publish::readDir() {
-	std::vector<Source> v;
+    std::vector<Source> v;
 
-	// check
-	if (!av::path::dir_exists(m_dir)) {
-		logw("{} not exists", av::str::toA(m_dir));
-		return v;
-	}
+    // check
+    if (!av::path::dir_exists(m_dir)) {
+        logw("{} not exists", av::str::toA(m_dir));
+        return v;
+    }
 
-	// read
-	for (const auto& entry : fs::directory_iterator(m_dir)) {
-		Source obj;
+    // read
+    for (const auto& entry : fs::directory_iterator(m_dir)) {
+        Source obj;
 #ifdef _UNICODE
-		obj.name = av::str::toT(entry.path().filename().wstring());
+        obj.name = av::str::toT(entry.path().filename().wstring());
 #else
-		obj.name = av::str::toT(entry.path().filename().string());
+        obj.name = av::str::toT(entry.path().filename().string());
 #endif // _UNICODE
-		if (obj.name.size() < 5) {
-			continue;
-		}
-		//
-		if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
-			// published
-			continue;
-		}
-		if (obj.name.substr(0, 1) == TEXT(".")) {
-			// tmp file
-			continue;
-		}
+        if (obj.name.size() < 5) {
+            continue;
+        }
+        //
+        if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
+            // published
+            continue;
+        }
+        if (obj.name.substr(0, 1) == TEXT(".")) {
+            // tmp file
+            continue;
+        }
 
-		//
-		if (entry.is_regular_file()) {
-			obj.type = SourceType::File;
+        //
+        if (entry.is_regular_file()) {
+            obj.type = SourceType::File;
 #ifdef _UNICODE
-			obj.file_suffix = entry.path().extension().wstring();
+            obj.file_suffix = entry.path().extension().wstring();
 #else
-			obj.file_suffix = entry.path().extension().string();
+            obj.file_suffix = entry.path().extension().string();
 #endif
-			av::str::replace(obj.file_suffix, TEXT("."), TEXT(""));
-		}
-		else if (entry.is_directory()) {
-			obj.type = SourceType::Dir; // 目前传目录的只有AVS, AVS就特殊处理
-		}
-		obj.dir = m_dir;
-		//logi("dir_ {}, obj.name {}, ", dir_, obj.name);
-		try {
-			obj.fullpath = av::path::append(m_dir, obj.name);
-			std::string tmp_md5;
-			av::hash::md5(av::str::toA(obj.fullpath), tmp_md5);
-			obj.fullpath_md5 = av::str::toT(tmp_md5);
-		}
-		catch (const std::exception& e) {
-			loge("exception {}", e.what());
-		}
+            av::str::replace(obj.file_suffix, TEXT("."), TEXT(""));
+        }
+        else if (entry.is_directory()) {
+            obj.type = SourceType::Dir; // 目前传目录的只有AVS, AVS就特殊处理
+        }
+        obj.dir = m_dir;
+        //logi("dir_ {}, obj.name {}, ", dir_, obj.name);
+        try {
+            obj.fullpath = av::path::append(m_dir, obj.name);
+            std::string tmp_md5;
+            av::hash::md5(av::str::toA(obj.fullpath), tmp_md5);
+            obj.fullpath_md5 = av::str::toT(tmp_md5);
+        }
+        catch (const std::exception& e) {
+            loge("exception {}", e.what());
+        }
 
-		v.emplace_back(obj);
-	}
-	return v;
+        v.emplace_back(obj);
+    }
+    return v;
 }
 
 void Publish::tvname(Source& obj) {
-	if (obj.title_prefix.empty()) {
-		return;
-	}
-	auto& tvs = Config::instance().tv_name;
-	for (auto& tv : tvs) {
-		if (tv.match == obj.title_prefix) {
-			obj.title_prefix = tv.title_prefix;
-			if (obj.category != av::media::SourceCategory::Movie) {
-				obj.sub_title = tv.sub_title_prefix + TEXT(" | ") + obj.sub_title;
-			}
-			return;
-		}
-	}
-	obj.title_prefix = TEXT("");
+    if (obj.title_prefix.empty()) {
+        return;
+    }
+    auto& tvs = Config::instance().tv_name;
+    for (auto& tv : tvs) {
+        if (tv.match == obj.title_prefix) {
+            obj.title_prefix = tv.title_prefix;
+            if (obj.category != av::media::SourceCategory::Movie) {
+                obj.sub_title = tv.sub_title_prefix + TEXT(" | ") + obj.sub_title;
+            }
+            return;
+        }
+    }
+    obj.title_prefix = TEXT("");
 }
 
 void Publish::setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj) {
-	obj.video_resolution = SourceVideoResolution::_1080i; // default
-	if (height == 4320) {
-		obj.video_resolution = SourceVideoResolution::_8k;
-	}
-	else if (height == 2160 || (width == 3840 && height >= 1500 && height <= 2160)) {
-		obj.video_resolution = SourceVideoResolution::_4k;
-	}
-	else if (height > 720 && height <= 1080) {
-		switch (scan_type) {
-		case av::media::ScanType::Interlaced:
-		case av::media::ScanType::MBAFF:
-		case av::media::ScanType::PAFF:
-			obj.video_resolution = SourceVideoResolution::_1080i;
-			break;
-		case av::media::ScanType::Progressive:
-			obj.video_resolution = SourceVideoResolution::_1080p;
-			break;
-		default:
-			obj.video_resolution = SourceVideoResolution::Unknown;
-			break;
-		}
-	}
-	else if (height <= 720 && height > 480) {
-		obj.video_resolution = SourceVideoResolution::_720;
-	}
-	else if (height <= 480) {
-		obj.video_resolution = SourceVideoResolution::_480;
-	}
+    obj.video_resolution = SourceVideoResolution::_1080i; // default
+    if (height == 4320) {
+        obj.video_resolution = SourceVideoResolution::_8k;
+    }
+    else if (height == 2160 || (width == 3840 && height >= 1500 && height <= 2160)) {
+        obj.video_resolution = SourceVideoResolution::_4k;
+    }
+    else if (height > 720 && height <= 1080) {
+        switch (scan_type) {
+        case av::media::ScanType::Interlaced:
+        case av::media::ScanType::MBAFF:
+        case av::media::ScanType::PAFF:
+            obj.video_resolution = SourceVideoResolution::_1080i;
+            break;
+        case av::media::ScanType::Progressive:
+            obj.video_resolution = SourceVideoResolution::_1080p;
+            break;
+        default:
+            obj.video_resolution = SourceVideoResolution::Unknown;
+            break;
+        }
+    }
+    else if (height <= 720 && height > 480) {
+        obj.video_resolution = SourceVideoResolution::_720;
+    }
+    else if (height <= 480) {
+        obj.video_resolution = SourceVideoResolution::_480;
+    }
 }
 
 void Publish::capitalizeWords(std::tstring& s) {
-	bool newWord = true;
-	for (tchar& c : s) {
-		if (std::isspace(c)) {
-			newWord = true;
-		}
-		else if (newWord) {
-			c = std::toupper(static_cast<tchar>(c));
-			newWord = false;
-		}
-	}
+    bool newWord = true;
+    for (tchar& c : s) {
+        if (std::isspace(c)) {
+            newWord = true;
+        }
+        else if (newWord) {
+            c = std::toupper(static_cast<tchar>(c));
+            newWord = false;
+        }
+    }
 }

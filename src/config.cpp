@@ -1,4 +1,4 @@
-#include "config.h"
+﻿#include "config.h"
 #include <iostream>
 
 bool Config::parse(const std::tstring& toml_file) {
@@ -72,6 +72,20 @@ bool Config::parse(const std::tstring& toml_file) {
 					cycle.pattern = av::str::toT(std::string(cron));
 					mteam.publish_cycle.push_back(cycle);
 
+				}
+			}
+		}
+
+		// download cycle
+		if (auto* patterns = config.at_path("mteam.download_cycle.pattern").as_array()) {
+			for (auto&& node : *patterns) {
+				if (auto* tbl = node.as_table()) {
+					PublishCycle cycle;
+					std::string_view name = (*tbl)["name"].as_string()->get();
+					std::string_view cron = (*tbl)["pattern"].as_string()->get();
+					cycle.name = av::str::toT(std::string(name));
+					cycle.pattern = av::str::toT(std::string(cron));
+					mteam.download_cycle.push_back(cycle);
 				}
 			}
 		}

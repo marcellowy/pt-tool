@@ -1,4 +1,4 @@
-#ifndef TEST_CONFIG_H_
+﻿#ifndef TEST_CONFIG_H_
 #define TEST_CONFIG_H_
 
 #include <string>
@@ -40,6 +40,7 @@ struct PublishCycle {
 };
 
 struct Mteam {
+	std::tstring source_dir = TEXT("");
 	std::tstring seed_dir = TEXT("");
 	int64_t group_id = 0;
 	int64_t source_id = 0;
@@ -48,6 +49,7 @@ struct Mteam {
 	std::tstring img_api_key = TEXT("");
 	std::tstring img_api_url = TEXT("");
 	std::vector<PublishCycle> publish_cycle;
+	std::vector<PublishCycle> download_cycle;
 };
 
 struct TGBot {

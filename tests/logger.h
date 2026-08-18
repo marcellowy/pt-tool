@@ -1,4 +1,4 @@
-#ifndef TEST_LOGGER_H_
+﻿#ifndef TEST_LOGGER_H_
 #define TEST_LOGGER_H_
 
 #include <iostream>
@@ -24,6 +24,8 @@ public:
     bool open() {
         std::tstring exe_name = av::path::get_exe_name();
 #ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
         av::str::replace(exe_name, TEXT(".exe"), TEXT(""));
 #endif // _WIN32
 

@@ -1,4 +1,4 @@
-# CMakeList.txt: test 的 CMake 项目，在此处包括源代码并定义
+﻿# CMakeList.txt: test 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
 cmake_minimum_required(VERSION 3.25)
@@ -10,7 +10,11 @@ set(CMAKE_STATIC_LIBRARY_FLAGS "")
 set(BUILD_SHARED_LIBS OFF)
 set(BOOST_USE_STATIC_LIBS ON)
 
-option(ENABLE_GOOGLE_TEST "enable google tests" OFF)
+option(ENABLE_GOOGLE_TEST "enable google tests" ON)
+
+if(MSVC)
+    add_definitions(-DUNICODE -D_UNICODE)
+endif()
 
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
@@ -165,6 +169,7 @@ else ()
 endif ()
 
 ## Add tests
+message(STATUS "ENABLE_GOOGLE_TEST = ${ENABLE_GOOGLE_TEST}")
 if (ENABLE_GOOGLE_TEST)
     message("ENABLE_TEST ON")
     enable_testing()
