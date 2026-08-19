@@ -204,7 +204,7 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 #else
 			int64_t dir_size = getDirSize(av::str::toT(dir.string()));
 #endif // _UNICODE
-			int64_t free_size = spaceFreeSize(dst_dir) + 1024 * 1024 * 1024 * 10;
+			int64_t free_size = spaceFreeSize(dst_dir) + 1024LL * 1024 * 1024 * 10;
 
 			//
 			if (free_size < dir_size) {
