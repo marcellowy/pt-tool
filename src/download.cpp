@@ -109,7 +109,7 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 		}
 		// 检查文件大小是否超过当前磁盘剩余空间
 		int64_t file_size = std::filesystem::file_size(file);
-		int64_t free_size = spaceFreeSize(file.parent_path()) + 1024 * 1024 * 1024 * 10;
+		int64_t free_size = spaceFreeSize(file.parent_path()) + 1024LL * 1024 * 1024 * 10;	// 留出10GB的缓冲空间
 		if (free_size < file_size) {
 			logw("file size {} > free size {}, not enough space!", file_size, free_size);
 			return false;
@@ -309,8 +309,8 @@ bool Download::start() {
 
 			//
 			auto& config = Config::instance();
-			if (!std::filesystem::exists(config.mteam.source_dir)) {
-				logw("source dir {} not exists!", av::str::toA(config.mteam.source_dir));
+			if (!std::filesystem::exists(config.download.source_dir)) {
+				logw("source dir {} not exists!", av::str::toA(config.download.source_dir));
 				return false;
 			}
 			if (!std::filesystem::exists(config.mteam.seed_dir))
@@ -321,7 +321,7 @@ bool Download::start() {
 
 			//	
 			av::worker::global_worker().sync([this, &config] {
-				task(config.mteam.source_dir, config.mteam.seed_dir);
+				task(config.download.source_dir, config.mteam.seed_dir);
 				}, 86400 * 1000);    // 24 hours
 			return true;
 			});

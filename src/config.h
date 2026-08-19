@@ -40,7 +40,6 @@ struct PublishCycle {
 };
 
 struct Mteam {
-	std::tstring source_dir = TEXT("");
 	std::tstring seed_dir = TEXT("");
 	int64_t group_id = 0;
 	int64_t source_id = 0;
@@ -64,6 +63,7 @@ struct PTGen {
 struct DownloadConfig {
 	bool enable = false;
 	int numberOfDownloadPerTime = 1;
+	std::tstring source_dir = TEXT("");
 };
 
 

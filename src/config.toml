@@ -25,6 +25,7 @@ img_api_key = ""
 
 [download]
 enable = false
+source_dir = ""
 number_of_downloads_per_time = 2
 
 [[mteam.publish_cycle.pattern]]
