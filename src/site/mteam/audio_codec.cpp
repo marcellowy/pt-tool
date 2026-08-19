@@ -1,4 +1,4 @@
-#include "audio_codec.h"
+﻿#include "audio_codec.h"
 
 namespace mteam {
 	namespace audio {
@@ -11,7 +11,7 @@ namespace mteam {
 			{av::media::SourceAudioCodec::_dts, TEXT("DTS")},
 			{av::media::SourceAudioCodec::_dts_hd_ma, TEXT("DTS-HD MA")},
 			{av::media::SourceAudioCodec::_e_ac3_ddp, TEXT("E-AC3")}, // E-AC3(DDP)
-			{av::media::SourceAudioCodec::_e_ac3_atoms, TEXT("E-AC3 Atoms")}, // E-AC3 Atoms(DDP Atoms)
+			{av::media::SourceAudioCodec::_e_ac3_atmos, TEXT("E-AC3 Atmos")}, // E-AC3 Atmos(DDP Atmos)
 			{av::media::SourceAudioCodec::_true_hd, TEXT("TrueHD)")},
 			{av::media::SourceAudioCodec::_true_hd_atmos, TEXT("TrueHD Atmos")},
 			{av::media::SourceAudioCodec::_lpcm, TEXT("LPCM/PCM")}, // LPCM/PCM
@@ -49,8 +49,8 @@ namespace mteam {
 			case av::media::SourceAudioCodec::_e_ac3_ddp:
 				return CodecId::_e_ac3_ddp;
 				break;
-			case av::media::SourceAudioCodec::_e_ac3_atoms:
-				return CodecId::_e_ac3_atoms;
+				case av::media::SourceAudioCodec::_e_ac3_atmos:
+				return CodecId::_e_ac3_atmos;
 				break;
 			case av::media::SourceAudioCodec::_true_hd:
 				return CodecId::_true_hd;

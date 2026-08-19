@@ -1,4 +1,4 @@
-#ifndef AV_MEDIA_INFO_H_
+﻿#ifndef AV_MEDIA_INFO_H_
 #define AV_MEDIA_INFO_H_
 
 #include "av_string.h"
@@ -48,7 +48,7 @@ namespace av {
 			_dts,
 			_dts_hd_ma,
 			_e_ac3_ddp,
-			_e_ac3_atoms,
+			_e_ac3_atmos,
 			_true_hd,
 			_true_hd_atmos,
 			_lpcm,

@@ -1,4 +1,4 @@
-#include <fstream>
+﻿#include <fstream>
 
 #include "MediaInfo/MediaInfo.h"
 
@@ -163,7 +163,7 @@ namespace av {
                                             m_audio.codec = av::media::SourceAudioCodec::_e_ac3_ddp;
                                         }
                                         else {
-                                            m_audio.codec = av::media::SourceAudioCodec::_e_ac3_atoms;
+                                            m_audio.codec = av::media::SourceAudioCodec::_e_ac3_atmos;
                                         }
                                     }
                                     else if (format == TEXT("DTS")) {

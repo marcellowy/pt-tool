@@ -1,4 +1,4 @@
-#ifndef MTEAM_AUDIO_CODEC_H_
+﻿#ifndef MTEAM_AUDIO_CODEC_H_
 #define MTEAM_AUDIO_CODEC_H_
 
 #include <map>
@@ -17,7 +17,7 @@ namespace mteam {
 			_dts = 3,
 			_dts_hd_ma = 11,
 			_e_ac3_ddp = 12,
-			_e_ac3_atoms = 13,
+			_e_ac3_atmos = 13,
 			_true_hd = 9,
 			_true_hd_atmos = 10,
 			_lpcm = 14,

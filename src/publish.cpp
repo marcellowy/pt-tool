@@ -225,13 +225,13 @@ int Publish::processDir(Source& obj) {
     fs::path json_path(media_info_json_path);
     if (!av::file::read(json_path, json_content)) {
         logw("read file {} failed", av::str::toA(media_info_json_path));
-        return false;
+        return -1;
     }
     std::string text_content;
     fs::path text_path(media_info_text_path);
     if (!av::file::read(text_path, text_content)) {
         logw("read file {} failed", av::str::toA(media_info_text_path));
-        return false;
+        return -1;
     }
     obj.mediainfo_text = av::str::toT(text_content);
     logi("json content: \n{}", json_content);
@@ -272,13 +272,48 @@ int Publish::processDir(Source& obj) {
         else if (avs_info.video_format == TEXT("MPEG2VIDEO")) {
             obj.video_codec = SourceVideoCodec::_mpeg2;
         }
+        else if (avs_info.video_format == TEXT("h264")) {
+            obj.video_codec = SourceVideoCodec::_h264;
+        }
+        else if (avs_info.video_format == TEXT("h265")) {
+            obj.video_codec = SourceVideoCodec::_h265;
+        }
         else {
             // default avs
-            obj.video_codec = SourceVideoCodec::_avs;
+			logw("video codec {} not support", 
+                av::str::toA(avs_info.video_format));
+            return -1;
         }
 
         // audio codec
-        obj.audio_codec = SourceAudioCodec::_ac3;
+        if(avs_info.audio_format == TEXT("AC3")) {
+            obj.audio_codec = SourceAudioCodec::_ac3;
+        }   
+        else if (avs_info.audio_format == TEXT("MP2"))
+        {
+            obj.audio_codec = SourceAudioCodec::_mp2;
+        }
+        else if (avs_info.audio_format == TEXT("MP3"))
+        {
+            obj.audio_codec = SourceAudioCodec::_mp3;
+        }
+        else if (avs_info.audio_format == TEXT("AAC"))
+        {
+            obj.audio_codec = SourceAudioCodec::_aac;
+        }
+        else if (avs_info.audio_format == TEXT("E-AC3(DDP)"))
+        {
+            obj.audio_codec = SourceAudioCodec::_e_ac3_ddp;
+        }
+        else if (avs_info.audio_format == TEXT("E-AC3 Atmos"))
+        {
+            obj.audio_codec = SourceAudioCodec::_e_ac3_atmos;
+        }
+        else {
+			logw("audio codec {} not support", 
+                av::str::toA(avs_info.audio_format));
+            return -1;
+        }
 
         obj.title_prefix = avs_info.channel;
         obj.name_chs = avs_info.title;
@@ -298,6 +333,10 @@ int Publish::processDir(Source& obj) {
         }
         else if (avs_info.category == 419) {
             obj.category = SourceCategory::Movie;
+        }
+        else {
+			logw("category {} not support", avs_info.category);
+            return -1;
         }
     }
     catch (const json::parse_error& e) {
@@ -406,7 +445,7 @@ int Publish::processDir(Source& obj) {
         av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
         if (!t.foo(obj.name_chs, obj.name_eng)) {
             loge("translate failed");
-            return false;
+            return -1;
         }
     }
     if (!empty(obj.name_eng)) {
