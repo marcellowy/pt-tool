@@ -230,13 +230,28 @@ namespace mteam {
 					sendTGWaringMessage(msg);
 					return false;
 				}
+			} else if (j["code"].is_string()) {
+				auto code = j["code"].get<std::string>();
+				if (code != "0") {
+					// here, the website result string
+					logw("code {} message {}", code, message);
+					std::tstring msg = TEXT("发布 ");
+					msg += title + TEXT("\n");
+					msg += m_external_source.sub_title + TEXT(" 失败\n");
+					msg += TEXT("错误消息: ") + av::str::toT(message);
+					sendTGWaringMessage(msg);
+					return false;
+				}
 			}
-
-			auto code = j["code"].get<std::string>();
-			if (code != "0") {
-				// here, the website result string
-				logw("code {} message {}", code, message);
+			else {
+				std::tstring msg = TEXT("发布 ");
+				msg += title + TEXT("\n");
+				msg += m_external_source.sub_title + TEXT(" 失败\n");
+				msg += TEXT("错误消息: ") + TEXT("无法解析返回结果(") + av::str::toT(resp->body) + TEXT(")");
+				sendTGWaringMessage(msg);
+				return false;
 			}
+			
 
 			if (j.contains("data")) {
 				json data = j["data"];
