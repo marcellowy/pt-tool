@@ -271,7 +271,7 @@ int Publish::processDir(Source& obj) {
 		if (avs_info.video_format == TEXT("AVS2")) {
 			obj.video_codec = SourceVideoCodec::_avs2;
 		}
-		else if (avs_info.video_format == TEXT("CAS")) {
+		else if (avs_info.video_format == TEXT("CAVS")) {
 			obj.video_codec = SourceVideoCodec::_cavs;
 		}
 		else if (avs_info.video_format == TEXT("AVS")) {
