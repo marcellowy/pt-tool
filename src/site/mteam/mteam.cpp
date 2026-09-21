@@ -247,7 +247,7 @@ namespace mteam {
 				std::tstring msg = TEXT("发布 ");
 				msg += title + TEXT("\n");
 				msg += m_external_source.sub_title + TEXT(" 失败\n");
-				msg += TEXT("错误消息: ") + TEXT("无法解析返回结果(") + av::str::toT(resp->body) + TEXT(")");
+				msg += TEXT("错误消息: 无法解析返回结果(") + av::str::toT(resp->body) + TEXT(")");
 				sendTGWaringMessage(msg);
 				return false;
 			}
