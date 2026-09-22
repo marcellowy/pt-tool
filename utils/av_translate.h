@@ -2,6 +2,7 @@
 #define AV_TRANSLATE_H_
 
 #include "av_string.h"
+#include <memory>
 
 // Example code
 //std::tstring text;
