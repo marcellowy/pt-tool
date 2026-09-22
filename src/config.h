@@ -30,6 +30,7 @@ struct TVName {
 };
 
 struct Rapidapi {
+	int channel = 0;
 	std::tstring key = TEXT("");
 	std::tstring host = TEXT("");
 };

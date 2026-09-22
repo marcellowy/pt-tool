@@ -586,8 +586,16 @@ bool Publish::processFile(Source& obj) {
 
 	// add english name
 	if (obj.name_eng.empty()) {
-		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
-		if (!t.foo(obj.name_chs, obj.name_eng)) {
+		std::unique_ptr<av::translate::ITranslate> translate = nullptr;
+		if (config.rapidapi.channel == 2) {
+			translate = av::translate::TranslateFactory::create(config.rapidapi.key, config.rapidapi.host, av::translate::TranslateType::kFreeGoogleTranslate);
+		}
+		else {
+			translate = av::translate::TranslateFactory::create(config.rapidapi.key, config.rapidapi.host, av::translate::TranslateType::kTranslate);
+		}
+
+		//
+		if(!translate->foo(obj.name_chs, obj.name_eng)) {
 			loge("translate failed");
 			return false;
 		}

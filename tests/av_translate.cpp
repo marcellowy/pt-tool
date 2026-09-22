@@ -33,13 +33,26 @@ TEST_F(TranslateTest, foo) {
 	SetConsoleCP(CP_UTF8);
 #endif
 	auto& config = Config::instance().rapidapi;
-	av::translate::Translate t(config.key, config.host);
+	//av::translate::Translate t(config.key, config.host);
+	//std::tstring cc;
+	//std::tstring mm = TEXT("中国");
+	//if (!t.foo(mm, cc)) {
+	//	loge("translate failed");
+	//}
+	//logi("cc {}", av::str::toA(cc));
+
+	auto ptr = av::translate::TranslateFactory::create(config.key, config.host, av::translate::TranslateType::kFreeGoogleTranslate);
+	if (!ptr) {
+		logw("create translate failed");
+		return;
+	}
 	std::tstring cc;
-	std::tstring mm = TEXT("中国");
-	if (!t.foo(mm, cc)) {
-		loge("translate failed");
+	if (!ptr->foo(TEXT("中国"), cc)) {
+		logw("translate failed");
+		return;
 	}
 	logi("cc {}", av::str::toA(cc));
+
 	std::abort();
 
 }

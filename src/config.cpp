@@ -18,6 +18,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		server.port = config["server"]["port"].value_or(0);
 
 		// rapidapi
+		rapidapi.channel = config["rapidapi"]["channel"].value_or(rapidapi.channel);
 		rapidapi.key = av::str::toT(config["rapidapi"]["key"].value_or(""));
 		rapidapi.host = av::str::toT(config["rapidapi"]["host"].value_or(""));
 
