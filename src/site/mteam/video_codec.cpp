@@ -1,4 +1,4 @@
-#include "video_codec.h"
+﻿#include "video_codec.h"
 
 namespace mteam {
 	namespace video {
@@ -15,6 +15,7 @@ namespace mteam {
 			{av::media::SourceVideoCodec::_avs, TEXT("AVS")},
 			{av::media::SourceVideoCodec::_avs2, TEXT("AVS2")},
 			{av::media::SourceVideoCodec::_cavs, TEXT("AVS+")},
+			{av::media::SourceVideoCodec::_avs3, TEXT("AVS3")},
 		};
 
 		Codec::Codec(const av::media::SourceVideoCodec& codec) : m_codec(codec)
@@ -63,6 +64,9 @@ namespace mteam {
 				break;
 			case av::media::SourceVideoCodec::_cavs:
 				return CodecId::_cavs;
+				break;
+			case av::media::SourceVideoCodec::_avs3:
+				return CodecId::_avs3;
 				break;
 			case av::media::SourceVideoCodec::Unknown:
 				return CodecId::Unknown;

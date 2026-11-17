@@ -1,4 +1,4 @@
-#ifndef MTEAM_VIDEO_CODEC_H_
+﻿#ifndef MTEAM_VIDEO_CODEC_H_
 #define MTEAM_VIDEO_CODEC_H_
 
 #include <map>
@@ -23,6 +23,7 @@ namespace mteam {
 			_avs = 22,
 			_avs2 = 22,
 			_cavs = 22,
+			_avs3 = 22,
 		};
 
 		class Codec

@@ -286,6 +286,9 @@ int Publish::processDir(Source& obj) {
 		else if (avs_info.video_format == TEXT("h265")) {
 			obj.video_codec = SourceVideoCodec::_h265;
 		}
+		else if (avs_info.video_format == TEXT("AVS3")) {
+			obj.video_codec = SourceVideoCodec::_avs3;
+		}
 		else {
 			// default avs
 			logw("video codec {} not support",

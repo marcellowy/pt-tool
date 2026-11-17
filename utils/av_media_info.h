@@ -39,6 +39,7 @@ namespace av {
 			_avs,
 			_avs2,
 			_cavs,
+			_avs3,
 		};
 
 		enum class SourceAudioCodec {
