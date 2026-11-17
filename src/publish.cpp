@@ -407,6 +407,18 @@ int Publish::processDir(Source& obj) {
 		return -1;
 	}
 
+	// add english name
+	if (obj.name_eng.empty()) {
+		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
+		if (!t.foo(obj.name_chs, obj.name_eng)) {
+			loge("translate failed");
+			return -1;
+		}
+	}
+	if (!empty(obj.name_eng)) {
+		capitalizeWords(obj.name_eng);
+	}
+
 	auto move_image = [&obj, &img_vec]() -> bool {
 		// create dir
 		auto dir = getTmpDir(obj);
@@ -435,7 +447,7 @@ int Publish::processDir(Source& obj) {
 		}
 		logi("move_image succ");
 		return true;
-		};
+	};
 
 	// move img
 	if (!move_image()) {
@@ -449,18 +461,6 @@ int Publish::processDir(Source& obj) {
 
 	if (!av::path::remove_file(media_info_text_path)) {
 		logw("remove file {} failed", av::str::toA(media_info_text_path));
-	}
-
-	// add english name
-	if (obj.name_eng.empty()) {
-		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
-		if (!t.foo(obj.name_chs, obj.name_eng)) {
-			loge("translate failed");
-			return -1;
-		}
-	}
-	if (!empty(obj.name_eng)) {
-		capitalizeWords(obj.name_eng);
 	}
 	logi("process dir succ");
 
