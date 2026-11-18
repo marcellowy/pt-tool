@@ -194,7 +194,7 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 	// 检查目录大小是否超过当前磁盘剩余空间
 	{
 		int64_t dir_size = getDirSize(src) + 1024LL * 1024 * 1024 * 20;	// 留出20GB的缓冲空间
-		logi("dir size: {} bytes", dir_size);
+		logi("dir size: {}G", dir_size / G);
 		int64_t free_size = spaceFreeSize(dst_dir);
 
 		//

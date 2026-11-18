@@ -18,7 +18,7 @@ protected:
 
 TEST_F(DownloadTest, custom) {
 	auto& config = Config::instance();
-	config.download.numberOfDownloadPerTime = 100;
+	config.download.numberOfDownloadPerTime = 1;
 	config.download.enable = true;
 
 	//
