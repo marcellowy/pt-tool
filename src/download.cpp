@@ -12,7 +12,9 @@
 #include "publish.h"
 
 using namespace std::chrono;
-
+namespace {
+	constexpr auto G = 1024 * 1024 * 1024;
+}
 Download::Download() {
 
 }
@@ -33,7 +35,6 @@ int64_t Download::spaceFreeSize(const fs::path& root) {
 	}
 
 	//
-	constexpr auto G = 1024 * 1024 * 1024;
 	logi("path: {}, total size: {} GB, free size: {} GB, available size (non-privileged): {} GB",
 		av::str::toA(root), si.capacity / G, si.free / G, si.available / G);
 	// si.available 才是非特权用户可用的磁盘空间大小，si.free 是所有用户可用的磁盘空间大小
@@ -100,7 +101,8 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 		}
 
 		// 检查文件大小是否超过当前磁盘剩余空间
-		int64_t file_size = fs::file_size(src) + 1024LL * 1024 * 1024 * 10;	// 留出10GB的缓冲空间
+		int64_t file_size = fs::file_size(src) + 1024LL * 1024 * 1024 * 20;	// 留出20GB的缓冲空间
+		logi("file size: {}G", file_size / G);
 		int64_t free_size = spaceFreeSize(dst_dir);
 		if (free_size < file_size) {
 			logw("file size {} > free size {}, not enough space!", file_size, free_size);
