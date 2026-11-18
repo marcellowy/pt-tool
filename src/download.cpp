@@ -338,7 +338,7 @@ std::tstring Download::getLastDirName(const fs::path& dir) {
 
 }
 
-bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
+bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std::tstring& dst_dir) {
 
 	//
 	auto& config = Config::instance();
@@ -358,6 +358,12 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 
 		//
 		if (entry.is_regular_file()) {
+			//
+			const bool include_file = (type & TaskProcessType::kFile) == TaskProcessType::kFile;
+			if (!include_file) {
+				continue;
+			}
+
 			// 处理一般文件
 			logi("file {}", av::str::toUtf8(entry.path()));
 
@@ -384,6 +390,12 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 			count_of_downloads++;
 		}
 		else if (entry.is_directory()) {
+			//
+			const bool include_dir = (type & TaskProcessType::kDir) == TaskProcessType::kDir;
+			if (!include_dir) {
+				continue;
+			}
+
 			// 处理目录
 			logi("dir {}", av::str::toA(entry.path()));
 
@@ -439,7 +451,7 @@ bool Download::start() {
 			}
 
 			//
-			task(config.download.source_dir, config.mteam.seed_dir);
+			task(TaskProcessType::kAll, config.download.source_dir, config.mteam.seed_dir);
 			return true;
 			});
 

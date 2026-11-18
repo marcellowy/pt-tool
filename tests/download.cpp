@@ -16,14 +16,24 @@ protected:
 	}
 };
 
-TEST_F(DownloadTest, custom) {
+TEST_F(DownloadTest, file) {
 	auto& config = Config::instance();
 	config.download.numberOfDownloadPerTime = 1;
 	config.download.enable = true;
 
 	//
 	Download d;
-	d.task(TEXT("/root/media"), TEXT("/root/downloads"));
+	d.task(TaskProcessType::kFile, TEXT("/root/media"), TEXT("/root/downloads"));
+}
+
+TEST_F(DownloadTest, dir) {
+	auto& config = Config::instance();
+	config.download.numberOfDownloadPerTime = 1;
+	config.download.enable = true;
+
+	//
+	Download d;
+	d.task(TaskProcessType::kDir, TEXT("/root/media"), TEXT("/root/downloads"));
 }
 
 TEST_F(DownloadTest, space) {

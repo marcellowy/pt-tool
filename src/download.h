@@ -6,11 +6,28 @@
 
 namespace fs = std::filesystem;
 
+enum class TaskProcessType {
+	kNone = 0,
+	kFile = 1 << 0,
+	kDir = 1 << 1,
+	kAll = kFile | kDir
+};
+
+constexpr TaskProcessType operator|(TaskProcessType a, TaskProcessType b) {
+	return static_cast<TaskProcessType>(
+		static_cast<int>(a) | static_cast<int>(b));
+}
+
+constexpr TaskProcessType operator&(TaskProcessType a, TaskProcessType b) {
+	return static_cast<TaskProcessType>(
+		static_cast<int>(a) & static_cast<int>(b));
+}
+
 class Download {
 public:
 	Download();
 	~Download();
-	bool task(const std::tstring& src_dir, const std::tstring& dst_dir);
+	bool task(TaskProcessType type, const std::tstring& src_dir, const std::tstring& dst_dir);
 	bool start();
 	bool stop();
 private:
