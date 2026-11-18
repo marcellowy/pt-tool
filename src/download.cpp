@@ -236,7 +236,7 @@ bool Download::atomicCopyDir(const fs::path& src_dir, const fs::path& dst_dir) {
 	}
 
 	// 如果目标目录已经存在，先删除它
-	if(fs::exists(new_dst_dir)) {
+	if (fs::exists(new_dst_dir)) {
 		if (!fs::remove_all(new_dst_dir, ec)) {
 			logw("remove dir {} failed! {}", av::str::toUtf8(new_dst_dir), ec.message());
 			return false;
@@ -246,7 +246,7 @@ bool Download::atomicCopyDir(const fs::path& src_dir, const fs::path& dst_dir) {
 	// 重命名临时目录为真实目录
 	fs::rename(new_tmp_dst_dir, new_dst_dir, ec);
 	if (ec) {
-		logw("rename dir {} to {} failed! {}", 
+		logw("rename dir {} to {} failed! {}",
 			av::str::toUtf8(new_tmp_dst_dir), av::str::toUtf8(new_dst_dir), ec.message());
 		return false;
 	}
@@ -369,6 +369,14 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 				continue;
 			}
 			logi("atomic copy file {} to {} success!", av::str::toUtf8(entry.path()), av::str::toUtf8(dst_dir_path));
+
+			//
+			std::error_code ec;
+			if (!fs::remove(entry.path(), ec)) {
+				logw("remove file {} failed! {}", av::str::toUtf8(entry.path()), ec.message());
+			}
+
+			//
 			count_of_downloads++;
 		}
 		else if (entry.is_directory()) {
@@ -387,6 +395,12 @@ bool Download::task(const std::tstring& src_dir, const std::tstring& dst_dir) {
 				continue;
 			}
 			logi("atomic copy dir {} to {} success!", av::str::toUtf8(entry.path()), av::str::toUtf8(dst_dir_path));
+
+			//
+			std::error_code ec;
+			if (!fs::remove_all(entry.path(), ec)) {
+				logw("remove file {} failed! {}", av::str::toUtf8(entry.path()), ec.message());
+			}
 			count_of_downloads++;
 		}
 		else {
