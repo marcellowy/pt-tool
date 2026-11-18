@@ -36,7 +36,8 @@ int64_t Download::spaceFreeSize(const fs::path& root) {
 	constexpr auto G = 1024 * 1024 * 1024;
 	logi("path: {}, total size: {} GB, free size: {} GB, available size (non-privileged): {} GB",
 		av::str::toA(root), si.capacity / G, si.free / G, si.available / G);
-	return si.free;
+	// si.available 才是非特权用户可用的磁盘空间大小，si.free 是所有用户可用的磁盘空间大小
+	return si.available;
 }
 
 int64_t Download::getDirSize(const fs::path& dir) {
@@ -190,7 +191,8 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 
 	// 检查目录大小是否超过当前磁盘剩余空间
 	{
-		int64_t dir_size = getDirSize(src) + 1024LL * 1024 * 1024 * 10;	// 留出10GB的缓冲空间
+		int64_t dir_size = getDirSize(src) + 1024LL * 1024 * 1024 * 20;	// 留出20GB的缓冲空间
+		logi("dir size: {} bytes", dir_size);
 		int64_t free_size = spaceFreeSize(dst_dir);
 
 		//

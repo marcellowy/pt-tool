@@ -23,7 +23,7 @@ TEST_F(DownloadTest, custom) {
 
 	//
 	Download d;
-	d.task(TEXT("F:\\test1"), TEXT("F:\\test2"));
+	d.task(TEXT("/root/media"), TEXT("/root/downloads"));
 }
 
 TEST_F(DownloadTest, space) {
