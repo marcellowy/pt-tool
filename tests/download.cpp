@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "src/download.h"
 #include "src/config.h"
+#include "av_log.h"
 
 class DownloadTest : public ::testing::Test {
 protected:
@@ -23,4 +24,15 @@ TEST_F(DownloadTest, custom) {
 	//
 	Download d;
 	d.task(TEXT("F:\\test1"), TEXT("F:\\test2"));
+}
+
+TEST_F(DownloadTest, space) {
+	std::error_code ec;
+	fs::space_info si = fs::space("/root/downloads", ec);
+	if (ec) {
+		std::cerr << "get disk space failed: " << ec.message() << std::endl;
+	}
+	constexpr auto G = 1024 * 1024 * 1024;
+	logi("path: {}, total size: {} GB, free size: {} GB, available size (non-privileged): {} GB",
+		av::str::toA("/root/downloads"), si.capacity / G, si.free / G, si.available / G);
 }
