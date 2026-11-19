@@ -1,4 +1,6 @@
-﻿// 从 115 下载文件到本地的线程
+﻿#ifndef TEST_DOWNLOAD_H_
+#define TEST_DOWNLOAD_H_
+// 从 115 下载文件到本地的线程
 // 以前使用rsync总是有漏掉文件的情况
 // 文件还没有下载完成就会被删除，导致文件丢失
 #include <filesystem>
@@ -52,3 +54,5 @@ private:
 private:
 	std::vector<std::shared_ptr<av::cron::Cron>> m_cron;
 };
+
+#endif

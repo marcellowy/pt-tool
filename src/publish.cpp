@@ -23,6 +23,7 @@
 #include "av_file.h"
 #include "av_pt_gen_mteam.h"
 #include "av_worker.h"
+#include "av_tgbot.h"
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
@@ -42,7 +43,8 @@ std::tstring getTmpDir(const Source& obj) {
 Publish::Publish() {
 }
 
-Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir) : m_site(std::move(site)), m_dir(dir) {
+Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id) 
+    : m_site(std::move(site)), m_dir(dir), m_tgbot_token(tgbot_token), m_tgbot_chat_id(tgbot_chat_id) {
 }
 
 Publish::~Publish() {
@@ -51,23 +53,26 @@ Publish::~Publish() {
 
 void Publish::task() {
 	logi("publish task start");
-	auto arr = readDir();
+	PublishError error = PublishError::Success;
+	auto arr = readDir(error);
 	logi("read dir {} succ, count {}", av::str::toA(m_dir), arr.size());
 	for (auto& tmp : arr) {
 		if (tmp.type == SourceType::File) {
-			if (!processFile(tmp)) {
+			if (!processFile(tmp, error)) {
 				logw("process file failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+				sendTGWarningMessage(av::str::toA(tmp.fullpath), error);
 				continue;
 			}
 		}
 		else if (tmp.type == SourceType::Dir) {
-			const auto ret = processDir(tmp);
+			const auto ret = processDir(tmp, error);
 			if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
 				logw("{} time not reached", av::str::toA(tmp.name));
 				continue;
 			}
 			if (ret != static_cast<int>(ErrorCode::Success)) {
 				logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
+				sendTGWarningMessage(av::str::toA(tmp.fullpath), error);
 				continue;
 			}
 		}
@@ -93,6 +98,9 @@ void Publish::task() {
 				static_cast<int>(tmp.video_resolution)
 			);
 			logw("{} param error, please check", av::str::toA(tmp.fullpath));
+
+			// send tg warning
+			sendTGWarningMessage(av::str::toA(tmp.fullpath), PublishError::ErrParam);
 			continue;
 		}
 
@@ -107,6 +115,9 @@ void Publish::task() {
 			logi("publish succ, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
 			break;
 		}
+
+		//
+		sendTGWarningMessage(av::str::toA(tmp.fullpath), PublishError::ErrPublishFailed);
 
 		// if incorrect, just use next file keep publish
 		logi("publish failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
@@ -210,7 +221,7 @@ bool Publish::getSiteType(Source& obj) {
 	return false;
 }
 
-int Publish::processDir(Source& obj) {
+int Publish::processDir(Source& obj, PublishError& error) {
 	auto& config = Config::instance();
 	logi("process {}", av::str::toA(obj.fullpath));
 
@@ -225,6 +236,7 @@ int Publish::processDir(Source& obj) {
 	if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
 		logw("{} or {} not exists",
 			av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
+		error = PublishError::ErrNoMediaInfo;
 		return -1;
 	}
 
@@ -233,12 +245,14 @@ int Publish::processDir(Source& obj) {
 	fs::path json_path(media_info_json_path);
 	if (!av::file::read(json_path, json_content)) {
 		logw("read file {} failed", av::str::toA(media_info_json_path));
+		error = PublishError::ErrNoMediaInfo;
 		return -1;
 	}
 	std::string text_content;
 	fs::path text_path(media_info_text_path);
 	if (!av::file::read(text_path, text_content)) {
 		logw("read file {} failed", av::str::toA(media_info_text_path));
+		error = PublishError::ErrNoMediaInfo;
 		return -1;
 	}
 	obj.mediainfo_text = av::str::toT(text_content);
@@ -293,6 +307,7 @@ int Publish::processDir(Source& obj) {
 			// default avs
 			logw("video codec {} not support",
 				av::str::toA(avs_info.video_format));
+			error = PublishError::ErrVideoCodecNotSupport;
 			return -1;
 		}
 
@@ -323,6 +338,7 @@ int Publish::processDir(Source& obj) {
 		else {
 			logw("audio codec {} not support",
 				av::str::toA(avs_info.audio_format));
+			error = PublishError::ErrAudioCodecNotSupport;
 			return -1;
 		}
 
@@ -347,15 +363,18 @@ int Publish::processDir(Source& obj) {
 		}
 		else {
 			logw("category {} not support", avs_info.category);
+			error = PublishError::ErrCategoryNotSupport;
 			return -1;
 		}
 	}
 	catch (const json::parse_error& e) {
 		logw("json::parse_error {}", e.what());
+		error = PublishError::ErrParseJson;
 		return -1;
 	}
 	catch (const std::exception& e) {
 		logw("std::exception {}", e.what());
+		error = PublishError::ErrParseJson;
 		return -1;
 	}
 
@@ -366,6 +385,7 @@ int Publish::processDir(Source& obj) {
 	int64_t diff_time_seconds;
 	if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
 		logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
+		error = PublishError::ErrParseCreatedTime;
 		return -1;
 	}
 
@@ -404,6 +424,7 @@ int Publish::processDir(Source& obj) {
 	if (ts_count == 0) {
 		// no ts
 		logw("no ts file");
+		error = PublishError::ErrNoTSFile;
 		return -1;
 	}
 
@@ -412,6 +433,7 @@ int Publish::processDir(Source& obj) {
 		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
 		if (!t.foo(obj.name_chs, obj.name_eng)) {
 			loge("translate failed");
+			error = PublishError::ErrTranslate;
 			return -1;
 		}
 	}
@@ -452,6 +474,7 @@ int Publish::processDir(Source& obj) {
 	// move img
 	if (!move_image()) {
 		logw("move image failed");
+		error = PublishError::ErrMoveImage;
 		return -1;
 	}
 
@@ -467,7 +490,7 @@ int Publish::processDir(Source& obj) {
 	return static_cast<int>(ErrorCode::Success);
 }
 
-bool Publish::processFile(Source& obj) {
+bool Publish::processFile(Source& obj, PublishError& error) {
 	auto& config = Config::instance();
 	logi("process {}", av::str::toA(obj.fullpath));
 
@@ -478,6 +501,7 @@ bool Publish::processFile(Source& obj) {
 	// site type
 	if (!getSiteType(obj)) {
 		logw("dir {}, name {} get site type failed", av::str::toA(obj.dir), av::str::toA(obj.name));
+		error = PublishError::ErrGetSiteType;
 		return false;
 	}
 
@@ -488,6 +512,7 @@ bool Publish::processFile(Source& obj) {
 	av::mediainfo::MediaInfo m(obj.fullpath);
 	if (!m.parse()) {
 		logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
+		error = PublishError::ErrNoMediaInfo;
 		return false;
 	}
 
@@ -520,6 +545,7 @@ bool Publish::processFile(Source& obj) {
 			std::string real_douban_url_buff(douban_url_buff);
 			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
 				loge("get douban info failed!");
+				error = PublishError::ErrGetDoubanInfo;
 				return false;
 			}
 		}
@@ -557,6 +583,7 @@ bool Publish::processFile(Source& obj) {
 		});
 	if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
 		loge("capture frame failed");
+		error = PublishError::ErrCaptureFrame;
 		return false;
 	}
 
@@ -600,6 +627,7 @@ bool Publish::processFile(Source& obj) {
 		//
 		if(!translate->foo(obj.name_chs, obj.name_eng)) {
 			loge("translate failed");
+			error = PublishError::ErrTranslate;
 			return false;
 		}
 	}
@@ -610,12 +638,14 @@ bool Publish::processFile(Source& obj) {
 	return true;
 }
 
-std::vector<Source> Publish::readDir() {
+std::vector<Source> Publish::readDir(PublishError& error) {
 	std::vector<Source> v;
+	error = PublishError::Success;
 
 	// check
 	if (!av::path::dir_exists(m_dir)) {
 		logw("{} not exists", av::str::toA(m_dir));
+		error = PublishError::ErrDirNotExists;
 		return v;
 	}
 
@@ -729,4 +759,12 @@ void Publish::capitalizeWords(std::tstring& s) {
 			newWord = false;
 		}
 	}
+}
+
+void Publish::sendTGWarningMessage(const std::string& dir, PublishError error) {
+	auto msg = publishErrorToString(error);
+	const std::string text = "处理: " + dir + ", 错误: " + av::str::toA(msg);
+	av::tgbot::send_message(av::str::toA(m_tgbot_token),
+		av::str::toA(m_tgbot_chat_id),
+		text);
 }

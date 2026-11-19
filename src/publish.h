@@ -12,6 +12,7 @@
 #include "av_media_info.h"
 #include "av_cron.h"
 #include "site.h"
+#include "error_code.h"
 
 namespace fs = std::filesystem;
 
@@ -70,17 +71,17 @@ class Publish
 {
 public:
 	Publish();
-	Publish(std::shared_ptr<Site>& site, const std::tstring& dir);
+	Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id);
 	~Publish();
 	void task();
 	bool start();
 	bool stop();
 protected:
-	std::vector<Source> readDir();
+	std::vector<Source> readDir(PublishError& error);
 	bool getSiteType(Source& obj);
 	
-	int processDir(Source& obj);
-	bool processFile(Source& obj);
+	int processDir(Source& obj, PublishError& error);
+	bool processFile(Source& obj, PublishError& error);
 
 	// map tv name
 	void tvname(Source& obj);
@@ -91,10 +92,17 @@ protected:
 	// 
 	void capitalizeWords(std::tstring& s);
 
+    //
+	void sendTGWarningMessage(const std::string& dir, PublishError error);
+
 private:
 	std::tstring m_dir;
 	std::shared_ptr<Site> m_site;
 	std::vector<std::shared_ptr<av::cron::Cron>> m_cron;
+
+    //
+    std::tstring m_tgbot_token;
+    std::tstring m_tgbot_chat_id;
 };
 
 

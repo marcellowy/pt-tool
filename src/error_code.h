@@ -1,5 +1,8 @@
-#ifndef TEST_CODE_H_
-#define TEST_CODE_H_
+﻿#ifndef TEST_ERROR_CODE_H_
+#define TEST_ERROR_CODE_H_
+
+#include <string>
+#include <unordered_map>
 
 enum class ErrorCode {
     Success = 0,
@@ -11,6 +14,26 @@ enum class ErrorCode {
     ErrTimeNotReached,              //
     ErrStartCronFailed,
 };
+
+enum class PublishError {
+    Success = 0,
+    ErrNoMediaInfo,
+    ErrVideoCodecNotSupport,
+    ErrAudioCodecNotSupport,
+    ErrCategoryNotSupport,
+    ErrParseJson,
+    ErrNoTSFile,
+    ErrTranslate,
+    ErrMoveImage,
+    ErrGetSiteType,
+    ErrGetDoubanInfo,
+    ErrCaptureFrame,
+    ErrDirNotExists,
+    ErrParam,
+    ErrPublishFailed,
+};
+
+std::string publishErrorToString(PublishError code);
 
 
 #endif

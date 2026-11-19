@@ -57,7 +57,7 @@ int main()
 		config.mteam.img_api_url, config.mteam.img_api_key,
 		config.tgbot.token, config.tgbot.chat_id
 	);
-	Publish publish(ptr, config.mteam.seed_dir);
+	Publish publish(ptr, config.mteam.seed_dir, config.tgbot.token, config.tgbot.chat_id);
 	if (!publish.start()) {
 		logw("start publish cron failed");
 		return static_cast<int>(ErrorCode::ErrStartCronFailed);
