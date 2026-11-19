@@ -19,7 +19,7 @@ namespace {
 		{PublishError::ErrParam, "Param error"},
 		{PublishError::ErrPublishFailed, "Publish failed"},
     };
-}
+};
 
 std::string publishErrorToString(PublishError code) {
 	auto it = public_.find(code);

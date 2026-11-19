@@ -15,7 +15,7 @@ enum class ErrorCode {
     ErrStartCronFailed,
 };
 
-enum class PublishError {
+enum class PublishError: int {
     Success = 0,
     ErrNoMediaInfo,
     ErrVideoCodecNotSupport,
