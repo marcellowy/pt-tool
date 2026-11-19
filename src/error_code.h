@@ -31,6 +31,7 @@ enum class PublishError {
     ErrDirNotExists,
     ErrParam,
     ErrPublishFailed,
+    ErrParseCreatedTime,
 };
 
 std::string publishErrorToString(PublishError code);
