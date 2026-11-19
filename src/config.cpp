@@ -14,6 +14,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		log.level = spdlog::level::from_str(log_level);
 
 		// server
+		server.enable = config["server"]["enable"].value_or(false);
 		server.host = av::str::toT(config["server"]["host"].value_or(""));
 		server.port = config["server"]["port"].value_or(0);
 

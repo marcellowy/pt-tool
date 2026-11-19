@@ -43,6 +43,10 @@ std::tstring getTmpDir(const Source& obj) {
 Publish::Publish() {
 }
 
+Publish::Publish(const std::tstring& dir) : m_dir(dir) {
+
+}
+
 Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id)
 	: m_site(std::move(site)), m_dir(dir), m_tgbot_token(tgbot_token), m_tgbot_chat_id(tgbot_chat_id) {
 }

@@ -12,15 +12,16 @@
 #include "spdlog/spdlog.h"
 
 struct TableLog {
-	std::tstring dir = TEXT("logs");	// log to dir
+	std::tstring dir = TEXT("logs");		// log to dir
 	size_t max_file_size = 5 * 1024 * 1024;	// file max size
 	size_t max_file_count = 3;				// file max count
-	spdlog::level::level_enum level;	// debug
+	spdlog::level::level_enum level;		// debug
 };
 
 struct TableServer {
+	bool enable = false;					//
 	std::tstring host = TEXT("0.0.0.0");	// server host
-	uint16_t port = 8000;			// server port
+	uint16_t port = 8000;					// server port
 };
 
 struct TVName {

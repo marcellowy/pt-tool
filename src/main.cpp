@@ -21,6 +21,8 @@
 #include "download.h"
 #include "mteam/mteam.h"
 
+#include "server.h"
+
 using namespace std;
 
 int main()
@@ -72,12 +74,13 @@ int main()
 	}
 
 	//
-	httplib::Server svr;
-	if (!svr.bind_to_port(av::str::toA(config.server.host), config.server.port)) {
-		logw("bind failed");
-		return static_cast<int>(ErrorCode::ErrOpenLogFailed);
+	Server server;
+	if (config.server.enable) {
+		server.Start(av::str::toA(config.server.host), config.server.port);
 	}
-	svr.listen_after_bind();
+	else {
+		logi("server is disabled");
+	}
 
 	return static_cast<int>(ErrorCode::Success);
 }

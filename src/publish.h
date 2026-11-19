@@ -71,15 +71,16 @@ class Publish
 {
 public:
 	Publish();
+    Publish(const std::tstring& dir);
 	Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id);
 	~Publish();
 	void task();
 	bool start();
 	bool stop();
+
+    std::vector<Source> readDir(PublishError& error);
+    bool getSiteType(Source& obj);
 protected:
-	std::vector<Source> readDir(PublishError& error);
-	bool getSiteType(Source& obj);
-	
 	int processDir(Source& obj, PublishError& error);
 	bool processFile(Source& obj, PublishError& error);
 
