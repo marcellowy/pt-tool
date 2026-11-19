@@ -44,6 +44,9 @@ void Server::onReadFile(const httplib::Request& req, httplib::Response& res) {
 	auto arr = publish.readDir(error);
 	for (auto& tmp : arr)
 	{
+		if (tmp.type == SourceType::Dir) continue;	// 暂时不处理目录
+
+		//
 		if (!publish.getSiteType(tmp)) {
 			// 解析站点类型失败
 			File file;
