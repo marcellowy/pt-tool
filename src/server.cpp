@@ -21,8 +21,8 @@ void Server::router() {
 		});
 
 	// 2. 挂载静态文件目录（例如当前目录下的 ./html 文件夹）
-	// 访问 http://localhost:8080/ 会自动查找 ./html/index.html
-	auto ret = server_.set_mount_point("/", "./html");
+	// 访问 http://localhost:8080/html/ 会自动查找 ./html/index.html
+	auto ret = server_.set_mount_point("/html", "./html");
 	if (!ret) {
 		std::cerr << "静态目录 ./html 不存在！" << std::endl;
 		return;
