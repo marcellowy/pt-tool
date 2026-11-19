@@ -97,7 +97,7 @@ void Server::onRename(const httplib::Request& req, httplib::Response& res) {
 
 	//
 	std::error_code ec;
-	fs::rename(req_obj.path, fs::path(req_obj.path).parent_path() / fmt::format("0000@[%s][%s][%s][%s][%s][%s][%s][%s].ts",
+	fs::rename(req_obj.path, fs::path(req_obj.path).parent_path() / fmt::format("0000@[{}][{}][{}][{}][{}][{}][{}][{}].ts",
 		req_obj.category_id,
 		req_obj.name_chs,
 		req_obj.name_prefix,
@@ -110,4 +110,12 @@ void Server::onRename(const httplib::Request& req, httplib::Response& res) {
 		logw("rename failed: {}, {}, {}", 
 			ec.message(), ec.value(), ec.category().name());
 	}
+
+	//
+	Response<std::string> resp;
+	resp.code = 0;
+	resp.message = "success";
+	resp.data = "";
+	const nlohmann::json j = resp;
+	res.set_content(j.dump(), "application/json");
 };
