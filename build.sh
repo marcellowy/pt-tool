@@ -1,8 +1,9 @@
 #!/bin/sh
 
+#rm -rf build
 mkdir -p build && cd build
 
-# 关键在最后那个 -DCMAKE_TOOLCHAIN_FILE 参数，它会让 CMake 自动去读你项目地下的 vcpkg_installed
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake
-
+# build
+cmake .. -DENABLE_GOOGLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake
+#cmake --build . --config Release --target unit_tests
 cmake --build . --config Release

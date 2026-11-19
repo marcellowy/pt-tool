@@ -6,3 +6,4 @@ src/config_*.toml
 .idea
 cmake-build-*
 vcpkg_*
+build/
