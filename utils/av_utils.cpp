@@ -1,4 +1,5 @@
 ﻿#include "av_utils.h"
+#include <fmt/format.h>
 
 namespace av::utils {
 	std::string formatBytes(std::uint64_t bytes) {
