@@ -356,6 +356,8 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 	int count_of_downloads = 0;	// 下载数量计数器
 	for (const auto& entry : fs::directory_iterator(src_dir, ec)) {
 		if (count_of_downloads >= config.download.numberOfDownloadPerTime) {
+			logi("download task reached the limit of {} downloads per time, stop processing further files.",
+				config.download.numberOfDownloadPerTime);
 			break;
 		}
 
@@ -368,7 +370,7 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 			}
 
 			// 处理一般文件
-			logi("file {}", av::str::toUtf8(entry.path()));
+			logi(">>>>>>>> new file {}", av::str::toUtf8(entry.path()));
 
 			//
 			if (!isDownloadable(entry.path(), dst_dir)) {
@@ -400,7 +402,7 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 			}
 
 			// 处理目录
-			logi("dir {}", av::str::toA(entry.path()));
+			logi(">>>>>>>> new dir {}", av::str::toA(entry.path()));
 
 			//
 			if (!isDownloadable(entry.path(), dst_dir)) {
