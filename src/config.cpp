@@ -65,6 +65,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		// download
 		download.enable = config["download"]["enable"].value_or(false);
 		download.numberOfDownloadPerTime = config["download"]["number_of_downloads_per_time"].value_or(1);
+		download.source_dir = av::str::toT(config["download"]["source_dir"].value_or(""));
 
 		// publish cycle
 		if (auto* patterns = config.at_path("mteam.publish_cycle.pattern").as_array()) {
