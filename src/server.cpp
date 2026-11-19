@@ -34,7 +34,7 @@ void Server::Start(const std::string& host, int port) {
 		logw("bind failed");
 		return;
 	}
-	logi("server start on %s:%d", host.c_str(), port);
+	logi("server start on {}:{}", host, port);
 	router();
 	if (!server_.listen_after_bind()) {
 		logw("listen failed");
