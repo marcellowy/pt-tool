@@ -43,8 +43,8 @@ std::tstring getTmpDir(const Source& obj) {
 Publish::Publish() {
 }
 
-Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id) 
-    : m_site(std::move(site)), m_dir(dir), m_tgbot_token(tgbot_token), m_tgbot_chat_id(tgbot_chat_id) {
+Publish::Publish(std::shared_ptr<Site>& site, const std::tstring& dir, const std::tstring& tgbot_token, const std::tstring& tgbot_chat_id)
+	: m_site(std::move(site)), m_dir(dir), m_tgbot_token(tgbot_token), m_tgbot_chat_id(tgbot_chat_id) {
 }
 
 Publish::~Publish() {
@@ -469,7 +469,7 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		}
 		logi("move_image succ");
 		return true;
-	};
+		};
 
 	// move img
 	if (!move_image()) {
@@ -625,7 +625,7 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 		}
 
 		//
-		if(!translate->foo(obj.name_chs, obj.name_eng)) {
+		if (!translate->foo(obj.name_chs, obj.name_eng)) {
 			loge("translate failed");
 			error = PublishError::ErrTranslate;
 			return false;
@@ -762,6 +762,10 @@ void Publish::capitalizeWords(std::tstring& s) {
 }
 
 void Publish::sendTGWarningMessage(const std::string& dir, PublishError error) {
+	if (m_tgbot_token.empty() || m_tgbot_chat_id.empty()) {
+		logi("tgbot token or chat id is empty, skip send tg warning message");
+		return;
+	}
 	auto msg = publishErrorToString(error);
 	const std::string text = "处理: " + dir + ", 错误: " + av::str::toA(msg);
 	av::tgbot::send_message(av::str::toA(m_tgbot_token),

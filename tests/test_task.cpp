@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+﻿#include "gtest/gtest.h"
 #include "av_env.h"
 #include "logger.h"
 #include "src/config.h"
@@ -73,7 +73,7 @@ TEST_F(PublishTest, task) {
 		config.mteam.img_api_url, config.mteam.img_api_key,
 		config.tgbot.token, config.tgbot.chat_id
 	);
-	Publish publish(ptr, config.mteam.seed_dir);
+	Publish publish(ptr, config.mteam.seed_dir, config.tgbot.token, config.tgbot.chat_id);
 	publish.task();
 	std::abort();
 }
