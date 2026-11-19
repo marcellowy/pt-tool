@@ -6,15 +6,18 @@
 #include "av_worker.h"
 #include "av_path.h"
 #include "av_time.h"
+#include "av_utils.h"
 
 #include "config.h"
 #include "download.h"
 #include "publish.h"
 
 using namespace std::chrono;
+
 namespace {
-	constexpr auto G = 1024 * 1024 * 1024;
-}
+	constexpr auto BUFFER_SPACE = 1024LL * 1024 * 1024 * 10; // 留出10GB的缓冲空间
+};
+
 Download::Download() {
 
 }
@@ -35,8 +38,8 @@ int64_t Download::spaceFreeSize(const fs::path& root) {
 	}
 
 	//
-	logi("path: {}, total size: {} GB, free size: {} GB, available size (non-privileged): {} GB",
-		av::str::toA(root), si.capacity / G, si.free / G, si.available / G);
+	logi("path: {}, total size: {}, free size: {}, available size (non-privileged): {}",
+		av::str::toA(root), av::utils::formatBytes(si.capacity), av::utils::formatBytes(si.free), av::utils::formatBytes(si.available));
 	// si.available 才是非特权用户可用的磁盘空间大小，si.free 是所有用户可用的磁盘空间大小
 	return si.available;
 }
@@ -101,11 +104,12 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 		}
 
 		// 检查文件大小是否超过当前磁盘剩余空间
-		int64_t file_size = fs::file_size(src) + 1024LL * 1024 * 1024 * 20;	// 留出20GB的缓冲空间
-		logi("file size: {}G", file_size / G);
+		const int64_t file_size = fs::file_size(src);
+		const int64_t need_size = file_size + BUFFER_SPACE;	// 留出10GB的缓冲空间
+		logi("file size: {}, need size: {}", av::utils::formatBytes(file_size), av::utils::formatBytes(need_size));
 		int64_t free_size = spaceFreeSize(dst_dir);
-		if (free_size < file_size) {
-			logw("file size {} > free size {}, not enough space!", file_size, free_size);
+		if (free_size < need_size) {
+			logw("file size {} > free size {}, not enough space!", av::utils::formatBytes(file_size), av::utils::formatBytes(free_size));
 			return false;
 		}
 		return true;
@@ -193,13 +197,14 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 
 	// 检查目录大小是否超过当前磁盘剩余空间
 	{
-		int64_t dir_size = getDirSize(src) + 1024LL * 1024 * 1024 * 20;	// 留出20GB的缓冲空间
-		logi("dir size: {}G", dir_size / G);
+		int64_t dir_size = getDirSize(src);
+		const int64_t need_size = dir_size + BUFFER_SPACE;
+		logi("dir size: {}, need size: {}", av::utils::formatBytes(dir_size), av::utils::formatBytes(need_size));
 		int64_t free_size = spaceFreeSize(dst_dir);
 
 		//
-		if (free_size < dir_size) {
-			logw("dir size {} > free size {}, not enough space!", dir_size, free_size);
+		if (free_size < need_size) {
+			logw("dir size {} > free size {}, not enough space!", av::utils::formatBytes(dir_size), av::utils::formatBytes(free_size));
 			return false;
 		}
 	}
@@ -339,8 +344,6 @@ std::tstring Download::getLastDirName(const fs::path& dir) {
 }
 
 bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std::tstring& dst_dir) {
-
-	//
 	auto& config = Config::instance();
 	if (!config.download.enable) return true;
 
