@@ -53,6 +53,12 @@ void Server::onReadFile(const httplib::Request& req, httplib::Response& res) {
 			res_obj.files.push_back(std::move(file));
 		}
 	}
-	nlohmann::json j = res_obj;
+	Response<ReadFileRes> resp;
+	resp.code = 0;
+	resp.message = "success";
+	resp.data = res_obj;
+	nlohmann::json j = resp;
+
+	// 返回JSON响应	
 	res.set_content(j.dump(), "application/json");
 }
