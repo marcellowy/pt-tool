@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+﻿#include "gtest/gtest.h"
 #include "av_env.h"
 #include "logger.h"
 #include "src/config.h"
@@ -34,7 +34,7 @@ protected:
 TEST_F(AVPTGenMteamTest, douban) {
 	auto& config = Config::instance();
 	av::ptgen::Douban d;
-	auto a = av::ptgen::getByMteam(TEXT("https://movie.douban.com/subject/10736442/"),
+	auto a = av::ptgen::getByMteam(TEXT("https://movie.douban.com/subject/1401268/"),
 		config.mteam.api_key,d);
 	if (!a) {
 		loge("get douban failed");

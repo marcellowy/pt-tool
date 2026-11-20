@@ -1,18 +1,18 @@
-//
+﻿//
 // Created by Marcello on 2026/1/17.
 //
 
 #include "av_pt_gen_mteam.h"
-#include  "av_http_v2.h"
+#include  "av_http.h"
 namespace av {
 	namespace ptgen {
 
 		bool getByMteam(const std::tstring& douban_url, const std::tstring& api_key, Douban& douban) {
 
-			av::http_v2::Client cli;
-			av::http_v2::Form form;
+			av::http::Client cli;
+			av::http::Form form;
 			form.kv["code"] = av::str::toA(douban_url);
-			av::http_v2::Header header;
+			av::http::Header header;
 			header.kv["x-api-key"] = av::str::toA(api_key);
 
 			auto result = cli.post("https://api.m-team.cc/api/media/douban/infoV2", header, form);
