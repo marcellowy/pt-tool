@@ -13,4 +13,5 @@ namespace av::utils {
 
 		return fmt::format("{:.2f} {}", size, units[idx]);
 	};
+
 };

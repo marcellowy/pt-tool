@@ -24,6 +24,7 @@
 #include "av_pt_gen_mteam.h"
 #include "av_worker.h"
 #include "av_tgbot.h"
+#include "av_utils.h"
 #include "error_code.h"
 #include "nlohmann/json.hpp"
 
@@ -286,25 +287,25 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		setResolution(avs_info.width, avs_info.height, scan_type, obj);
 
 		// video codec
-		if (avs_info.video_format == TEXT("AVS2")) {
+		if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS2")))) {
 			obj.video_codec = SourceVideoCodec::_avs2;
 		}
-		else if (avs_info.video_format == TEXT("CAVS")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("CAVS")))) {
 			obj.video_codec = SourceVideoCodec::_cavs;
 		}
-		else if (avs_info.video_format == TEXT("AVS")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS")))) {
 			obj.video_codec = SourceVideoCodec::_avs;
 		}
-		else if (avs_info.video_format == TEXT("MPEG2VIDEO")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("MPEG2VIDEO")))) {
 			obj.video_codec = SourceVideoCodec::_mpeg2;
 		}
-		else if (avs_info.video_format == TEXT("h264")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("h264")))) {
 			obj.video_codec = SourceVideoCodec::_h264;
 		}
-		else if (avs_info.video_format == TEXT("h265")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("h265")))) {
 			obj.video_codec = SourceVideoCodec::_h265;
 		}
-		else if (avs_info.video_format == TEXT("AVS3")) {
+		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS3")))) {
 			obj.video_codec = SourceVideoCodec::_avs3;
 		}
 		else {
@@ -316,26 +317,26 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		}
 
 		// audio codec
-		if (avs_info.audio_format == TEXT("AC3")) {
+		if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("AC3")))) {
 			obj.audio_codec = SourceAudioCodec::_ac3;
 		}
-		else if (avs_info.audio_format == TEXT("MP2"))
+		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("MP2"))))
 		{
 			obj.audio_codec = SourceAudioCodec::_mp2;
 		}
-		else if (avs_info.audio_format == TEXT("MP3"))
+		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("MP3"))))
 		{
 			obj.audio_codec = SourceAudioCodec::_mp3;
 		}
-		else if (avs_info.audio_format == TEXT("AAC"))
+		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("AAC"))))
 		{
 			obj.audio_codec = SourceAudioCodec::_aac;
 		}
-		else if (avs_info.audio_format == TEXT("E-AC3(DDP)"))
+		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("E-AC3(DDP)"))))
 		{
 			obj.audio_codec = SourceAudioCodec::_e_ac3_ddp;
 		}
-		else if (avs_info.audio_format == TEXT("E-AC3 Atmos"))
+		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("E-AC3 Atmos"))))
 		{
 			obj.audio_codec = SourceAudioCodec::_e_ac3_atmos;
 		}
