@@ -90,6 +90,9 @@ namespace av {
 				if (data.contains("coverUrl")) {
 					d.poster = data["coverUrl"].get<std::string>();
 				}
+				if (data.contains("originalTitle")) {
+					d.original_title = data["originalTitle"].get<std::string>();
+				}
 			}
 			catch (const nlohmann::json::parse_error& e) {
 				loge("parse error {}, {}", e.what(), av::str::toA(result->body));
@@ -207,8 +210,7 @@ namespace av {
 					}
 				}
 			}
-			logi("english name: {}", douban.name_eng);
-
+			
 			// if trans title no english name and this title not empty
 			if (douban.name_eng.empty() && !d.this_title.empty()) {
 				for (auto& tmp : d.this_title) {
@@ -219,6 +221,15 @@ namespace av {
 					}
 				}
 			}
+
+			// if english name still empty, try use originalTitle
+			if (douban.name_eng.empty()) {
+				// 如果没有英文名,尝试使用originalTitle字段
+				if (!has_chinese_utf8(d.original_title)) {
+					douban.name_eng = d.original_title;
+				}
+			}
+			logi("english name: {}", douban.name_eng);
 
 			// imdb
 			auto imdb_link = av::str::trim(d.imdb_link);

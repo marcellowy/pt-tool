@@ -39,6 +39,7 @@ namespace av {
 			std::string imdb_link;
 			std::string imdb_id;
 			std::string poster;
+			std::string original_title;
 		};
 
 		struct Douban {
