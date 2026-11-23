@@ -144,11 +144,13 @@ namespace mteam {
 		}
 
 		// 没有描述
+		std::tstring warning_msg;
 		if (description.empty()) {
-			std::tstring msg = title + TEXT("\n");
-			msg += m_external_source.sub_title + TEXT("\n");
-			msg += TEXT("请补充描述");
-			sendTGWaringMessage(msg);
+			warning_msg = title + TEXT("\n");
+			warning_msg += m_external_source.sub_title + TEXT("\n");
+			warning_msg += TEXT("请补充描述");
+			
+			//
 			description = TEXT("稍后补充截图");
 		}
 
@@ -313,6 +315,12 @@ namespace mteam {
 			response_sub_title, response_create_date)) {
 			logw("sendTGMessage failed");
 		}
+
+		//
+		if (!warning_msg.empty()) {
+			sendTGWaringMessage(warning_msg);
+		}
+
 		return true;
 	}
 

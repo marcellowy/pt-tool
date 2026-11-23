@@ -1,4 +1,4 @@
-#include <optional>
+﻿#include <optional>
 #include <curl/curl.h>
 
 #include "av_log.h"
@@ -8,18 +8,18 @@
 #include "av_http_v3.h"
 
 namespace av::http_v3 {
-	size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp);
+	size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp);
 
-	size_t headerCallback(void *ptr, size_t size, size_t nmemb, std::string *data);
+	size_t headerCallback(void* ptr, size_t size, size_t nmemb, std::string* data);
 
-	static void parseHeader(const std::string &header_str, Header &header);
+	static void parseHeader(const std::string& header_str, Header& header);
 
-	void parseCookie(const Header &header, Cookie &cookie) {
+	void parseCookie(const Header& header, Cookie& cookie) {
 		if (header.kv.size() == 0) return;
 
 		// lookup set-cookie
 		std::string cookie_str;
-		for (auto &h: header.kv) {
+		for (auto& h : header.kv) {
 			if (str::toLower(h.first) == "set-cookie") {
 				cookie_str = h.second;
 				break;
@@ -42,8 +42,9 @@ namespace av::http_v3 {
 				auto cookie_vaue = cookie_part.substr(cookie_pos + 1);
 				cookie_key = av::str::trim(cookie_key);
 				cookie_vaue = av::str::trim(cookie_vaue);
-				cookie.kv.insert({cookie_key, cookie_vaue});
-			} else {
+				cookie.kv.insert({ cookie_key, cookie_vaue });
+			}
+			else {
 				// only value
 				cookie_part = av::str::trim(cookie_part);
 				cookie.val.push_back(cookie_part);
@@ -60,37 +61,37 @@ namespace av::http_v3 {
 	}
 
 	// get
-	Result Client::get(const std::string &url) {
+	Result Client::get(const std::string& url) {
 		return request(Method::Get, url, nullptr, nullptr, "");
 	}
 
-	Result Client::get(const std::string &url, const Header &header) {
+	Result Client::get(const std::string& url, const Header& header) {
 		return request(Method::Get, url, &header, nullptr, "");
 	}
 
 	// post raw
-	Result Client::post(const std::string &url, const std::string &body) {
+	Result Client::post(const std::string& url, const std::string& body) {
 		return request(Method::Post, url, nullptr, nullptr, body);
 	}
 
-	Result Client::post(const std::string &url, const Header &header, const std::string &body) {
+	Result Client::post(const std::string& url, const Header& header, const std::string& body) {
 		return request(Method::Post, url, &header, nullptr, body);
 	}
 
 	// post form
-	Result Client::post(const std::string &url, const Form &form) {
+	Result Client::post(const std::string& url, const Form& form) {
 		return request(Method::Post, url, nullptr, &form, "");
 	}
 
-	Result Client::post(const std::string &url, const Header &header, const Form &form) {
+	Result Client::post(const std::string& url, const Header& header, const Form& form) {
 		return request(Method::Post, url, &header, &form, "");
 	}
 
-	Result Client::request(Method method, const std::string &url, const Header *header, const Form *form,
-	                       const std::string &raw) {
+	Result Client::request(Method method, const std::string& url, const Header* header, const Form* form,
+		const std::string& raw) {
 		// response
 		Result response = std::make_unique<Response>();
-		CURL *curl = curl_easy_init();
+		CURL* curl = curl_easy_init();
 		if (!curl) {
 			logw("curl_easy_init failed");
 			response->reason = "Failed to initialize curl";
@@ -98,16 +99,16 @@ namespace av::http_v3 {
 		}
 		av::async::Exit exit_curl([&curl] {
 			curl_easy_cleanup(curl);
-		});
+			});
 
 		// set url
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 		bool userAgent = false;
 		// header
-		curl_slist *hds = nullptr;
+		curl_slist* hds = nullptr;
 		if (header != nullptr)
-			for (const auto &h: header->kv) {
+			for (const auto& h : header->kv) {
 				std::stringstream s;
 				s << h.first << ": " << h.second;
 				logi("add header {}", s.str());
@@ -128,10 +129,10 @@ namespace av::http_v3 {
 		}
 		av::async::Exit exit_header([&hds] {
 			if (hds != nullptr) curl_slist_free_all(hds);
-		});
+			});
 
 		// form mime
-		curl_mime *mime = curl_mime_init(curl);
+		curl_mime* mime = curl_mime_init(curl);
 		if (mime == nullptr) {
 			loge("init mime failed");
 			response->reason = "Failed to initialize curl mime";
@@ -139,9 +140,9 @@ namespace av::http_v3 {
 		}
 		av::async::Exit exit_mime([&mime] {
 			curl_mime_free(mime);
-		});
+			});
 
-		curl_mimepart *part = nullptr;
+		curl_mimepart* part = nullptr;
 		if (method == Method::Post) {
 			do {
 				if (!raw.empty()) {
@@ -149,7 +150,7 @@ namespace av::http_v3 {
 					break;
 				}
 				// add form data
-				for (const auto &data: form->kv) {
+				for (const auto& data : form->kv) {
 					part = curl_mime_addpart(mime);
 					curl_mime_name(part, data.first.c_str());
 					curl_mime_data(part, data.second.c_str(), CURL_ZERO_TERMINATED);
@@ -157,7 +158,7 @@ namespace av::http_v3 {
 				}
 
 				// add file
-				for (const auto &f: form->file) {
+				for (const auto& f : form->file) {
 					part = curl_mime_addpart(mime);
 					curl_mime_name(part, f.first.c_str());
 					curl_mime_filedata(part, f.second.c_str());
@@ -169,7 +170,7 @@ namespace av::http_v3 {
 		}
 		av::async::Exit exit_mime_part([&part] {
 			// just ref
-		});
+			});
 
 		// gzip, deflate, br
 		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
@@ -193,7 +194,7 @@ namespace av::http_v3 {
 		}
 		CURLcode res = curl_easy_perform(curl);
 		if (res != CURLE_OK) {
-			logi("http send not ok");
+			loge("http send not ok, curl code {}", static_cast<int64_t>(res));
 			response->reason = "Failed to perform curl";
 			return response;
 		}
@@ -209,24 +210,24 @@ namespace av::http_v3 {
 
 		// response->header
 		if ((response->status == 301 || response->status == 302) &&
-		    response->header.kv.contains("Location")) {
+			response->header.kv.contains("Location")) {
 			response->location = response->header.kv["Location"];
 		}
 		return response;
 	}
 
-	size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-		static_cast<std::string *>(userp)->append(static_cast<char *>(contents), size * nmemb);
+	size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+		static_cast<std::string*>(userp)->append(static_cast<char*>(contents), size * nmemb);
 		return size * nmemb;
 	}
 
-	size_t headerCallback(void *ptr, size_t size, size_t nmemb, std::string *data) {
+	size_t headerCallback(void* ptr, size_t size, size_t nmemb, std::string* data) {
 		size_t totalSize = size * nmemb;
-		data->append(static_cast<char *>(ptr), totalSize);
+		data->append(static_cast<char*>(ptr), totalSize);
 		return totalSize;
 	}
 
-	void parseHeader(const std::string &header_str, Header &header) {
+	void parseHeader(const std::string& header_str, Header& header) {
 		size_t start = 0;
 		size_t end = 0;
 		while ((end = header_str.find("\r\n", start)) != std::string::npos) {
