@@ -198,7 +198,7 @@ namespace mteam {
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
 		logi("post url {}", av::str::toA(url));
 		av::http::Result resp;
-		int max_retry = 5;
+		int max_retry = 0;
 		while (true) {
 			if (max_retry >= 5)
 			{
