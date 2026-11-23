@@ -197,13 +197,34 @@ namespace mteam {
 		// 上传到网站
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
 		logi("post url {}", av::str::toA(url));
-		const auto resp = client.post(av::str::toA(url), header, form);
-		if (!resp) {
-			loge("send http failed");
-			return false;
+		av::http::Result resp;
+		resp->status = 0;
+		int max_retry = 5;
+		while (true) {
+			if (max_retry >= 5)
+			{
+				break;
+			}
+			max_retry++;
+
+			//
+			resp = client.post(av::str::toA(url), header, form);
+			if (!resp) {
+				loge("send http failed");
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+				continue;
+			}
+			if (resp->status != 200) {
+				loge("post not ok status code {}, body {}", resp->status, resp->body);
+				std::this_thread::sleep_for(std::chrono::seconds(5));
+				continue;
+			}
+			break;
 		}
+
+		//
 		if (resp->status != 200) {
-			loge("post not ok statuc code {}, body {}", resp->status, resp->body);
+			loge("post not ok status code {}, body {}", resp->status, resp->body);
 			return false;
 		}
 
