@@ -676,8 +676,7 @@ std::vector<Source> Publish::readDir(PublishError& error) {
 			continue;
 		}
 		//
-		if (obj.name.find(TEXT(".TPTV")) != std::tstring::npos ||
-			obj.name.find(TEXT(".tptv")) != std::tstring::npos) {
+		if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
 			// published
 			continue;
 		}
