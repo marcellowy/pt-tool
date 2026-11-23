@@ -95,6 +95,7 @@ namespace mteam {
 		}
 
 		// 制作种子文件
+		logi("create torrent file, seed dir {}, torrent file {}", av::str::toA(seed_dir), av::str::toA(torrent_filename));
 		auto torrent_file = av::path::append(m_external_source.dir, torrent_filename);
 		if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(torrent_file))) {
 			loge("create torrent file failed, {}, {}", av::str::toA(seed_dir), av::str::toA(torrent_file));

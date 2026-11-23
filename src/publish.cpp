@@ -110,6 +110,7 @@ void Publish::task() {
 		}
 
 		// preprocess succ
+		logi("begin publish");
 		if (m_site->publish(tmp)) {
 			auto dir = getTmpDir(tmp);
 			if (av::path::remove_dir_all(dir)) {
@@ -564,7 +565,7 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 		obj.description = av::str::toT(db.description);
 		obj.poster_img = av::str::toT(db.poster_img);
 	}
-
+	
 	// add screenshot
 	// 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
 	const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
@@ -586,11 +587,13 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 
 		capture_count++;
 		});
+	logi("capture frame");
 	if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
 		loge("capture frame failed");
 		error = PublishError::ErrCaptureFrame;
 		return false;
 	}
+	logi("capture frame succ, count {}", capture_count);
 
 	// if capture frame failed
 	if (obj.screenshot_local.empty()) {
