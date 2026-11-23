@@ -126,6 +126,50 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 		return false;
 	}
 
+	// 检查目录中是否存在任意jpg/png文件
+	{
+		bool has_img = false;
+		auto tmp_p = src;
+		for (const auto& entry : fs::directory_iterator(tmp_p,
+			fs::directory_options::skip_permission_denied)) {
+				{
+					if (entry.is_directory()) continue;
+
+					// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
+					auto ext = entry.path().extension().string();
+					if (av::utils::iequals(ext, std::string(".jpeg")) ||
+						av::utils::iequals(ext, std::string(".jpg")) ||
+						av::utils::iequals(ext, std::string(".png"))) {
+						has_img = true;
+						break;
+					}
+				}
+		}
+
+		// 没有图片的直接不下载
+		if (!has_img) {
+			logw("dir {} has no jpg/png file!", av::str::toA(src));
+			return false;
+		}
+	}
+
+	// 检查是否存在固定文件
+	{
+		auto tmp_p = src;
+		auto txt_file = tmp_p / TEXT("media_info.txt");
+#ifdef _UNICODE
+		auto txt_file_str = txt_file.wstring();
+#else
+		auto txt_file_str = txt_file.string();
+#endif // _UNICODE
+
+		//
+		if (!av::path::exists(txt_file)) {
+			logw("file {} not exists!", av::str::toA(txt_file_str));
+			return false;
+		}
+	}
+
 	// 检查是否存在固定格式文件
 	{
 		auto tmp_p = src;

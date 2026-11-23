@@ -422,14 +422,14 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		std::tstring fullpath = av::path::append(obj.fullpath, name);
 
 		// process ts file
-		if (ext == TEXT(".ts")) {
+		if (av::utils::iequals(ext, std::tstring(TEXT(".ts")))) {
 			ts_count++;
 		}
 
 		// process image file
-		if (ext == TEXT(".jpg") ||
-			ext == TEXT(".jpeg") ||
-			ext == TEXT(".png")) {
+		if (av::utils::iequals(ext, std::tstring(TEXT(".jpg"))) ||
+			av::utils::iequals(ext, std::tstring(TEXT(".jpeg"))) ||
+			av::utils::iequals(ext, std::tstring(TEXT(".png")))) {
 			img_vec.push_back(fullpath);
 		}
 	}
@@ -676,7 +676,8 @@ std::vector<Source> Publish::readDir(PublishError& error) {
 			continue;
 		}
 		//
-		if (obj.name.find(TEXT("TPTV")) != std::tstring::npos) {
+		if (obj.name.find(TEXT(".TPTV")) != std::tstring::npos ||
+			obj.name.find(TEXT(".tptv")) != std::tstring::npos) {
 			// published
 			continue;
 		}
