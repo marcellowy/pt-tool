@@ -198,7 +198,6 @@ namespace mteam {
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
 		logi("post url {}", av::str::toA(url));
 		av::http::Result resp;
-		resp->status = 0;
 		int max_retry = 5;
 		while (true) {
 			if (max_retry >= 5)
@@ -223,6 +222,10 @@ namespace mteam {
 		}
 
 		//
+		if (!resp) {
+			loge("send http failed");
+			return false;
+		}
 		if (resp->status != 200) {
 			loge("post not ok status code {}, body {}", resp->status, resp->body);
 			return false;
