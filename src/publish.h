@@ -13,6 +13,7 @@
 #include "av_cron.h"
 #include "site.h"
 #include "error_code.h"
+#include "av_utils.h"
 
 namespace fs = std::filesystem;
 
@@ -104,6 +105,9 @@ private:
     //
     std::tstring m_tgbot_token;
     std::tstring m_tgbot_chat_id;
+
+    //
+    std::atomic_flag m_scoped_flag = ATOMIC_FLAG_INIT;
 };
 
 

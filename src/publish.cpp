@@ -135,6 +135,13 @@ bool Publish::start() {
 	for (auto& cycle : config.mteam.publish_cycle) {
 		auto c = std::make_shared<av::cron::Cron>(cycle.name, cycle.pattern, [this] {
 			logi("do task");
+
+			// 如果有重复任务执行，就跳过本次执行，避免重复执行
+			av::utils::ScopedTryFlag guard(m_scoped_flag);
+			if (!guard) {
+				logi("task is running, skip this time");
+				return;
+			};
 			// has bug
 			// sometimes task will block, so use sync to avoid block
 			//av::worker::global_worker().sync([this] { task();}, 1000 * 60 * 10);    // 10 minutes
@@ -565,7 +572,7 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 		obj.description = av::str::toT(db.description);
 		obj.poster_img = av::str::toT(db.poster_img);
 	}
-	
+
 	// add screenshot
 	// 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
 	const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };

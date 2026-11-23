@@ -6,10 +6,32 @@
 #include <string>
 #include <algorithm>
 #include <locale>
+#include <atomic>
 #include "av_log.h"
 #include "av_string.h"
 
 namespace av::utils {
+
+	// RAII 守卫：构造时尝试置位，析构时复位
+	class ScopedTryFlag {
+	public:
+		explicit ScopedTryFlag(std::atomic_flag& f)
+			: f_(f), ok_(!f.test_and_set(std::memory_order_acquire)) {
+		}
+
+		~ScopedTryFlag() {
+			if (ok_) f_.clear(std::memory_order_release);
+		}
+
+		explicit operator bool() const noexcept { return ok_; }
+
+		ScopedTryFlag(const ScopedTryFlag&) = delete;
+		ScopedTryFlag& operator=(const ScopedTryFlag&) = delete;
+
+	private:
+		std::atomic_flag& f_;
+		bool ok_;
+	};
 
 	//
 	std::string formatBytes(std::uint64_t bytes);
