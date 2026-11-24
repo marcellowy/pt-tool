@@ -477,7 +477,7 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 		logw("list source dir {} failed! {}", av::str::toA(dst_dir), ec.message());
 		return false;
 	}
-
+	logi("download task finished, total downloads: {}", count_of_downloads);
 	return true;
 }
 
