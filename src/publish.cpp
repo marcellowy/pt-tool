@@ -359,6 +359,9 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		obj.name_chs = avs_info.title;
 		obj.sub_title = avs_info.title;
 		obj.year = avs_info.year;
+		if (!avs_info.douban_id.empty()) {
+			obj.douban_id = av::str::toT(avs_info.douban_id);
+		}
 
 		// category
 		obj.category = SourceCategory::Unknown; // default

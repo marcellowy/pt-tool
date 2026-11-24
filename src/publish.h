@@ -33,6 +33,7 @@ public:
     std::tstring year;
     int64_t category;
     std::tstring created_time;
+	std::string douban_id;
 
     friend void from_json(const json& j, AVSInfo& avs) {
         if (j.contains("width") && j["width"].is_number_integer()) {
@@ -64,6 +65,9 @@ public:
         }
         if (j.contains("createdTime") && j["createdTime"].is_string()) {
             avs.created_time = av::str::toT(j["createdTime"].get<std::string>());
+        }
+        if (j.contains("doubanId") && j["doubanId"].is_string()) {
+            avs.douban_id = j["doubanId"].get<std::string>();
         }
     }
 };
