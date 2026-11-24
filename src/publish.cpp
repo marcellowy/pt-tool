@@ -355,14 +355,6 @@ int Publish::processDir(Source& obj, PublishError& error) {
 			return -1;
 		}
 
-		obj.title_prefix = avs_info.channel;
-		obj.name_chs = avs_info.title;
-		obj.sub_title = avs_info.title;
-		obj.year = avs_info.year;
-		if (!avs_info.douban_id.empty()) {
-			obj.douban_id = av::str::toT(avs_info.douban_id);
-		}
-
 		// category
 		obj.category = SourceCategory::Unknown; // default
 		if (avs_info.category == 402) {
@@ -392,6 +384,45 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		logw("std::exception {}", e.what());
 		error = PublishError::ErrParseJson;
 		return -1;
+	}
+
+	//
+	obj.title_prefix = avs_info.channel;
+	obj.name_chs = avs_info.title;
+	obj.sub_title = avs_info.title;
+	obj.year = avs_info.year;
+	if (!avs_info.douban_id.empty()) {
+		obj.douban_id = av::str::toT(avs_info.douban_id);
+	}
+
+	//
+	if (!obj.douban_id.empty()) {
+		av::ptgen::Douban db;
+		char buff[2048];
+		snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
+		std::string real_url(buff);
+		if (!av::ptgen::get(av::str::toT(real_url), db)) {
+			loge("get douban info failed!");
+			// try use m-team api
+			char douban_url_buff[2048];
+			snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
+				av::str::toA(obj.douban_id).c_str());
+			std::string real_douban_url_buff(douban_url_buff);
+			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
+				loge("get douban info failed!");
+				error = PublishError::ErrGetDoubanInfo;
+				return false;
+			}
+		}
+
+		// set douban info to obj
+		obj.year = av::str::toT(db.year);
+		obj.name_chs = av::str::toT(db.name_chs);
+		obj.name_eng = av::str::toT(db.name_eng);
+		obj.sub_title = av::str::toT(db.sub_title);
+		obj.imdb_link = av::str::toT(db.imdb_link);
+		obj.description = av::str::toT(db.description);
+		obj.poster_img = av::str::toT(db.poster_img);
 	}
 
 	//
