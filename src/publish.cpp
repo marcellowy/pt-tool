@@ -411,7 +411,7 @@ int Publish::processDir(Source& obj, PublishError& error) {
 			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
 				loge("get douban info failed!");
 				error = PublishError::ErrGetDoubanInfo;
-				return false;
+				return -1;
 			}
 		}
 
