@@ -15,6 +15,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		
 		//
 		debug = config["debug"].value_or(false);
+		debug_type = config["debug_type"].value_or(0);
 
 		// server
 		server.enable = config["server"]["enable"].value_or(false);

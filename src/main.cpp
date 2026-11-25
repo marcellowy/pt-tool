@@ -60,6 +60,12 @@ int main()
 		config.tgbot.token, config.tgbot.chat_id, config.debug
 	);
 	Publish publish(ptr, config.mteam.seed_dir, config.tgbot.token, config.tgbot.chat_id);
+	if (config.debug) {
+		publish.task();
+		return static_cast<int>(ErrorCode::Success);
+	}
+
+	//
 	if (!publish.start()) {
 		logw("start publish cron failed");
 		return static_cast<int>(ErrorCode::ErrStartCronFailed);

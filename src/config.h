@@ -82,6 +82,7 @@ public:
 	PTGen ptgen;
 	DownloadConfig download;
 	bool debug = false;
+	int debug_type = 0;	// 0 文件 1 目录
 public:
 	bool parse(const std::tstring& toml_file);
 };

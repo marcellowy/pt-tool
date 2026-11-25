@@ -62,13 +62,18 @@ void Publish::task() {
 	PublishError error = PublishError::Success;
 	auto arr = readDir(error);
 	logi("read dir {} succ, count {}", av::str::toA(m_dir), arr.size());
+
+	//
+	auto& config = Config::instance();
+
+	//
 	for (auto& source : arr) {
 		// rollback tasks
 		{
 			bool publish_success = false;
 			std::vector<std::pair<std::string, std::function<void()>>> rollback_tasks;
-			av::async::Exit exit_publish([&publish_success, &rollback_tasks] {
-				if (!publish_success || Config::instance().debug) {
+			av::async::Exit exit_publish([&publish_success, &rollback_tasks, &config] {
+				if (!publish_success || config.debug) {
 					logi("publish failed, rollback tasks size = {}", rollback_tasks.size());
 
 					// 倒序先进后出执行
@@ -89,6 +94,10 @@ void Publish::task() {
 				});
 
 			if (source.type == SourceType::File) {
+				if (config.debug && config.debug_type == 1) {
+					logi("debug type is 1, skip file {}", av::str::toA(source.fullpath));
+					continue;
+				}
 				if (!processFile(source, rollback_tasks, error)) {
 					logw("process file failed, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
 					sendTGWarningMessage(av::str::toA(source.fullpath), error);
@@ -96,6 +105,10 @@ void Publish::task() {
 				}
 			}
 			else if (source.type == SourceType::Dir) {
+				if (config.debug && config.debug_type == 0) {
+					logi("debug type is 0, skip dir {}", av::str::toA(source.fullpath));
+					continue;
+				}
 				const auto ret = processDir(source, rollback_tasks, error);
 				if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
 					logw("{} time not reached", av::str::toA(source.name));
@@ -138,7 +151,7 @@ void Publish::task() {
 			// preprocess succ
 			logi("begin publish");
 			if (m_site->publish(source)) {
-				if (!Config::instance().debug) {
+				if (!config.debug) {
 					auto dir = getTmpDir(source);
 					if (av::path::remove_dir_all(dir)) {
 						logi("clean tmp dir {} succ", av::str::toA(dir));
