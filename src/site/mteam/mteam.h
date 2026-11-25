@@ -37,14 +37,7 @@ namespace mteam {
 		std::tstring m_img_api_key;
 		std::tstring m_tgbot_token;
 		std::tstring m_tgbot_chat_id;
-
-		mteam::video::Codec m_video_codec;
-		mteam::video::Resolution m_video_resolution;
-		mteam::audio::Codec m_audio_codec;
-		mteam::Category m_category;
-		int64_t group_id = 0;
-		mteam::Source m_source;
-
+		
 		//
 		bool m_debug = false;
 

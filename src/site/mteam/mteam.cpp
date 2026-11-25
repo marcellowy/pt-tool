@@ -63,6 +63,13 @@ namespace mteam {
 	bool Mteam::publish(const av::media::Source& source) {
 		Category category(source.category);
 
+		//
+		mteam::Source m_source; m_source.setExternalSourceId(source.source_id);
+		mteam::video::Codec video_codec; video_codec.setSourceVideoCodec(source.video_codec);
+		mteam::audio::Codec audio_codec; audio_codec.setSourceCodec(source.audio_codec);
+		mteam::video::Resolution video_resolution; video_resolution.setSourceResolution(source.video_resolution);
+
+		//
 		PublishName publish_name;
 		if (!name(source, publish_name)) {
 			loge("get publish name failed");
@@ -127,10 +134,10 @@ namespace mteam {
 			form.kv["dmmCode"] = "";
 			auto source_id = m_source.getid();
 			form.kv["source"] = std::to_string(static_cast<int64_t>(source_id));
-			auto standard_id = m_video_resolution.getid();
+			auto standard_id = video_resolution.getid();
 			form.kv["standard"] = std::to_string(static_cast<int64_t>(standard_id));
-			form.kv["videoCodec"] = std::to_string(static_cast<int64_t>(m_video_codec.getid()));
-			form.kv["audioCodec"] = std::to_string(static_cast<int64_t>(m_audio_codec.getid()));
+			form.kv["videoCodec"] = std::to_string(static_cast<int64_t>(video_codec.getid()));
+			form.kv["audioCodec"] = std::to_string(static_cast<int64_t>(audio_codec.getid()));
 			form.kv["team"] = std::to_string(source.group_id);
 			form.kv["imdb"] = av::str::toA(source.imdb_link);
 			if (!source.douban_id.empty()) {
@@ -428,8 +435,8 @@ namespace mteam {
 		torrent_dir_.push_back(video_resolution.getText());
 
 
-		title_name.push_back(m_audio_codec.getText()); {
-			auto tmp = m_audio_codec.getText();
+		title_name.push_back(audio_codec.getText()); {
+			auto tmp = audio_codec.getText();
 			av::str::replace_all(tmp, TEXT(" "), TEXT("."));
 			video_name.push_back(tmp);
 			torrent_name.push_back(tmp);
