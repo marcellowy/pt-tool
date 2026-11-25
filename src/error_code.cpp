@@ -20,7 +20,8 @@ namespace {
 		{PublishError::ErrPublishFailed, "Publish failed"},
 		{PublishError::ErrMoveFile, "Move file failed"},
 		{PublishError::ErrContactName, "Site contact name error"},
-    };
+		{PublishError::ErrDebug, "Debug mode"},
+	};
 };
 
 std::string publishErrorToString(PublishError code) {

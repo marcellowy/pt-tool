@@ -50,12 +50,14 @@ namespace mteam {
 		const std::tstring& img_api_url,
 		const std::tstring& img_api_key,
 		const std::tstring& tgbot_token,
-		const std::tstring& tgbot_chat_id) : m_api_url(api_url),
+		const std::tstring& tgbot_chat_id,
+		const bool& debug) : m_api_url(api_url),
 		m_api_key(api_key),
 		m_img_api_url(img_api_url),
 		m_img_api_key(img_api_key),
 		m_tgbot_token(tgbot_token),
-		m_tgbot_chat_id(tgbot_chat_id) {
+		m_tgbot_chat_id(tgbot_chat_id),
+		m_debug(debug) {
 	}
 
 	bool Mteam::publish(const av::media::Source& source) {
@@ -169,7 +171,26 @@ namespace mteam {
 			max_retry++;
 
 			//
-			resp = client.post(av::str::toA(url), header, form);
+			if (m_debug) {
+				// debug
+				resp = std::make_unique<av::http::Response>();
+				resp->status = 200;
+				resp->body = R"({
+					"code": 0,
+					"message": "success",
+					"data": {
+						"id": "123456",
+						"name": "test name",
+						"smallDescr": "test smallDescr",
+						"createdDate": "2024-01-01 00:00:00"
+					}
+				})";
+			}
+			else {
+				resp = client.post(av::str::toA(url), header, form);
+			}
+
+			//
 			if (!resp) {
 				loge("send http failed");
 				std::this_thread::sleep_for(std::chrono::seconds(5));

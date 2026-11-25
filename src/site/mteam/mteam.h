@@ -22,7 +22,8 @@ namespace mteam {
 		      const std::tstring &img_api_url,
 		      const std::tstring &img_api_key,
 		      const std::tstring &tgbot_token,
-		      const std::tstring &tgbot_chat_id);
+		      const std::tstring &tgbot_chat_id,
+		      const bool& debug);
 
 		bool publish(const av::media::Source &source) override;
 		bool name(const av::media::Source& source, PublishName& publish_name) override;
@@ -43,6 +44,9 @@ namespace mteam {
 		mteam::Category m_category;
 		int64_t group_id = 0;
 		mteam::Source m_source;
+
+		//
+		bool m_debug = false;
 
 	private:
 		bool sendTGMessage(const std::tstring &douban_poster_img,

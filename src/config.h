@@ -71,7 +71,7 @@ struct DownloadConfig {
 
 
 class Config: public av::Singleton<Config> {
-	friend class Singleton<Config>;
+	friend class av::Singleton<Config>;
 public:
 	TableLog log;
 	TableServer server;
@@ -81,6 +81,7 @@ public:
 	TGBot tgbot;
 	PTGen ptgen;
 	DownloadConfig download;
+	bool debug = false;
 public:
 	bool parse(const std::tstring& toml_file);
 };

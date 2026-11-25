@@ -4,7 +4,7 @@
 bool Config::parse(const std::tstring& toml_file) {
 	std::tstring tv_name_file = TEXT("");
 	try {
-
+		
 		// config.toml
 		const auto config = toml::parse_file(av::str::toA(toml_file));
 		log.dir = av::str::toT(config["log"]["dir"].value_or(log.dir));
@@ -12,6 +12,9 @@ bool Config::parse(const std::tstring& toml_file) {
 		log.max_file_count = config["log"]["max_count"].value_or(log.max_file_count);
 		auto log_level = config["log"]["level"].value_or("info");
 		log.level = spdlog::level::from_str(log_level);
+		
+		//
+		debug = config["debug"].value_or(false);
 
 		// server
 		server.enable = config["server"]["enable"].value_or(false);

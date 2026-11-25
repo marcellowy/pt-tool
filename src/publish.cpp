@@ -68,7 +68,7 @@ void Publish::task() {
 			bool publish_success = false;
 			std::vector<std::pair<std::string, std::function<void()>>> rollback_tasks;
 			av::async::Exit exit_publish([&publish_success, &rollback_tasks] {
-				if (!publish_success) {
+				if (!publish_success || Config::instance().debug) {
 					logi("publish failed, rollback tasks size = {}", rollback_tasks.size());
 
 					// 倒序先进后出执行
@@ -138,9 +138,11 @@ void Publish::task() {
 			// preprocess succ
 			logi("begin publish");
 			if (m_site->publish(source)) {
-				auto dir = getTmpDir(source);
-				if (av::path::remove_dir_all(dir)) {
-					logi("clean tmp dir {} succ", av::str::toA(dir));
+				if (!Config::instance().debug) {
+					auto dir = getTmpDir(source);
+					if (av::path::remove_dir_all(dir)) {
+						logi("clean tmp dir {} succ", av::str::toA(dir));
+					}
 				}
 
 				// if succ break,

@@ -213,7 +213,7 @@ namespace av::http_v3 {
 			response->header.kv.contains("Location")) {
 			response->location = response->header.kv["Location"];
 		}
-		return response;
+		return std::move(response);
 	}
 
 	size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {

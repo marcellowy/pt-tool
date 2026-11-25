@@ -34,6 +34,7 @@ enum class PublishError: int {
     ErrPublishFailed,
     ErrParseCreatedTime,
     ErrContactName,
+    ErrDebug,
 };
 
 std::string publishErrorToString(PublishError code);
