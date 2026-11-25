@@ -94,8 +94,8 @@ void Publish::task() {
 				});
 
 			if (source.type == SourceType::File) {
-				if (config.debug && config.debug_type == 1) {
-					logi("debug type is 1, skip file {}", av::str::toA(source.fullpath));
+				if (config.debug && config.debug_type != 0) {
+					logi("debug type is {}, skip file {}", config.debug_type, av::str::toA(source.fullpath));
 					continue;
 				}
 				if (!processFile(source, rollback_tasks, error)) {
@@ -105,8 +105,8 @@ void Publish::task() {
 				}
 			}
 			else if (source.type == SourceType::Dir) {
-				if (config.debug && config.debug_type == 0) {
-					logi("debug type is 0, skip dir {}", av::str::toA(source.fullpath));
+				if (config.debug && config.debug_type != 1) {
+					logi("debug type is {}, skip dir {}", config.debug_type, av::str::toA(source.fullpath));
 					continue;
 				}
 				const auto ret = processDir(source, rollback_tasks, error);

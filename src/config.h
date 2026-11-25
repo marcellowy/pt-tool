@@ -70,7 +70,7 @@ struct DownloadConfig {
 };
 
 
-class Config: public av::Singleton<Config> {
+class Config : public av::Singleton<Config> {
 	friend class av::Singleton<Config>;
 public:
 	TableLog log;
@@ -82,7 +82,7 @@ public:
 	PTGen ptgen;
 	DownloadConfig download;
 	bool debug = false;
-	int debug_type = 0;	// 0 文件 1 目录
+	int debug_type = -1;	// 0 文件 1 目录
 public:
 	bool parse(const std::tstring& toml_file);
 };
