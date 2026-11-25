@@ -52,7 +52,7 @@ int main()
 		return static_cast<int>(ErrorCode::ErrParseConfigFileFailed);
 	}
 	auto& config = Config::instance();
-	logi("server start ==================================");
+	logi("server start ================================== debug = {}", config.debug);
 
 	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>(
 		config.mteam.api_url, config.mteam.api_key,
