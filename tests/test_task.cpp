@@ -71,7 +71,7 @@ TEST_F(PublishTest, task) {
 	std::shared_ptr<Site> ptr = std::make_shared<mteam::Mteam>(
 		config.mteam.api_url, config.mteam.api_key,
 		config.mteam.img_api_url, config.mteam.img_api_key,
-		config.tgbot.token, config.tgbot.chat_id
+		config.tgbot.token, config.tgbot.chat_id, true
 	);
 	Publish publish(ptr, config.mteam.seed_dir, config.tgbot.token, config.tgbot.chat_id);
 	publish.task();
