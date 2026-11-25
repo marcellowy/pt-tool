@@ -127,23 +127,43 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 	}
 
 	// 检查目录中是否存在任意jpg/png文件
+	// 同时删除目录里指定的文件或目录
 	{
 		bool has_img = false;
 		auto tmp_p = src;
 		for (const auto& entry : fs::directory_iterator(tmp_p,
 			fs::directory_options::skip_permission_denied)) {
-				{
-					if (entry.is_directory()) continue;
 
-					// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
-					auto ext = entry.path().extension().string();
-					if (av::utils::iequals(ext, std::string(".jpeg")) ||
-						av::utils::iequals(ext, std::string(".jpg")) ||
-						av::utils::iequals(ext, std::string(".png"))) {
-						has_img = true;
-						break;
-					}
+			// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
+			if (!entry.is_directory()) {
+				auto ext = entry.path().extension().string();
+				if (av::utils::iequals(ext, std::string(".jpeg")) ||
+					av::utils::iequals(ext, std::string(".jpg")) ||
+					av::utils::iequals(ext, std::string(".png"))) {
+					has_img = true;
+					continue;
 				}
+			}
+
+			// 判断文件是不是douban.json, 如果是就删除它
+			auto& config = Config::instance();
+			for (const auto& item : config.download.delete_in_dir) {
+				const auto item_path = av::str::toA(item);
+				if (av::utils::iequals(entry.path().filename().string(), item_path)) {
+					try {
+						if (entry.is_directory())
+							fs::remove_all(entry.path());	// 删除目录 
+						else
+							fs::remove(entry.path());	// 删除文件
+						logi("remove file {} success!", av::str::toA(entry.path()));
+					}
+					catch (const std::exception& e) {
+						logw("remove file {} failed! {}", av::str::toA(entry.path()), e.what());
+					}
+					continue;
+				}
+			}
+
 		}
 
 		// 没有图片的直接不下载

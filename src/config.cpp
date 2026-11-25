@@ -59,7 +59,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		// tgbot
 		tgbot.token = av::str::toT(config["tgbot"]["token"].value_or(""));
 		tgbot.chat_id = av::str::toT(config["tgbot"]["chat_id"].value_or(""));
-		
+
 		// PTGen
 		ptgen.url = av::str::toT(config["ptgen"]["url"].value_or(""));
 
@@ -67,6 +67,10 @@ bool Config::parse(const std::tstring& toml_file) {
 		download.enable = config["download"]["enable"].value_or(false);
 		download.numberOfDownloadPerTime = config["download"]["number_of_downloads_per_time"].value_or(1);
 		download.source_dir = av::str::toT(config["download"]["source_dir"].value_or(""));
+		auto tmp = config["download"]["delete_in_dir"].value_or<std::vector<std::string>>({});
+		for (const auto& item : tmp) {
+			download.delete_in_dir.push_back(av::str::toT(item));
+		}
 
 		// publish cycle
 		if (auto* patterns = config.at_path("mteam.publish_cycle.pattern").as_array()) {
@@ -98,7 +102,7 @@ bool Config::parse(const std::tstring& toml_file) {
 		}
 	}
 	catch (const toml::parse_error& e) {
-		loge("parse {} {} failed, err {}", 
+		loge("parse {} {} failed, err {}",
 			av::str::toA(toml_file), av::str::toA(tv_name_file), e.what());
 		return false;
 	}

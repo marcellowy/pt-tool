@@ -66,6 +66,7 @@ struct DownloadConfig {
 	bool enable = false;
 	int numberOfDownloadPerTime = 1;
 	std::tstring source_dir = TEXT("");
+	std::vector<std::tstring> delete_in_dir = {};
 };
 
 
