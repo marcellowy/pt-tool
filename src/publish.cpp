@@ -806,7 +806,7 @@ bool Publish::processFile(Source& source,
 	// 获取当前站点的发布名称
 	PublishName publish_name;
 	if (!m_site->name(source, publish_name)) {
-		error = PublishError::ErrParamName;
+		error = PublishError::ErrContactName;
 		return false;
 	}
 
