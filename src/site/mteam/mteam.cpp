@@ -1,5 +1,6 @@
 ﻿#include <filesystem>
-
+#include <functional>
+#include <utility>
 #include "mteam.h"
 
 #include "fmt/format.h"
@@ -11,6 +12,7 @@
 #include "av_http.h"
 #include "av_tgbot.h"
 #include "av_async.h"
+#include "av_utils.h"
 
 #include "nlohmann/json.hpp"
 
@@ -18,6 +20,17 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 namespace http_ = av::http;
+
+namespace {
+	static std::tstring getTmpDir(const av::media::Source& obj);
+
+	std::tstring getTmpDir(const av::media::Source& obj) {
+		std::tstring dir = av::path::get_exe_dir();
+		dir = av::path::append(dir, TEXT("tmp"));
+		dir = av::path::append(dir, obj.fullpath_md5);
+		return dir;
+	}
+}
 
 namespace mteam {
 	static std::vector<std::tstring> ex_include = {
@@ -55,8 +68,43 @@ namespace mteam {
 		std::tstring video_filename;
 		std::tstring torrent_filename;
 
+		// publish status
+		bool publish_success = false;
+
+		// rollback tasks
+		std::vector<std::pair<std::string, std::function<void()>>> rollback_tasks;
+		av::async::Exit exit_publish([&publish_success, &rollback_tasks] {
+			if (!publish_success) {
+				logi("publish failed, rollback tasks size = {}", rollback_tasks.size());
+
+				// 倒序先进后出执行
+				for (auto it = rollback_tasks.rbegin(); it != rollback_tasks.rend(); ++it) {
+					try {
+						if (it->second)
+						{
+							it->second();
+							logi("rollback task \"{}\" succ", it->first);
+						}
+					}
+					catch (const std::exception& e) {
+						logw("rollback task \"{}\" failed, err: {}", it->first, e.what());
+					}
+				}
+			}
+			rollback_tasks.clear();
+			});
+
 		// 命名
 		parseName(torrent_dir, title, video_filename, torrent_filename);
+
+		// 创建临时目录
+		const auto tmp_dir = getTmpDir(m_external_source);
+		if (!av::path::exists(tmp_dir)) {
+			if (!av::path::create_dir(tmp_dir)) {
+				loge("create dir {} failed", av::str::toA(tmp_dir));
+				return false;
+			}
+		}
 
 		// 做种目录
 		auto seed_dir = av::path::append(source.seed_dir, torrent_dir);
@@ -76,11 +124,89 @@ namespace mteam {
 				loge("move file{} to {} failed", av::str::toA(m_external_source.fullpath), av::str::toA(video_file));
 				return false;
 			}
+			// 回滚移动的视频
+			rollback_tasks.push_back(std::make_pair("rollback move video", [video_file, fullpath = m_external_source.fullpath] {
+				av::path::move_file(video_file, fullpath, true);
+				}));
 		}
 		else if (source.type == av::media::SourceType::Dir) {
+			// 移动图片到临时目录
+			for (const auto& entry : fs::directory_iterator(m_external_source.fullpath)) {
+#ifdef _UNICODE
+				std::tstring name = entry.path().filename().wstring();
+				std::tstring ext = entry.path().extension().wstring();
+#else
+				std::tstring name = entry.path().filename().string();
+				std::tstring ext = entry.path().extension().string();
+#endif // _UNICODE
+				std::tstring fullpath = av::path::append(m_external_source.fullpath, name);
+
+				// process image file
+				if (av::utils::iequals(ext, std::tstring(TEXT(".jpg"))) ||
+					av::utils::iequals(ext, std::tstring(TEXT(".jpeg"))) ||
+					av::utils::iequals(ext, std::tstring(TEXT(".png")))) {
+
+					// move to tmp dir
+					const auto tmp = av::path::append(tmp_dir, name);
+					if (av::path::move_file(fullpath, tmp, true)) {
+
+						// 复制成功
+						m_external_source.screenshot_local.push_back(tmp);
+
+						// 复制成功,添加回滚任务 
+						const std::string task_name = "rollback img" + av::str::toA(fullpath);
+						rollback_tasks.push_back(std::make_pair(task_name, [fullpath, tmp] {
+							av::path::move_file(tmp, fullpath, true);
+							}));
+					}
+					else {
+						loge("move file {} to {} failed", av::str::toA(fullpath), av::str::toA(tmp));
+						return false;
+					}
+				}
+			}
+
+			// 移动json和txt到临时目录
+			{
+				auto media_info_json_path = av::path::append(m_external_source.fullpath, TEXT("media_info.json"));
+				auto media_info_text_path = av::path::append(m_external_source.fullpath, TEXT("media_info.txt"));
+				if (av::path::exists(media_info_json_path)) {
+					const auto tmp = av::path::append(tmp_dir, TEXT("media_info.json"));
+					if (av::path::move_file(media_info_json_path, tmp, true)) {
+						const std::string task_name = "rollback media_info.json" + av::str::toA(media_info_json_path);
+						rollback_tasks.push_back(std::make_pair(task_name, [media_info_json_path, tmp] {
+							av::path::move_file(tmp, media_info_json_path, true);
+							}));
+					}
+					else {
+						loge("move file {} to {} failed", av::str::toA(media_info_json_path), av::str::toA(tmp));
+						return false;
+					}
+				}
+				if (av::path::exists(media_info_text_path)) {
+					const auto tmp = av::path::append(tmp_dir, TEXT("media_info.txt"));
+					if (av::path::move_file(media_info_text_path, tmp, true)) {
+						const std::string task_name = "rollback media_info.txt" + av::str::toA(media_info_text_path);
+						rollback_tasks.push_back(std::make_pair(task_name, [media_info_text_path, tmp] {
+							av::path::move_file(tmp, media_info_text_path, true);
+							}));
+					}
+					else {
+						loge("move file {} to {} failed", av::str::toA(media_info_text_path), av::str::toA(tmp));
+						return false;
+					}
+				}
+			}
+
 			// 如果是目录,修改名称即可
 			try {
 				fs::rename(m_external_source.fullpath, seed_dir);
+
+				//  添加回滚任务
+				const std::string task_name = "rollback rename" + av::str::toA(m_external_source.fullpath);
+				rollback_tasks.push_back(std::make_pair(task_name, [seed_dir, fullpath = m_external_source.fullpath] {
+					fs::rename(seed_dir, fullpath);
+					}));
 			}
 			catch (const fs::filesystem_error& e) {
 				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
@@ -96,17 +222,11 @@ namespace mteam {
 
 		// 制作种子文件
 		logi("create torrent file, seed dir {}, torrent file {}", av::str::toA(seed_dir), av::str::toA(torrent_filename));
-		auto torrent_file = av::path::append(m_external_source.dir, torrent_filename);
+		auto torrent_file = av::path::append(tmp_dir, torrent_filename);
 		if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(torrent_file))) {
 			loge("create torrent file failed, {}, {}", av::str::toA(seed_dir), av::str::toA(torrent_file));
 			return false;
 		}
-		av::async::Exit exit_delete_torrent_file([&torrent_file] {
-			if (av::path::remove_file(torrent_file)) {
-				logi("clean {} succ", av::str::toA(torrent_file));
-			}
-			});
-
 
 		// 上传图片
 		std::vector<std::tstring> img_url;
@@ -149,7 +269,7 @@ namespace mteam {
 			warning_msg = title + TEXT("\n");
 			warning_msg += m_external_source.sub_title + TEXT("\n");
 			warning_msg += TEXT("请补充描述");
-			
+
 			//
 			description = TEXT("稍后补充截图");
 		}
@@ -301,6 +421,7 @@ namespace mteam {
 					response_create_date = av::str::toT(data["createdDate"].get<std::string>());
 				}
 			}
+			publish_success = true;
 		}
 		catch (const json::parse_error& e) {
 			logw("parse_error {}, {}", e.what(), resp->body);

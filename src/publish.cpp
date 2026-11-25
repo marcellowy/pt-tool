@@ -488,51 +488,51 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		capitalizeWords(obj.name_eng);
 	}
 
-	auto move_image = [&obj, &img_vec]() -> bool {
-		// create dir
-		auto dir = getTmpDir(obj);
-		if (!av::path::exists(dir)) {
-			if (!av::path::create_dir(dir)) {
-				loge("create dir {} failed", av::str::toA(dir));
-				return false;
-			}
-		}
-
-		// move
-		for (auto& img : img_vec) {
-			fs::path i = img;
-#ifdef _UNICODE
-			std::tstring tmp_name = i.filename().wstring();
-#else
-			std::tstring tmp_name = i.filename().string();
-#endif // _UNICODE
-
-			auto tmp = av::path::append(dir, tmp_name);
-			if (!av::path::move_file(img, tmp, true)) {
-				loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
-				return false;
-			}
-			obj.screenshot_local.push_back(tmp);
-		}
-		logi("move_image succ");
-		return true;
-		};
+//	auto move_image = [&obj, &img_vec]() -> bool {
+//		// create dir
+//		auto dir = getTmpDir(obj);
+//		if (!av::path::exists(dir)) {
+//			if (!av::path::create_dir(dir)) {
+//				loge("create dir {} failed", av::str::toA(dir));
+//				return false;
+//			}
+//		}
+//
+//		// move
+//		for (auto& img : img_vec) {
+//			fs::path i = img;
+//#ifdef _UNICODE
+//			std::tstring tmp_name = i.filename().wstring();
+//#else
+//			std::tstring tmp_name = i.filename().string();
+//#endif // _UNICODE
+//
+//			auto tmp = av::path::append(dir, tmp_name);
+//			if (!av::path::move_file(img, tmp, true)) {
+//				loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
+//				return false;
+//			}
+//			obj.screenshot_local.push_back(tmp);
+//		}
+//		logi("move_image succ");
+//		return true;
+//		};
 
 	// move img
-	if (!move_image()) {
-		logw("move image failed");
-		error = PublishError::ErrMoveImage;
-		return -1;
-	}
+	//if (!move_image()) {
+	//	logw("move image failed");
+	//	error = PublishError::ErrMoveImage;
+	//	return -1;
+	//}
 
-	if (!av::path::remove_file(media_info_json_path)) {
-		logw("remove file {} failed", av::str::toA(media_info_json_path));
-	}
+	//if (!av::path::remove_file(media_info_json_path)) {
+	//	logw("remove file {} failed", av::str::toA(media_info_json_path));
+	//}
 
-	if (!av::path::remove_file(media_info_text_path)) {
-		logw("remove file {} failed", av::str::toA(media_info_text_path));
-	}
-	logi("process dir succ");
+	//if (!av::path::remove_file(media_info_text_path)) {
+	//	logw("remove file {} failed", av::str::toA(media_info_text_path));
+	//}
+	logi("pre-process dir succ");
 
 	return static_cast<int>(ErrorCode::Success);
 }
