@@ -18,6 +18,8 @@ namespace {
 		{PublishError::ErrDirNotExists, "Dir not exists"},
 		{PublishError::ErrParam, "Param error"},
 		{PublishError::ErrPublishFailed, "Publish failed"},
+		{PublishError::ErrMoveFile, "Move file failed"},
+		{PublishError::ErrContactName, "Site contact name error"},
     };
 };
 

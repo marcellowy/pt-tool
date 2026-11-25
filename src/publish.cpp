@@ -6,6 +6,7 @@
 
 #include "boost/locale.hpp"
 
+#include "av_libtorrent.h"
 #include "av_log.h"
 #include "av_string.h"
 #include "av_path.h"
@@ -61,72 +62,99 @@ void Publish::task() {
 	PublishError error = PublishError::Success;
 	auto arr = readDir(error);
 	logi("read dir {} succ, count {}", av::str::toA(m_dir), arr.size());
-	for (auto& tmp : arr) {
-		if (tmp.type == SourceType::File) {
-			if (!processFile(tmp, error)) {
-				logw("process file failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-				sendTGWarningMessage(av::str::toA(tmp.fullpath), error);
+	for (auto& source : arr) {
+		// rollback tasks
+		{
+			bool publish_success = false;
+			std::vector<std::pair<std::string, std::function<void()>>> rollback_tasks;
+			av::async::Exit exit_publish([&publish_success, &rollback_tasks] {
+				if (!publish_success) {
+					logi("publish failed, rollback tasks size = {}", rollback_tasks.size());
+
+					// 倒序先进后出执行
+					for (auto it = rollback_tasks.rbegin(); it != rollback_tasks.rend(); ++it) {
+						try {
+							if (it->second)
+							{
+								it->second();
+								logi("rollback task \"{}\" succ", it->first);
+							}
+						}
+						catch (const std::exception& e) {
+							logw("rollback task \"{}\" failed, err: {}", it->first, e.what());
+						}
+					}
+				}
+				rollback_tasks.clear();
+				});
+
+			if (source.type == SourceType::File) {
+				if (!processFile(source, rollback_tasks, error)) {
+					logw("process file failed, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
+					sendTGWarningMessage(av::str::toA(source.fullpath), error);
+					continue;
+				}
+			}
+			else if (source.type == SourceType::Dir) {
+				const auto ret = processDir(source, rollback_tasks, error);
+				if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
+					logw("{} time not reached", av::str::toA(source.name));
+					continue;
+				}
+				if (ret != static_cast<int>(ErrorCode::Success)) {
+					logw("process dir failed, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
+					sendTGWarningMessage(av::str::toA(source.fullpath), error);
+					continue;
+				}
+			}
+			logi("process dir/file succ, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
+
+			// check param
+			if (source.audio_codec == SourceAudioCodec::Unknown ||
+				source.category == SourceCategory::Unknown ||
+				source.group_id == 0 ||
+				source.name_eng.empty() ||
+				source.source_id == SourceId::Unknown ||
+				source.video_codec == SourceVideoCodec::Unknown ||
+				source.video_resolution == SourceVideoResolution::Unknown
+				) {
+				logi(
+					"audio_codec {}, category {}, group id {}, name eng {}, source id {}, video codec {}, video resolution {}",
+					static_cast<int>(source.audio_codec),
+					static_cast<int>(source.category),
+					source.group_id,
+					av::str::toA(source.name_eng),
+					static_cast<int>(source.source_id),
+					static_cast<int>(source.video_codec),
+					static_cast<int>(source.video_resolution)
+				);
+				logw("{} param error, please check", av::str::toA(source.fullpath));
+
+				// send tg warning
+				sendTGWarningMessage(av::str::toA(source.fullpath), PublishError::ErrParam);
 				continue;
 			}
-		}
-		else if (tmp.type == SourceType::Dir) {
-			const auto ret = processDir(tmp, error);
-			if (ret == static_cast<int>(ErrorCode::ErrTimeNotReached)) {
-				logw("{} time not reached", av::str::toA(tmp.name));
-				continue;
-			}
-			if (ret != static_cast<int>(ErrorCode::Success)) {
-				logw("process dir failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-				sendTGWarningMessage(av::str::toA(tmp.fullpath), error);
-				continue;
-			}
-		}
-		logi("process dir/file succ, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
 
-		// check param
-		if (tmp.audio_codec == SourceAudioCodec::Unknown ||
-			tmp.category == SourceCategory::Unknown ||
-			tmp.group_id == 0 ||
-			tmp.name_eng.empty() ||
-			tmp.source_id == SourceId::Unknown ||
-			tmp.video_codec == SourceVideoCodec::Unknown ||
-			tmp.video_resolution == SourceVideoResolution::Unknown
-			) {
-			logi(
-				"audio_codec {}, category {}, group id {}, name eng {}, source id {}, video codec {}, video resolution {}",
-				static_cast<int>(tmp.audio_codec),
-				static_cast<int>(tmp.category),
-				tmp.group_id,
-				av::str::toA(tmp.name_eng),
-				static_cast<int>(tmp.source_id),
-				static_cast<int>(tmp.video_codec),
-				static_cast<int>(tmp.video_resolution)
-			);
-			logw("{} param error, please check", av::str::toA(tmp.fullpath));
+			// preprocess succ
+			logi("begin publish");
+			if (m_site->publish(source)) {
+				auto dir = getTmpDir(source);
+				if (av::path::remove_dir_all(dir)) {
+					logi("clean tmp dir {} succ", av::str::toA(dir));
+				}
 
-			// send tg warning
-			sendTGWarningMessage(av::str::toA(tmp.fullpath), PublishError::ErrParam);
-			continue;
-		}
-
-		// preprocess succ
-		logi("begin publish");
-		if (m_site->publish(tmp)) {
-			auto dir = getTmpDir(tmp);
-			if (av::path::remove_dir_all(dir)) {
-				logi("clean tmp dir {} succ", av::str::toA(dir));
+				// if succ break,
+				logi("publish succ, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
+				publish_success = true;
+				break;
 			}
 
-			// if succ break,
-			logi("publish succ, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
-			break;
+			//
+			sendTGWarningMessage(av::str::toA(source.fullpath), PublishError::ErrPublishFailed);
+
+			// if incorrect, just use next file keep publish
+			logi("publish failed, dir {}, name {}", av::str::toA(source.dir), av::str::toA(source.name));
 		}
-
-		//
-		sendTGWarningMessage(av::str::toA(tmp.fullpath), PublishError::ErrPublishFailed);
-
-		// if incorrect, just use next file keep publish
-		logi("publish failed, dir {}, name {}", av::str::toA(tmp.dir), av::str::toA(tmp.name));
 	}
 }
 
@@ -234,18 +262,31 @@ bool Publish::getSiteType(Source& obj) {
 	return false;
 }
 
-int Publish::processDir(Source& obj, PublishError& error) {
+int Publish::processDir(Source& source,
+	std::vector<std::pair<std::string, std::function<void()>>>& rollback_tasks,
+	PublishError& error) {
+
+	// config
 	auto& config = Config::instance();
-	logi("process {}", av::str::toA(obj.fullpath));
+	logi("process {}", av::str::toA(source.fullpath));
+
+	// 临时目录 
+	auto tmp_dir = getTmpDir(source);
+	if (!av::path::exists(tmp_dir)) {
+		if (!av::path::create_dir(tmp_dir)) {
+			loge("create dir {} failed", av::str::toA(tmp_dir));
+			return false;
+		}
+	}
 
 	//
-	obj.source_id = av::media::from(config.mteam.source_id);
-	obj.group_id = config.mteam.group_id;
-	obj.seed_dir = config.mteam.seed_dir;
+	source.source_id = av::media::from(config.mteam.source_id);
+	source.group_id = config.mteam.group_id;
+	source.seed_dir = config.mteam.seed_dir;
 
 	// media_info.json, media_info.txt
-	auto media_info_json_path = av::path::append(obj.fullpath, TEXT("media_info.json"));
-	auto media_info_text_path = av::path::append(obj.fullpath, TEXT("media_info.txt"));
+	auto media_info_json_path = av::path::append(source.fullpath, TEXT("media_info.json"));
+	auto media_info_text_path = av::path::append(source.fullpath, TEXT("media_info.txt"));
 	if (!av::path::exists(media_info_json_path) || !av::path::exists(media_info_text_path)) {
 		logw("{} or {} not exists",
 			av::str::toA(media_info_json_path), av::str::toA(media_info_text_path));
@@ -268,112 +309,15 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		error = PublishError::ErrNoMediaInfo;
 		return -1;
 	}
-	obj.mediainfo_text = av::str::toT(text_content);
+	source.mediainfo_text = av::str::toT(text_content);
 	logi("json content: \n{}", json_content);
 	logi("text content: \n{}", text_content);
 
 	// parse json file
-	AVSInfo avs_info;
+	MediaInfo media_info;
 	try {
-		json _o;
-		auto j = _o.parse(json_content);
-		avs_info = j.get<AVSInfo>();
-		av::media::ScanType scan_type;
-		if (avs_info.scan_type == TEXT("Interlaced")) {
-			scan_type = av::media::ScanType::Interlaced;
-		}
-		else if (avs_info.scan_type == TEXT("MBAFF")) {
-			scan_type = av::media::ScanType::MBAFF;
-		}
-		else if (avs_info.scan_type == TEXT("Progressive")) {
-			scan_type = av::media::ScanType::Progressive;
-		}
-		else {
-			scan_type = av::media::ScanType::Unknown;
-		}
-		//
-		setResolution(avs_info.width, avs_info.height, scan_type, obj);
-
-		// video codec
-		if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS2")))) {
-			obj.video_codec = SourceVideoCodec::_avs2;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("CAVS")))) {
-			obj.video_codec = SourceVideoCodec::_cavs;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS")))) {
-			obj.video_codec = SourceVideoCodec::_avs;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("MPEG2VIDEO")))) {
-			obj.video_codec = SourceVideoCodec::_mpeg2;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("h264")))) {
-			obj.video_codec = SourceVideoCodec::_h264;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("h265")))) {
-			obj.video_codec = SourceVideoCodec::_h265;
-		}
-		else if (av::utils::iequals(avs_info.video_format, std::tstring(TEXT("AVS3")))) {
-			obj.video_codec = SourceVideoCodec::_avs3;
-		}
-		else {
-			// default avs
-			logw("video codec {} not support",
-				av::str::toA(avs_info.video_format));
-			error = PublishError::ErrVideoCodecNotSupport;
-			return -1;
-		}
-
-		// audio codec
-		if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("AC3")))) {
-			obj.audio_codec = SourceAudioCodec::_ac3;
-		}
-		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("MP2"))))
-		{
-			obj.audio_codec = SourceAudioCodec::_mp2;
-		}
-		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("MP3"))))
-		{
-			obj.audio_codec = SourceAudioCodec::_mp3;
-		}
-		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("AAC"))))
-		{
-			obj.audio_codec = SourceAudioCodec::_aac;
-		}
-		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("E-AC3(DDP)"))))
-		{
-			obj.audio_codec = SourceAudioCodec::_e_ac3_ddp;
-		}
-		else if (av::utils::iequals(avs_info.audio_format, std::tstring(TEXT("E-AC3 Atmos"))))
-		{
-			obj.audio_codec = SourceAudioCodec::_e_ac3_atmos;
-		}
-		else {
-			logw("audio codec {} not support",
-				av::str::toA(avs_info.audio_format));
-			error = PublishError::ErrAudioCodecNotSupport;
-			return -1;
-		}
-
-		// category
-		obj.category = SourceCategory::Unknown; // default
-		if (avs_info.category == 402) {
-			obj.category = SourceCategory::TVSeries;
-		}
-		else if (avs_info.category == 404) {
-			obj.category = SourceCategory::Discover;
-		}
-		else if (avs_info.category == 407) {
-			obj.category = SourceCategory::Sport;
-		}
-		else if (avs_info.category == 419) {
-			obj.category = SourceCategory::Movie;
-		}
-		else {
-			logw("category {} not support", avs_info.category);
-			error = PublishError::ErrCategoryNotSupport;
-			return -1;
-		}
+		auto j = json::parse(json_content);
+		media_info = j.get<MediaInfo>();
 	}
 	catch (const json::parse_error& e) {
 		logw("json::parse_error {}", e.what());
@@ -386,66 +330,159 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		return -1;
 	}
 
-	//
-	obj.title_prefix = avs_info.channel;
-	obj.name_chs = avs_info.title;
-	obj.sub_title = avs_info.title;
-	obj.year = avs_info.year;
-	if (!avs_info.douban_id.empty()) {
-		obj.douban_id = av::str::toT(avs_info.douban_id);
-	}
-
-	//
-	if (!obj.douban_id.empty()) {
-		av::ptgen::Douban db;
-		char buff[2048];
-		snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
-		std::string real_url(buff);
-		if (!av::ptgen::get(av::str::toT(real_url), db)) {
-			loge("get douban info failed!");
-			// try use m-team api
-			char douban_url_buff[2048];
-			snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
-				av::str::toA(obj.douban_id).c_str());
-			std::string real_douban_url_buff(douban_url_buff);
-			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
-				loge("get douban info failed!");
-				error = PublishError::ErrGetDoubanInfo;
-				return -1;
-			}
-		}
-
-		// set douban info to obj
-		obj.year = av::str::toT(db.year);
-		obj.name_chs = av::str::toT(db.name_chs);
-		obj.name_eng = av::str::toT(db.name_eng);
-		obj.sub_title = av::str::toT(db.sub_title);
-		obj.imdb_link = av::str::toT(db.imdb_link);
-		obj.description = av::str::toT(db.description);
-		obj.poster_img = av::str::toT(db.poster_img);
-	}
-
-	//
-	tvname(obj);
-
 	// check time
 	int64_t diff_time_seconds;
-	if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
-		logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
+	if (!av::time::diff_now(av::str::toA(media_info.created_time), diff_time_seconds)) {
+		logw("diff time failed, time: {}", av::str::toA(media_info.created_time));
 		error = PublishError::ErrParseCreatedTime;
 		return -1;
 	}
 
 	if (diff_time_seconds < 24 * 3600) {
 		// 24 hours
-		logw("time not reached! wait time, {}", av::str::toA(obj.fullpath));
+		logw("time not reached! wait time, {}", av::str::toA(source.fullpath));
 		return static_cast<int>(ErrorCode::ErrTimeNotReached);
 	}
+
+	av::media::ScanType scan_type;
+	if (media_info.scan_type == TEXT("Interlaced")) {
+		scan_type = av::media::ScanType::Interlaced;
+	}
+	else if (media_info.scan_type == TEXT("MBAFF")) {
+		scan_type = av::media::ScanType::MBAFF;
+	}
+	else if (media_info.scan_type == TEXT("Progressive")) {
+		scan_type = av::media::ScanType::Progressive;
+	}
+	else {
+		scan_type = av::media::ScanType::Unknown;
+	}
+	//
+	setResolution(media_info.width, media_info.height, scan_type, source);
+
+	// video codec
+	if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("AVS2")))) {
+		source.video_codec = SourceVideoCodec::_avs2;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("CAVS")))) {
+		source.video_codec = SourceVideoCodec::_cavs;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("AVS")))) {
+		source.video_codec = SourceVideoCodec::_avs;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("MPEG2VIDEO")))) {
+		source.video_codec = SourceVideoCodec::_mpeg2;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("h264")))) {
+		source.video_codec = SourceVideoCodec::_h264;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("h265")))) {
+		source.video_codec = SourceVideoCodec::_h265;
+	}
+	else if (av::utils::iequals(media_info.video_format, std::tstring(TEXT("AVS3")))) {
+		source.video_codec = SourceVideoCodec::_avs3;
+	}
+	else {
+		// default avs
+		logw("video codec {} not support",
+			av::str::toA(media_info.video_format));
+		error = PublishError::ErrVideoCodecNotSupport;
+		return -1;
+	}
+
+	// audio codec
+	if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("AC3")))) {
+		source.audio_codec = SourceAudioCodec::_ac3;
+	}
+	else if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("MP2"))))
+	{
+		source.audio_codec = SourceAudioCodec::_mp2;
+	}
+	else if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("MP3"))))
+	{
+		source.audio_codec = SourceAudioCodec::_mp3;
+	}
+	else if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("AAC"))))
+	{
+		source.audio_codec = SourceAudioCodec::_aac;
+	}
+	else if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("E-AC3(DDP)"))))
+	{
+		source.audio_codec = SourceAudioCodec::_e_ac3_ddp;
+	}
+	else if (av::utils::iequals(media_info.audio_format, std::tstring(TEXT("E-AC3 Atmos"))))
+	{
+		source.audio_codec = SourceAudioCodec::_e_ac3_atmos;
+	}
+	else {
+		logw("audio codec {} not support",
+			av::str::toA(media_info.audio_format));
+		error = PublishError::ErrAudioCodecNotSupport;
+		return -1;
+	}
+
+	// category
+	source.category = SourceCategory::Unknown; // default
+	if (media_info.category == 402) {
+		source.category = SourceCategory::TVSeries;
+	}
+	else if (media_info.category == 404) {
+		source.category = SourceCategory::Discover;
+	}
+	else if (media_info.category == 407) {
+		source.category = SourceCategory::Sport;
+	}
+	else if (media_info.category == 419) {
+		source.category = SourceCategory::Movie;
+	}
+	else {
+		logw("category {} not support", media_info.category);
+		error = PublishError::ErrCategoryNotSupport;
+		return -1;
+	}
+
+	//
+	source.title_prefix = media_info.channel;
+	source.name_chs = media_info.title;
+	source.sub_title = media_info.title;
+	source.year = media_info.year;
+	if (!media_info.douban_id.empty()) {
+		source.douban_id = av::str::toT(media_info.douban_id);
+	}
+
+	//
+	if (!source.douban_id.empty()) {
+		av::ptgen::Douban douban_info;
+
+		//
+		std::string douban_url;
+		fmt::format_to(std::back_inserter(douban_url),
+			"https://movie.douban.com/subject/{}/", av::str::toA(source.douban_id));
+
+		//
+		if (!av::ptgen::getByMteam(av::str::toT(douban_url), config.mteam.api_key, douban_info)) {
+			loge("get douban info failed!");
+			error = PublishError::ErrGetDoubanInfo;
+			return -1;
+		}
+
+		// set douban info to obj
+		source.year = av::str::toT(douban_info.year);
+		source.name_chs = av::str::toT(douban_info.name_chs);
+		source.name_eng = av::str::toT(douban_info.name_eng);
+		source.sub_title = av::str::toT(douban_info.sub_title);
+		source.imdb_link = av::str::toT(douban_info.imdb_link);
+		source.description = av::str::toT(douban_info.description);
+		source.poster_img = av::str::toT(douban_info.poster_img);
+	}
+
+	//
+	tvname(source);
 
 	// read dir
 	int64_t ts_count = 0;
 	std::vector<std::tstring> img_vec;
-	for (const auto& entry : fs::directory_iterator(obj.fullpath)) {
+	for (const auto& entry : fs::directory_iterator(source.fullpath)) {
 #ifdef _UNICODE
 		std::tstring name = entry.path().filename().wstring();
 		std::tstring ext = entry.path().extension().wstring();
@@ -453,7 +490,7 @@ int Publish::processDir(Source& obj, PublishError& error) {
 		std::tstring name = entry.path().filename().string();
 		std::tstring ext = entry.path().extension().string();
 #endif // _UNICODE
-		std::tstring fullpath = av::path::append(obj.fullpath, name);
+		std::tstring fullpath = av::path::append(source.fullpath, name);
 
 		// process ts file
 		if (av::utils::iequals(ext, std::tstring(TEXT(".ts")))) {
@@ -466,6 +503,25 @@ int Publish::processDir(Source& obj, PublishError& error) {
 			av::utils::iequals(ext, std::tstring(TEXT(".png")))) {
 			img_vec.push_back(fullpath);
 		}
+
+		// 判断文件是不是需要删除的文件或目录, 如果是就删除它
+		auto& config = Config::instance();
+		for (const auto& item : config.download.delete_in_dir) {
+			const auto item_path = av::str::toA(item);
+			if (av::utils::iequals(entry.path().filename().string(), item_path)) {
+				try {
+					if (entry.is_directory())
+						fs::remove_all(entry.path());	// 删除目录 
+					else
+						fs::remove(entry.path());	// 删除文件
+					logi("remove file {} success!", av::str::toA(entry.path()));
+				}
+				catch (const std::exception& e) {
+					logw("remove file {} failed! {}", av::str::toA(entry.path()), e.what());
+				}
+				continue;
+			}
+		}
 	}
 
 	if (ts_count == 0) {
@@ -476,89 +532,167 @@ int Publish::processDir(Source& obj, PublishError& error) {
 	}
 
 	// add english name
-	if (obj.name_eng.empty()) {
+	if (source.name_eng.empty()) {
 		av::translate::Translate t(config.rapidapi.key, config.rapidapi.host);
-		if (!t.foo(obj.name_chs, obj.name_eng)) {
+		if (!t.foo(source.name_chs, source.name_eng)) {
 			loge("translate failed");
 			error = PublishError::ErrTranslate;
 			return -1;
 		}
 	}
-	if (!empty(obj.name_eng)) {
-		capitalizeWords(obj.name_eng);
+	if (!empty(source.name_eng)) {
+		capitalizeWords(source.name_eng);
 	}
 
-//	auto move_image = [&obj, &img_vec]() -> bool {
-//		// create dir
-//		auto dir = getTmpDir(obj);
-//		if (!av::path::exists(dir)) {
-//			if (!av::path::create_dir(dir)) {
-//				loge("create dir {} failed", av::str::toA(dir));
-//				return false;
-//			}
-//		}
-//
-//		// move
-//		for (auto& img : img_vec) {
-//			fs::path i = img;
-//#ifdef _UNICODE
-//			std::tstring tmp_name = i.filename().wstring();
-//#else
-//			std::tstring tmp_name = i.filename().string();
-//#endif // _UNICODE
-//
-//			auto tmp = av::path::append(dir, tmp_name);
-//			if (!av::path::move_file(img, tmp, true)) {
-//				loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
-//				return false;
-//			}
-//			obj.screenshot_local.push_back(tmp);
-//		}
-//		logi("move_image succ");
-//		return true;
-//		};
+	auto move_image = [&source, &rollback_tasks, &img_vec]() -> bool {
+		// create dir
+		auto dir = getTmpDir(source);
+		if (!av::path::exists(dir)) {
+			if (!av::path::create_dir(dir)) {
+				loge("create dir {} failed", av::str::toA(dir));
+				return false;
+			}
+		}
+
+		// move
+		for (auto& img : img_vec) {
+			fs::path i = img;
+#ifdef _UNICODE
+			std::tstring tmp_name = i.filename().wstring();
+#else
+			std::tstring tmp_name = i.filename().string();
+#endif // _UNICODE
+
+			auto tmp = av::path::append(dir, tmp_name);
+			if (!av::path::move_file(img, tmp, true)) {
+				loge("move file {} to {} failed", av::str::toA(img), av::str::toA(tmp));
+				return false;
+			}
+			rollback_tasks.push_back(std::make_pair("rollback image", [img, tmp]() {
+				if (!av::path::move_file(tmp, img, true)) {
+					logw("rollback move file {} to {} failed", av::str::toA(tmp), av::str::toA(img));
+				}
+				}));
+			source.screenshot_local.push_back(tmp);
+		}
+		logi("move_image succ");
+		return true;
+		};
 
 	// move img
-	//if (!move_image()) {
-	//	logw("move image failed");
-	//	error = PublishError::ErrMoveImage;
-	//	return -1;
-	//}
+	if (!move_image()) {
+		logw("move image failed");
+		error = PublishError::ErrMoveImage;
+		return -1;
+	}
 
-	//if (!av::path::remove_file(media_info_json_path)) {
-	//	logw("remove file {} failed", av::str::toA(media_info_json_path));
-	//}
+	//
+	const auto media_info_tmp_json_file = av::path::append(tmp_dir, TEXT("media_info.json"));
+	if (av::path::move_file(media_info_json_path, media_info_tmp_json_file, true)) {
+		const std::string task_name = "rollback media_info.json -> " + av::str::toA(media_info_json_path);
+		rollback_tasks.push_back(std::make_pair(task_name, [media_info_json_path, media_info_tmp_json_file] {
+			av::path::move_file(media_info_tmp_json_file, media_info_json_path, true);
+			}));
+	}
+	else {
+		logw("move file {} to {} failed",
+			av::str::toA(media_info_json_path),
+			av::str::toA(media_info_tmp_json_file));
+		error = PublishError::ErrMoveFile;
+		return -1;
+	}
 
-	//if (!av::path::remove_file(media_info_text_path)) {
-	//	logw("remove file {} failed", av::str::toA(media_info_text_path));
-	//}
+	//
+	const auto media_info_tmp_txt_file = av::path::append(tmp_dir, TEXT("media_info.txt"));
+	if (av::path::move_file(media_info_text_path, media_info_tmp_txt_file, true)) {
+		const std::string task_name = "rollback media_info.txt -> " + av::str::toA(media_info_text_path);
+		rollback_tasks.push_back(std::make_pair(task_name, [media_info_text_path, media_info_tmp_txt_file] {
+			av::path::move_file(media_info_tmp_txt_file, media_info_text_path, true);
+			}));
+	}
+	else {
+		logw("move file {} to {} failed",
+			av::str::toA(media_info_text_path),
+			av::str::toA(media_info_tmp_txt_file));
+		error = PublishError::ErrMoveFile;
+		return -1;
+	}
+
+	// 获取当前站点的发布名称
+	PublishName publish_name;
+	if (!m_site->name(source, publish_name)) {
+		error = PublishError::ErrContactName;
+		return -1;
+	}
+
+	// 移动目录为种子目录
+	auto seed_dir = av::path::append(source.seed_dir, publish_name.torrent_dir);
+	try {
+		fs::rename(source.fullpath, seed_dir);
+		//  添加回滚任务
+		const std::string task_name = "rollback rename" + av::str::toA(source.fullpath);
+		rollback_tasks.push_back(std::make_pair(task_name, [seed_dir, fullpath = source.fullpath] {
+			fs::rename(seed_dir, fullpath);
+			}));
+	}
+	catch (const fs::filesystem_error& e) {
+		logw("rename {}, {} failed, err: {}", av::str::toA(source.fullpath), av::str::toA(seed_dir),
+			e.what());
+		return false;
+	}
+	catch (const std::exception& e) {
+		logw("rename {}, {} failed, err: {}", av::str::toA(source.fullpath), av::str::toA(seed_dir),
+			e.what());
+		return false;
+	}
+
+	// 制作种子文件,直接放在临时目录下
+	source.torrent_file = av::path::append(tmp_dir, publish_name.torrent_filename);
+	logi("create torrent file, seed dir {}, torrent file {}",
+		av::str::toA(seed_dir),
+		av::str::toA(source.torrent_file));
+	if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(source.torrent_file))) {
+		loge("create torrent file failed, {}, {}", av::str::toA(seed_dir), av::str::toA(source.torrent_file));
+		return false;
+	}
+
+	//
 	logi("pre-process dir succ");
-
 	return static_cast<int>(ErrorCode::Success);
 }
 
-bool Publish::processFile(Source& obj, PublishError& error) {
+bool Publish::processFile(Source& source,
+	std::vector<std::pair<std::string, std::function<void()>>>& rollback_tasks,
+	PublishError& error) {
 	auto& config = Config::instance();
-	logi("process {}", av::str::toA(obj.fullpath));
+	logi("process {}", av::str::toA(source.fullpath));
 
-	obj.source_id = av::media::from(config.mteam.source_id);
-	obj.group_id = config.mteam.group_id;
-	obj.seed_dir = config.mteam.seed_dir;
+	//
+	auto tmp_dir = getTmpDir(source);
+	if (!av::path::create_dir(tmp_dir)) {
+		loge("create dir {} failed", av::str::toA(tmp_dir));
+		return false;
+	}
+
+	//
+	source.source_id = av::media::from(config.mteam.source_id);
+	source.group_id = config.mteam.group_id;
+	source.seed_dir = config.mteam.seed_dir;
 
 	// site type
-	if (!getSiteType(obj)) {
-		logw("dir {}, name {} get site type failed", av::str::toA(obj.dir), av::str::toA(obj.name));
+	if (!getSiteType(source)) {
+		logw("dir {}, name {} get site type failed", av::str::toA(source.dir), av::str::toA(source.name));
 		error = PublishError::ErrGetSiteType;
 		return false;
 	}
 
 	// tv name
-	tvname(obj);
+	tvname(source);
 
 	// mediainfo
-	av::mediainfo::MediaInfo m(obj.fullpath);
+	av::mediainfo::MediaInfo m(source.fullpath);
 	if (!m.parse()) {
-		logw("get mediainfo failed, file {}", av::str::toA(obj.fullpath));
+		logw("get mediainfo failed, file {}", av::str::toA(source.fullpath));
 		error = PublishError::ErrNoMediaInfo;
 		return false;
 	}
@@ -566,70 +700,61 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 	// video resolution
 	auto video_height = m.getVideo().height;
 	auto video_width = m.getVideo().width;
-	setResolution(video_width, video_height, m.getVideo().scan_type, obj);
+	setResolution(video_width, video_height, m.getVideo().scan_type, source);
 
 	// video codec
-	obj.video_codec = m.getVideo().codec;
+	source.video_codec = m.getVideo().codec;
 
 	// audio codec
-	obj.audio_codec = m.getAudio().codec;
+	source.audio_codec = m.getAudio().codec;
 
 	// mediainfo text
-	obj.mediainfo_text = m.getText();
+	source.mediainfo_text = m.getText();
 
 	// add douban info
-	if (!obj.douban_id.empty()) {
-		av::ptgen::Douban db;
-		char buff[2048];
-		snprintf(buff, sizeof(buff) - 1, av::str::toA(config.ptgen.url).c_str(), av::str::toA(obj.douban_id).c_str());
-		std::string real_url(buff);
-		if (!av::ptgen::get(av::str::toT(real_url), db)) {
+	if (!source.douban_id.empty()) {
+		av::ptgen::Douban douban_info;
+
+		//
+		std::string douban_url;
+		fmt::format_to(std::back_inserter(douban_url),
+			"https://movie.douban.com/subject/{}/", av::str::toA(source.douban_id));
+
+		//
+		if (!av::ptgen::getByMteam(av::str::toT(douban_url), config.mteam.api_key, douban_info)) {
 			loge("get douban info failed!");
-			// try use m-team api
-			char douban_url_buff[2048];
-			snprintf(douban_url_buff, sizeof(douban_url_buff), "https://movie.douban.com/subject/%s/",
-				av::str::toA(obj.douban_id).c_str());
-			std::string real_douban_url_buff(douban_url_buff);
-			if (!av::ptgen::getByMteam(av::str::toT(real_douban_url_buff), config.mteam.api_key, db)) {
-				loge("get douban info failed!");
-				error = PublishError::ErrGetDoubanInfo;
-				return false;
-			}
+			error = PublishError::ErrGetDoubanInfo;
+			return false;
 		}
 
-		// set douban info to obj
-		obj.year = av::str::toT(db.year);
-		obj.name_chs = av::str::toT(db.name_chs);
-		obj.name_eng = av::str::toT(db.name_eng);
-		obj.sub_title = av::str::toT(db.sub_title);
-		obj.imdb_link = av::str::toT(db.imdb_link);
-		obj.description = av::str::toT(db.description);
-		obj.poster_img = av::str::toT(db.poster_img);
+		// set douban info to source
+		source.year = av::str::toT(douban_info.year);
+		source.name_chs = av::str::toT(douban_info.name_chs);
+		source.name_eng = av::str::toT(douban_info.name_eng);
+		source.sub_title = av::str::toT(douban_info.sub_title);
+		source.imdb_link = av::str::toT(douban_info.imdb_link);
+		source.description = av::str::toT(douban_info.description);
+		source.poster_img = av::str::toT(douban_info.poster_img);
 	}
 
 	// add screenshot
 	// 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960
 	const std::vector<int64_t> capture_time = { 60, 120, 180, 240 };
 	int capture_count = 0;
-	av::codec::StbPNG stbPng([&obj, &capture_count](void* data, int size) {
+	av::codec::StbPNG stbPng([&source, &tmp_dir, &capture_count](void* data, int size) {
 		// screenshots dir
-		auto dir = getTmpDir(obj);
-		if (!av::path::create_dir(dir)) {
-			loge("create dir {} failed", av::str::toA(dir));
-			return;
-		}
 		std::tstringstream oo;
 		oo << TEXT("screenshot_") << capture_count << TEXT(".png");
-		std::tstring filename = av::path::append(dir, oo.str());
+		std::tstring filename = av::path::append(tmp_dir, oo.str());
 		std::ofstream out_file(av::str::toA(filename), std::ios::binary);
 		out_file.write(static_cast<char*>(data), size); // 写入数据到文件
 
-		obj.screenshot_local.push_back(filename);
+		source.screenshot_local.push_back(filename);
 
 		capture_count++;
 		});
 	logi("capture frame");
-	if (!av::ffmpeg::captureFrame(obj.fullpath, capture_time, stbPng)) {
+	if (!av::ffmpeg::captureFrame(source.fullpath, capture_time, stbPng)) {
 		loge("capture frame failed");
 		error = PublishError::ErrCaptureFrame;
 		return false;
@@ -637,34 +762,28 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 	logi("capture frame succ, count {}", capture_count);
 
 	// if capture frame failed
-	if (obj.screenshot_local.empty()) {
+	if (source.screenshot_local.empty()) {
 		logw("capture frame failed");
 		// try use ffmpeg command capture
-		auto dir = getTmpDir(obj);
-		if (!av::path::create_dir(dir)) {
-			loge("create dir {} failed", av::str::toA(dir));
-			return false;
-		}
 		std::vector<std::string> tt = { "00:00:30", "00:00:45", "00:01:00", "00:01:30" };
-		std::tstring save_path = av::str::toT(dir);
 		std::vector<std::tstring> files;
-		av::ffmpeg::captureFrame(obj.fullpath, tt, save_path, files);
+		av::ffmpeg::captureFrame(source.fullpath, tt, tmp_dir, files);
 		if (!files.empty()) {
 			for (const auto& file : files) {
-				obj.screenshot_local.emplace_back(av::str::toT(file));
+				source.screenshot_local.emplace_back(av::str::toT(file));
 			}
 		}
 		else {
 			logw("use ffmpeg command capture frame failed");
 		}
-		logi("capture screenshot local size {}", obj.screenshot_local.size());
+		logi("capture screenshot local size {}", source.screenshot_local.size());
 	}
 	else {
-		logi("capture screenshot local size {}", obj.screenshot_local.size());
+		logi("capture screenshot local size {}", source.screenshot_local.size());
 	}
 
 	// add english name
-	if (obj.name_eng.empty()) {
+	if (source.name_eng.empty()) {
 		std::unique_ptr<av::translate::ITranslate> translate = nullptr;
 		if (config.rapidapi.channel == 2) {
 			translate = av::translate::TranslateFactory::create(config.rapidapi.key, config.rapidapi.host, av::translate::TranslateType::kFreeGoogleTranslate);
@@ -674,15 +793,44 @@ bool Publish::processFile(Source& obj, PublishError& error) {
 		}
 
 		//
-		if (!translate->foo(obj.name_chs, obj.name_eng)) {
+		if (!translate->foo(source.name_chs, source.name_eng)) {
 			loge("translate failed");
 			error = PublishError::ErrTranslate;
 			return false;
 		}
 	}
-	if (!empty(obj.name_eng)) {
-		capitalizeWords(obj.name_eng);
+	if (!empty(source.name_eng)) {
+		capitalizeWords(source.name_eng);
 	}
+
+	// 获取当前站点的发布名称
+	PublishName publish_name;
+	if (!m_site->name(source, publish_name)) {
+		error = PublishError::ErrParamName;
+		return false;
+	}
+
+	//
+	auto seed_dir = av::path::append(source.seed_dir, publish_name.torrent_dir);
+	if (av::path::exists(publish_name.torrent_dir)) {
+		loge("dir {} exists", av::str::toA(publish_name.torrent_dir));
+		return false;
+	}
+	if (!av::path::create_dir(seed_dir)) {
+		loge("create dir {} failed", av::str::toA(seed_dir));
+		return false;
+	}
+
+	// 移动视频到目录, 并修改名称
+	auto video_file = av::path::append(seed_dir, publish_name.video_filename);
+	if (!av::path::move_file(source.fullpath, video_file)) {
+		loge("move file{} to {} failed", av::str::toA(source.fullpath), av::str::toA(video_file));
+		return false;
+	}
+	// 回滚移动的视频
+	rollback_tasks.push_back(std::make_pair("rollback move video", [video_file, fullpath = source.fullpath] {
+		av::path::move_file(video_file, fullpath, true);
+		}));
 
 	return true;
 }
@@ -749,51 +897,51 @@ std::vector<Source> Publish::readDir(PublishError& error) {
 	return v;
 }
 
-void Publish::tvname(Source& obj) {
-	if (obj.title_prefix.empty()) {
+void Publish::tvname(Source& source) {
+	if (source.title_prefix.empty()) {
 		return;
 	}
 	auto& tvs = Config::instance().tv_name;
 	for (auto& tv : tvs) {
-		if (tv.match == obj.title_prefix) {
-			obj.title_prefix = tv.title_prefix;
-			if (obj.category != av::media::SourceCategory::Movie) {
-				obj.sub_title = tv.sub_title_prefix + TEXT(" | ") + obj.sub_title;
+		if (tv.match == source.title_prefix) {
+			source.title_prefix = tv.title_prefix;
+			if (source.category != av::media::SourceCategory::Movie) {
+				source.sub_title = tv.sub_title_prefix + TEXT(" | ") + source.sub_title;
 			}
 			return;
 		}
 	}
-	obj.title_prefix = TEXT("");
+	source.title_prefix = TEXT("");
 }
 
-void Publish::setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj) {
-	obj.video_resolution = SourceVideoResolution::_1080i; // default
+void Publish::setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& source) {
+	source.video_resolution = SourceVideoResolution::_1080i; // default
 	if (height == 4320) {
-		obj.video_resolution = SourceVideoResolution::_8k;
+		source.video_resolution = SourceVideoResolution::_8k;
 	}
 	else if (height == 2160 || (width == 3840 && height >= 1500 && height <= 2160)) {
-		obj.video_resolution = SourceVideoResolution::_4k;
+		source.video_resolution = SourceVideoResolution::_4k;
 	}
 	else if (height > 720 && height <= 1080) {
 		switch (scan_type) {
 		case av::media::ScanType::Interlaced:
 		case av::media::ScanType::MBAFF:
 		case av::media::ScanType::PAFF:
-			obj.video_resolution = SourceVideoResolution::_1080i;
+			source.video_resolution = SourceVideoResolution::_1080i;
 			break;
 		case av::media::ScanType::Progressive:
-			obj.video_resolution = SourceVideoResolution::_1080p;
+			source.video_resolution = SourceVideoResolution::_1080p;
 			break;
 		default:
-			obj.video_resolution = SourceVideoResolution::Unknown;
+			source.video_resolution = SourceVideoResolution::Unknown;
 			break;
 		}
 	}
 	else if (height <= 720 && height > 480) {
-		obj.video_resolution = SourceVideoResolution::_720;
+		source.video_resolution = SourceVideoResolution::_720;
 	}
 	else if (height <= 480) {
-		obj.video_resolution = SourceVideoResolution::_480;
+		source.video_resolution = SourceVideoResolution::_480;
 	}
 }
 

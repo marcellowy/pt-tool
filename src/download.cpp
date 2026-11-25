@@ -144,26 +144,6 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 					continue;
 				}
 			}
-
-			// 判断文件是不是douban.json, 如果是就删除它
-			auto& config = Config::instance();
-			for (const auto& item : config.download.delete_in_dir) {
-				const auto item_path = av::str::toA(item);
-				if (av::utils::iequals(entry.path().filename().string(), item_path)) {
-					try {
-						if (entry.is_directory())
-							fs::remove_all(entry.path());	// 删除目录 
-						else
-							fs::remove(entry.path());	// 删除文件
-						logi("remove file {} success!", av::str::toA(entry.path()));
-					}
-					catch (const std::exception& e) {
-						logw("remove file {} failed! {}", av::str::toA(entry.path()), e.what());
-					}
-					continue;
-				}
-			}
-
 		}
 
 		// 没有图片的直接不下载
@@ -217,10 +197,10 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 
 		// 解析JSON内容
 		nlohmann::json j;
-		AVSInfo avs_info;
+		MediaInfo media_info;
 		try {
 			j = nlohmann::json::parse(content);
-			j.get_to(avs_info);
+			j.get_to(media_info);
 		}
 		catch (const nlohmann::json::parse_error& e) {
 			logw("json::parse_error {}", e.what());
@@ -232,7 +212,7 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 		}
 
 		// 检查json内容 
-		if (avs_info.created_time.empty()) {
+		if (media_info.created_time.empty()) {
 			logw("json created_time is empty!");
 			return false;
 		}
@@ -241,20 +221,20 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 		// 不依赖运行机器的本地时区。
 		int64_t diff_time_seconds = 0;
 		try {
-			if (!av::time::diff_now(av::str::toA(avs_info.created_time), diff_time_seconds)) {
-				logw("diff time failed, time: {}", av::str::toA(avs_info.created_time));
+			if (!av::time::diff_now(av::str::toA(media_info.created_time), diff_time_seconds)) {
+				logw("diff time failed, time: {}", av::str::toA(media_info.created_time));
 				return false;
 			}
 		}
 		catch (const std::exception& e) {
 			logw("parse created_time failed, time: {}, error: {}",
-				av::str::toA(avs_info.created_time), e.what());
+				av::str::toA(media_info.created_time), e.what());
 			return false;
 		}
 
 		if (diff_time_seconds < duration_cast<seconds>(std::chrono::hours(24)).count()) {
 			logw("time not reached, time: {}, elapsed seconds: {}",
-				av::str::toA(avs_info.created_time), diff_time_seconds);
+				av::str::toA(media_info.created_time), diff_time_seconds);
 			return false;
 		}
 	}

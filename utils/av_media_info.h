@@ -162,6 +162,9 @@ namespace av {
 
 			// mediainfo
 			std::tstring mediainfo_text;
+
+			// 过程中创建的种子文件
+			std::tstring torrent_file;
 		};
 	}
 }

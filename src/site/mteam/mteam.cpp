@@ -59,181 +59,21 @@ namespace mteam {
 	}
 
 	bool Mteam::publish(const av::media::Source& source) {
-		m_external_source = source;
 		Category category(source.category);
 
-		// all names
-		std::tstring torrent_dir;
-		std::tstring title;
-		std::tstring video_filename;
-		std::tstring torrent_filename;
-
-		// publish status
-		bool publish_success = false;
-
-		// rollback tasks
-		std::vector<std::pair<std::string, std::function<void()>>> rollback_tasks;
-		av::async::Exit exit_publish([&publish_success, &rollback_tasks] {
-			if (!publish_success) {
-				logi("publish failed, rollback tasks size = {}", rollback_tasks.size());
-
-				// 倒序先进后出执行
-				for (auto it = rollback_tasks.rbegin(); it != rollback_tasks.rend(); ++it) {
-					try {
-						if (it->second)
-						{
-							it->second();
-							logi("rollback task \"{}\" succ", it->first);
-						}
-					}
-					catch (const std::exception& e) {
-						logw("rollback task \"{}\" failed, err: {}", it->first, e.what());
-					}
-				}
-			}
-			rollback_tasks.clear();
-			});
-
-		// 命名
-		parseName(torrent_dir, title, video_filename, torrent_filename);
-
-		// 创建临时目录
-		const auto tmp_dir = getTmpDir(m_external_source);
-		if (!av::path::exists(tmp_dir)) {
-			if (!av::path::create_dir(tmp_dir)) {
-				loge("create dir {} failed", av::str::toA(tmp_dir));
-				return false;
-			}
-		}
-
-		// 做种目录
-		auto seed_dir = av::path::append(source.seed_dir, torrent_dir);
-		if (source.type == av::media::SourceType::File) {
-			if (av::path::exists(torrent_dir)) {
-				loge("dir {} exists", av::str::toA(torrent_dir));
-				return false;
-			}
-			if (!av::path::create_dir(seed_dir)) {
-				loge("create dir {} failed", av::str::toA(seed_dir));
-				return false;
-			}
-
-			// 移动视频到目录, 并修改名称
-			auto video_file = av::path::append(seed_dir, video_filename);
-			if (!av::path::move_file(m_external_source.fullpath, video_file)) {
-				loge("move file{} to {} failed", av::str::toA(m_external_source.fullpath), av::str::toA(video_file));
-				return false;
-			}
-			// 回滚移动的视频
-			rollback_tasks.push_back(std::make_pair("rollback move video", [video_file, fullpath = m_external_source.fullpath] {
-				av::path::move_file(video_file, fullpath, true);
-				}));
-		}
-		else if (source.type == av::media::SourceType::Dir) {
-			// 移动图片到临时目录
-			for (const auto& entry : fs::directory_iterator(m_external_source.fullpath)) {
-#ifdef _UNICODE
-				std::tstring name = entry.path().filename().wstring();
-				std::tstring ext = entry.path().extension().wstring();
-#else
-				std::tstring name = entry.path().filename().string();
-				std::tstring ext = entry.path().extension().string();
-#endif // _UNICODE
-				std::tstring fullpath = av::path::append(m_external_source.fullpath, name);
-
-				// process image file
-				if (av::utils::iequals(ext, std::tstring(TEXT(".jpg"))) ||
-					av::utils::iequals(ext, std::tstring(TEXT(".jpeg"))) ||
-					av::utils::iequals(ext, std::tstring(TEXT(".png")))) {
-
-					// move to tmp dir
-					const auto tmp = av::path::append(tmp_dir, name);
-					if (av::path::move_file(fullpath, tmp, true)) {
-
-						// 复制成功
-						m_external_source.screenshot_local.push_back(tmp);
-
-						// 复制成功,添加回滚任务 
-						const std::string task_name = "rollback img" + av::str::toA(fullpath);
-						rollback_tasks.push_back(std::make_pair(task_name, [fullpath, tmp] {
-							av::path::move_file(tmp, fullpath, true);
-							}));
-					}
-					else {
-						loge("move file {} to {} failed", av::str::toA(fullpath), av::str::toA(tmp));
-						return false;
-					}
-				}
-			}
-
-			// 移动json和txt到临时目录
-			{
-				auto media_info_json_path = av::path::append(m_external_source.fullpath, TEXT("media_info.json"));
-				auto media_info_text_path = av::path::append(m_external_source.fullpath, TEXT("media_info.txt"));
-				if (av::path::exists(media_info_json_path)) {
-					const auto tmp = av::path::append(tmp_dir, TEXT("media_info.json"));
-					if (av::path::move_file(media_info_json_path, tmp, true)) {
-						const std::string task_name = "rollback media_info.json" + av::str::toA(media_info_json_path);
-						rollback_tasks.push_back(std::make_pair(task_name, [media_info_json_path, tmp] {
-							av::path::move_file(tmp, media_info_json_path, true);
-							}));
-					}
-					else {
-						loge("move file {} to {} failed", av::str::toA(media_info_json_path), av::str::toA(tmp));
-						return false;
-					}
-				}
-				if (av::path::exists(media_info_text_path)) {
-					const auto tmp = av::path::append(tmp_dir, TEXT("media_info.txt"));
-					if (av::path::move_file(media_info_text_path, tmp, true)) {
-						const std::string task_name = "rollback media_info.txt" + av::str::toA(media_info_text_path);
-						rollback_tasks.push_back(std::make_pair(task_name, [media_info_text_path, tmp] {
-							av::path::move_file(tmp, media_info_text_path, true);
-							}));
-					}
-					else {
-						loge("move file {} to {} failed", av::str::toA(media_info_text_path), av::str::toA(tmp));
-						return false;
-					}
-				}
-			}
-
-			// 如果是目录,修改名称即可
-			try {
-				fs::rename(m_external_source.fullpath, seed_dir);
-
-				//  添加回滚任务
-				const std::string task_name = "rollback rename" + av::str::toA(m_external_source.fullpath);
-				rollback_tasks.push_back(std::make_pair(task_name, [seed_dir, fullpath = m_external_source.fullpath] {
-					fs::rename(seed_dir, fullpath);
-					}));
-			}
-			catch (const fs::filesystem_error& e) {
-				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
-					e.what());
-				return false;
-			}
-			catch (const std::exception& e) {
-				logw("rename {}, {} failed, err: {}", av::str::toA(m_external_source.fullpath), av::str::toA(seed_dir),
-					e.what());
-				return false;
-			}
-		}
-
-		// 制作种子文件
-		logi("create torrent file, seed dir {}, torrent file {}", av::str::toA(seed_dir), av::str::toA(torrent_filename));
-		auto torrent_file = av::path::append(tmp_dir, torrent_filename);
-		if (!av::libtorrent::create_torrent(av::str::toA(seed_dir), av::str::toA(torrent_file))) {
-			loge("create torrent file failed, {}, {}", av::str::toA(seed_dir), av::str::toA(torrent_file));
+		PublishName publish_name;
+		if (!name(source, publish_name)) {
+			loge("get publish name failed");
 			return false;
 		}
+		std::tstring title = publish_name.title;
 
 		// 上传图片
 		std::vector<std::tstring> img_url;
-		if (!m_external_source.screenshot_local.empty()) {
-			logi("m_external_source.screenshot_local size = {}", m_external_source.screenshot_local.size());
+		if (!source.screenshot_local.empty()) {
+			logi("source.screenshot_local size = {}", source.screenshot_local.size());
 			UploadImg img(m_img_api_url, m_img_api_key);
-			for (auto& i : m_external_source.screenshot_local) {
+			for (auto& i : source.screenshot_local) {
 				std::tstring tmp;
 				if (!img.Upload(i, tmp)) {
 					loge("upload img {} failed", av::str::toA(i));
@@ -246,7 +86,7 @@ namespace mteam {
 			}
 		}
 		else {
-			logw("m_external_source.screenshot_local size = {}", m_external_source.screenshot_local.size());
+			logw("m_external_source.screenshot_local size = {}", source.screenshot_local.size());
 		}
 
 		// description
@@ -258,16 +98,16 @@ namespace mteam {
 		}
 
 		// append douban description
-		if (!m_external_source.description.empty()) {
+		if (!source.description.empty()) {
 			// 组合豆瓣的描述
-			description = m_external_source.description + TEXT("\n\n") + description;
+			description = source.description + TEXT("\n\n") + description;
 		}
 
 		// 没有描述
 		std::tstring warning_msg;
 		if (description.empty()) {
 			warning_msg = title + TEXT("\n");
-			warning_msg += m_external_source.sub_title + TEXT("\n");
+			warning_msg += source.sub_title + TEXT("\n");
 			warning_msg += TEXT("请补充描述");
 
 			//
@@ -281,7 +121,7 @@ namespace mteam {
 			auto category_id = category.getid();
 			form.kv["category"] = std::to_string(static_cast<int64_t>(category_id));
 			form.kv["name"] = av::str::toA(title);
-			form.kv["smallDescr"] = av::str::toA(m_external_source.sub_title);
+			form.kv["smallDescr"] = av::str::toA(source.sub_title);
 			form.kv["dmmCode"] = "";
 			auto source_id = m_source.getid();
 			form.kv["source"] = std::to_string(static_cast<int64_t>(source_id));
@@ -289,19 +129,19 @@ namespace mteam {
 			form.kv["standard"] = std::to_string(static_cast<int64_t>(standard_id));
 			form.kv["videoCodec"] = std::to_string(static_cast<int64_t>(m_video_codec.getid()));
 			form.kv["audioCodec"] = std::to_string(static_cast<int64_t>(m_audio_codec.getid()));
-			form.kv["team"] = std::to_string(m_external_source.group_id);
-			form.kv["imdb"] = av::str::toA(m_external_source.imdb_link);
-			if (!m_external_source.douban_id.empty()) {
+			form.kv["team"] = std::to_string(source.group_id);
+			form.kv["imdb"] = av::str::toA(source.imdb_link);
+			if (!source.douban_id.empty()) {
 				char buff[2048];
 				snprintf(buff, sizeof(buff) - 1, "https://movie.douban.com/subject/%s/",
-					av::str::toA(m_external_source.douban_id).c_str());
+					av::str::toA(source.douban_id).c_str());
 				form.kv["douban"] = std::string(buff);
 			}
 			else {
 				form.kv["douban"] = "";
 			}
 			form.kv["labelsNew"] = "";
-			form.kv["mediainfo"] = av::str::toA(m_external_source.mediainfo_text);
+			form.kv["mediainfo"] = av::str::toA(source.mediainfo_text);
 			form.kv["tags"] = "";
 			form.kv["anonymous"] = "true";
 			form.kv["aids"] = "";
@@ -314,7 +154,7 @@ namespace mteam {
 		}
 		http_::Header header;
 		header.kv["x-api-key"] = av::str::toA(m_api_key);
-		form.file["file"] = av::str::toA(torrent_file);
+		form.file["file"] = av::str::toA(source.torrent_file);
 
 		// 上传到网站
 		auto url = m_api_url + TEXT("/api/torrent/createOredit");
@@ -377,7 +217,7 @@ namespace mteam {
 				if (code_i != 0) {
 					std::tstring msg = TEXT("发布 ");
 					msg += title + TEXT("\n");
-					msg += m_external_source.sub_title + TEXT(" 失败\n");
+					msg += source.sub_title + TEXT(" 失败\n");
 					msg += TEXT("错误消息: ") + av::str::toT(message);
 					sendTGWaringMessage(msg);
 					return false;
@@ -390,7 +230,7 @@ namespace mteam {
 					logw("code {} message {}", code, message);
 					std::tstring msg = TEXT("发布 ");
 					msg += title + TEXT("\n");
-					msg += m_external_source.sub_title + TEXT(" 失败\n");
+					msg += source.sub_title + TEXT(" 失败\n");
 					msg += TEXT("错误消息: ") + av::str::toT(message);
 					sendTGWaringMessage(msg);
 					return false;
@@ -399,7 +239,7 @@ namespace mteam {
 			else {
 				std::tstring msg = TEXT("发布 ");
 				msg += title + TEXT("\n");
-				msg += m_external_source.sub_title + TEXT(" 失败\n");
+				msg += source.sub_title + TEXT(" 失败\n");
 				msg += TEXT("错误消息: 无法解析返回结果(") + av::str::toT(resp->body) + TEXT(")");
 				sendTGWaringMessage(msg);
 				return false;
@@ -421,7 +261,6 @@ namespace mteam {
 					response_create_date = av::str::toT(data["createdDate"].get<std::string>());
 				}
 			}
-			publish_success = true;
 		}
 		catch (const json::parse_error& e) {
 			logw("parse_error {}, {}", e.what(), resp->body);
@@ -432,12 +271,13 @@ namespace mteam {
 			return false;
 		}
 
-		if (!sendTGMessage(m_external_source.poster_img, m_external_source.screenshot_local, response_id, response_name,
+		// 发送成功的tg消息
+		if (!sendTGMessage(source.poster_img, source.screenshot_local, response_id, response_name,
 			response_sub_title, response_create_date)) {
 			logw("sendTGMessage failed");
 		}
 
-		//
+		// 如果有警告消息,发送tg警告消息
 		if (!warning_msg.empty()) {
 			sendTGWaringMessage(warning_msg);
 		}
@@ -445,12 +285,12 @@ namespace mteam {
 		return true;
 	}
 
-	bool Mteam::sendTGMessage(std::tstring& douban_poster_img,
-		std::vector<std::tstring>& screenshots,
-		std::tstring& publish_id,
-		std::tstring& title,
-		std::tstring& sub_title,
-		std::tstring& create_date) {
+	bool Mteam::sendTGMessage(const std::tstring& douban_poster_img,
+		const std::vector<std::tstring>& screenshots,
+		const std::tstring& publish_id,
+		const std::tstring& title,
+		const std::tstring& sub_title,
+		const std::tstring& create_date) {
 		// 发送tg消息
 		std::tstring text; {
 			std::string text_tmp = R"(
@@ -509,18 +349,15 @@ namespace mteam {
 		return true;
 	}
 
-	bool Mteam::parseName(std::tstring& torrent_dir,
-		std::tstring& title,
-		std::tstring& video_filename,
-		std::tstring& torrent_filename
-	) {
-		m_video_codec.setSourceVideoCodec(m_external_source.video_codec);
-		m_video_resolution.setSourceResolution(m_external_source.video_resolution);
-		m_audio_codec.setSourceCodec(m_external_source.audio_codec);
-		m_category.setSourceCategory(m_external_source.category);
-		m_source.setExternalSourceId(m_external_source.source_id);
+	//
+	bool Mteam::name(const av::media::Source& source, PublishName& publish_name) {
+		mteam::video::Codec video_codec; video_codec.setSourceVideoCodec(source.video_codec);
+		mteam::audio::Codec audio_codec; audio_codec.setSourceCodec(source.audio_codec);
+		mteam::video::Resolution video_resolution; video_resolution.setSourceResolution(source.video_resolution);
+		mteam::Category category; category.setSourceCategory(source.category);
+		mteam::Source m_source; m_source.setExternalSourceId(source.source_id);
 
-		auto title_name_vec = av::str::split(m_external_source.name_eng, TEXT(" "));
+		auto title_name_vec = av::str::split(source.name_eng, TEXT(" "));
 		std::tstring new_name = av::str::join(title_name_vec, TEXT("."));
 		for (auto& t : ex_include) {
 			av::str::replace_all(new_name, t, TEXT(""));
@@ -531,30 +368,30 @@ namespace mteam {
 		std::vector<std::tstring> video_name;
 		std::vector<std::tstring> torrent_name;
 		std::vector<std::tstring> torrent_dir_;
-		if (!m_external_source.title_prefix.empty()) {
-			title_name.push_back(m_external_source.title_prefix);
-			auto tmp = m_external_source.title_prefix;
+		if (!source.title_prefix.empty()) {
+			title_name.push_back(source.title_prefix);
+			auto tmp = source.title_prefix;
 			av::str::replace_all(tmp, TEXT(" "), TEXT("."));
 			video_name.push_back(tmp);
 			torrent_name.push_back(tmp);
 			torrent_dir_.push_back(tmp);
 		}
-		title_name.push_back(m_external_source.name_eng);
+		title_name.push_back(source.name_eng);
 		video_name.push_back(new_name);
 		torrent_name.push_back(new_name);
 		torrent_dir_.push_back(new_name);
 
-		if (!m_external_source.season.empty()) {
-			title_name.push_back(m_external_source.season);
-			video_name.push_back(m_external_source.season);
-			torrent_name.push_back(m_external_source.season);
+		if (!source.season.empty()) {
+			title_name.push_back(source.season);
+			video_name.push_back(source.season);
+			torrent_name.push_back(source.season);
 			torrent_dir_.push_back(TEXT("Complete"));
 		}
 
-		title_name.push_back(m_external_source.year);
-		video_name.push_back(m_external_source.year);
-		torrent_name.push_back(m_external_source.year);
-		torrent_dir_.push_back(m_external_source.year);
+		title_name.push_back(source.year);
+		video_name.push_back(source.year);
+		torrent_name.push_back(source.year);
+		torrent_dir_.push_back(source.year);
 
 		auto source_text = m_source.getText();
 		if (!source_text.empty()) {
@@ -564,10 +401,10 @@ namespace mteam {
 			torrent_dir_.push_back(source_text);
 		}
 
-		title_name.push_back(m_video_resolution.getText());
-		video_name.push_back(m_video_resolution.getText());
-		torrent_name.push_back(m_video_resolution.getText());
-		torrent_dir_.push_back(m_video_resolution.getText());
+		title_name.push_back(video_resolution.getText());
+		video_name.push_back(video_resolution.getText());
+		torrent_name.push_back(video_resolution.getText());
+		torrent_dir_.push_back(video_resolution.getText());
 
 
 		title_name.push_back(m_audio_codec.getText()); {
@@ -578,30 +415,30 @@ namespace mteam {
 			torrent_dir_.push_back(tmp);
 		}
 
-		auto team_name = mteam::group::getText(m_external_source.group_id);
-		title_name.push_back(m_video_codec.getText() + TEXT("-") + team_name);
-		video_name.push_back(m_video_codec.getText() + TEXT("-") + team_name);
-		torrent_dir_.push_back(m_video_codec.getText() + TEXT("-") + team_name);
-		torrent_name.push_back(m_video_codec.getText() + TEXT("-") + team_name);
+		auto team_name = mteam::group::getText(source.group_id);
+		title_name.push_back(video_codec.getText() + TEXT("-") + team_name);
+		video_name.push_back(video_codec.getText() + TEXT("-") + team_name);
+		torrent_dir_.push_back(video_codec.getText() + TEXT("-") + team_name);
+		torrent_name.push_back(video_codec.getText() + TEXT("-") + team_name);
 
 		// 做种目录名
-		if (!m_external_source.season.empty()) {
-			torrent_dir = av::str::join(torrent_dir_, TEXT(".")); // 剧集
+		if (!source.season.empty()) {
+			publish_name.torrent_dir = av::str::join(torrent_dir_, TEXT(".")); // 剧集
 		}
 		else {
-			torrent_dir = av::str::join(video_name, TEXT("."));
+			publish_name.torrent_dir = av::str::join(video_name, TEXT("."));
 		}
 
 		// 标题
-		title = av::str::join(title_name, TEXT(" "));
+		publish_name.title = av::str::join(title_name, TEXT(" "));
 
 		// 视频文件名
-		video_name.push_back(m_external_source.file_suffix);
-		video_filename = av::str::join(video_name, TEXT("."));
+		video_name.push_back(source.file_suffix);
+		publish_name.video_filename = av::str::join(video_name, TEXT("."));
 
 		// 种子文件名
 		torrent_name.push_back(TEXT("torrent"));
-		torrent_filename = av::str::join(torrent_name, TEXT("."));
+		publish_name.torrent_filename = av::str::join(torrent_name, TEXT("."));
 		return true;
 	}
 

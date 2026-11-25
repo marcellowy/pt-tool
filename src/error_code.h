@@ -25,6 +25,7 @@ enum class PublishError: int {
     ErrNoTSFile,
     ErrTranslate,
     ErrMoveImage,
+    ErrMoveFile,
     ErrGetSiteType,
     ErrGetDoubanInfo,
     ErrCaptureFrame,
@@ -32,6 +33,7 @@ enum class PublishError: int {
     ErrParam,
     ErrPublishFailed,
     ErrParseCreatedTime,
+    ErrContactName,
 };
 
 std::string publishErrorToString(PublishError code);

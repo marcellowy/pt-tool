@@ -20,8 +20,8 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 using namespace av::media;
 
-// AVS
-class AVSInfo {
+//
+class MediaInfo {
 public:
     int64_t width;
     int64_t height;
@@ -35,39 +35,39 @@ public:
     std::tstring created_time;
 	std::string douban_id;
 
-    friend void from_json(const json& j, AVSInfo& avs) {
+    friend void from_json(const json& j, MediaInfo& media_info) {
         if (j.contains("width") && j["width"].is_number_integer()) {
-            avs.width = j["width"].get<int64_t>();
+            media_info.width = j["width"].get<int64_t>();
         }
         if (j.contains("height") && j["height"].is_number_integer()) {
-            avs.height = j["height"].get<int64_t>();
+            media_info.height = j["height"].get<int64_t>();
         }
         if (j.contains("videoFormat") && j["videoFormat"].is_string()) {
-            avs.video_format = av::str::toT(j["videoFormat"].get<std::string>());
+            media_info.video_format = av::str::toT(j["videoFormat"].get<std::string>());
         }
         if (j.contains("scanType") && j["scanType"].is_string()) {
-            avs.scan_type = av::str::toT(j["scanType"].get<std::string>());
+            media_info.scan_type = av::str::toT(j["scanType"].get<std::string>());
         }
         if (j.contains("audioFormat") && j["audioFormat"].is_string()) {
-            avs.audio_format = av::str::toT(j["audioFormat"].get<std::string>());
+            media_info.audio_format = av::str::toT(j["audioFormat"].get<std::string>());
         }
         if (j.contains("title") && j["title"].is_string()) {
-            avs.title = av::str::toT(j["title"].get<std::string>());
+            media_info.title = av::str::toT(j["title"].get<std::string>());
         }
         if (j.contains("channel") && j["channel"].is_string()) {
-            avs.channel = av::str::toT(j["channel"].get<std::string>());
+            media_info.channel = av::str::toT(j["channel"].get<std::string>());
         }
         if (j.contains("year") && j["year"].is_string()) {
-            avs.year = av::str::toT(j["year"].get<std::string>());
+            media_info.year = av::str::toT(j["year"].get<std::string>());
         }
         if (j.contains("category") && j["category"].is_number_integer()) {
-            avs.category = j["category"].get<int64_t>();
+            media_info.category = j["category"].get<int64_t>();
         }
         if (j.contains("createdTime") && j["createdTime"].is_string()) {
-            avs.created_time = av::str::toT(j["createdTime"].get<std::string>());
+            media_info.created_time = av::str::toT(j["createdTime"].get<std::string>());
         }
         if (j.contains("doubanId") && j["doubanId"].is_string()) {
-            avs.douban_id = j["doubanId"].get<std::string>();
+            media_info.douban_id = j["doubanId"].get<std::string>();
         }
     }
 };
@@ -84,16 +84,20 @@ public:
 	bool stop();
 
     std::vector<Source> readDir(PublishError& error);
-    bool getSiteType(Source& obj);
+    bool getSiteType(Source& source);
 protected:
-	int processDir(Source& obj, PublishError& error);
-	bool processFile(Source& obj, PublishError& error);
+	int processDir(Source& source, 
+        std::vector<std::pair<std::string, std::function<void()>>>& rollback_tasks,
+        PublishError& error);
+	bool processFile(Source& source, 
+        std::vector<std::pair<std::string, std::function<void()>>>& rollback_tasks,
+        PublishError& error);
 
 	// map tv name
-	void tvname(Source& obj);
+	void tvname(Source& source);
 
 	// 
-	void setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& obj);
+	void setResolution(int64_t width, int64_t height, const av::media::ScanType& scan_type, Source& source);
 
 	// 
 	void capitalizeWords(std::tstring& s);

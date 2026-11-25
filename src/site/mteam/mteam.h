@@ -25,6 +25,7 @@ namespace mteam {
 		      const std::tstring &tgbot_chat_id);
 
 		bool publish(const av::media::Source &source) override;
+		bool name(const av::media::Source& source, PublishName& publish_name) override;
 
 		~Mteam() override;
 
@@ -36,8 +37,6 @@ namespace mteam {
 		std::tstring m_tgbot_token;
 		std::tstring m_tgbot_chat_id;
 
-		av::media::Source m_external_source;
-
 		mteam::video::Codec m_video_codec;
 		mteam::video::Resolution m_video_resolution;
 		mteam::audio::Codec m_audio_codec;
@@ -46,20 +45,14 @@ namespace mteam {
 		mteam::Source m_source;
 
 	private:
-		bool sendTGMessage(std::tstring &douban_poster_img,
-		                   std::vector<std::tstring> &screenshots,
-		                   std::tstring &publish_id,
-		                   std::tstring &title,
-		                   std::tstring &sub_title,
-		                   std::tstring &create_date);
+		bool sendTGMessage(const std::tstring &douban_poster_img,
+		                   const std::vector<std::tstring> &screenshots,
+		                   const std::tstring &publish_id,
+		                   const std::tstring &title,
+		                   const std::tstring &sub_title,
+		                   const std::tstring &create_date);
 
 		void sendTGWaringMessage(const std::tstring &msg) const;
-
-		bool parseName(std::tstring &torrent_dir,
-		               std::tstring &title,
-		               std::tstring &video_filename,
-		               std::tstring &torrent_filename
-		);
 	};
 }
 #endif
