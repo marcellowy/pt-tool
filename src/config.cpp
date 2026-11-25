@@ -67,9 +67,22 @@ bool Config::parse(const std::tstring& toml_file) {
 		download.enable = config["download"]["enable"].value_or(false);
 		download.numberOfDownloadPerTime = config["download"]["number_of_downloads_per_time"].value_or(1);
 		download.source_dir = av::str::toT(config["download"]["source_dir"].value_or(""));
-		auto tmp = config["download"]["delete_in_dir"].value_or<std::vector<std::string>>({});
-		for (const auto& item : tmp) {
-			download.delete_in_dir.push_back(av::str::toT(item));
+
+		// delete_in_dir
+		{
+			std::vector<std::string> tmp;
+			if (config["download"].as_table()->contains("delete_in_dir")) {
+				if (const toml::array* arr = config["download"]["delete_in_dir"].as_array()) {
+					tmp.reserve(arr->size()); // 可选：预分配内存
+					for (const auto& node : *arr) {
+						// 2. 逐个元素转换，如果不是字符串则使用默认值 ""（或者你可以用 try/catch）
+						tmp.push_back(node.value_or<std::string>(""));
+					}
+				}
+			}
+			for (const auto& item : tmp) {
+				if (item != "")download.delete_in_dir.push_back(av::str::toT(item));
+			}
 		}
 
 		// publish cycle
