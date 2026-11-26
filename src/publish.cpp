@@ -468,17 +468,10 @@ int Publish::processDir(Source& source,
 	//
 	if (!source.douban_id.empty()) {
 		av::ptgen::Douban douban_info;
-
-		//
-		std::string douban_url;
-		fmt::format_to(std::back_inserter(douban_url),
-			"https://movie.douban.com/subject/{}/", av::str::toA(source.douban_id));
-
-		//
-		if (!av::ptgen::getByMteam(av::str::toT(douban_url), config.mteam.api_key, douban_info)) {
+		if (!m_site->douban(av::str::toA(source.douban_id), douban_info)) {
 			loge("get douban info failed!");
 			error = PublishError::ErrGetDoubanInfo;
-			return -1;
+			return false;
 		}
 
 		// set douban info to obj
