@@ -3,8 +3,9 @@
 #include <utility>
 #include "mteam.h"
 
-#include "fmt/format.h"
-#include "fmt/ranges.h"
+//#include "fmt/format.h"
+//#include "fmt/ranges.h"
+#include "fmt/core.h"
 
 #include "av_path.h"
 #include "av_log.h"
@@ -58,6 +59,14 @@ namespace mteam {
 		m_tgbot_token(tgbot_token),
 		m_tgbot_chat_id(tgbot_chat_id),
 		m_debug(debug) {
+	}
+
+	// 获取豆瓣信息
+	bool Mteam::douban(const std::string& douban_id, av::ptgen::Douban& douban_info) {
+		std::string douban_url;
+		fmt::format_to(std::back_inserter(douban_url),
+			"https://movie.douban.com/subject/{}/", av::str::toA(douban_id));
+		return av::ptgen::getByMteam(av::str::toT(douban_url), m_api_key, douban_info);
 	}
 
 	bool Mteam::publish(const av::media::Source& source) {

@@ -3,6 +3,8 @@
 
 #include "av_media_info.h"
 #include "av_string.h"
+#include "av_pt_gen.h"
+#include "av_pt_gen_mteam.h"
 
 class PublishName {
 public:
@@ -21,6 +23,8 @@ public:
 	// 返回文件或目录名称
 	virtual bool name(const av::media::Source& source, PublishName& publish_name) = 0;
 
+	// 获取豆瓣信息
+	virtual bool douban(const std::string& douban_id, av::ptgen::Douban& douban_info) = 0;
 	// 虚析构函数
 	virtual ~Site() = default;
 };

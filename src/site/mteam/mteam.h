@@ -13,6 +13,8 @@
 #include "source.h"
 #include "upload_img.h"
 #include "group.h"
+#include "av_pt_gen.h"
+#include "av_pt_gen_mteam.h"
 
 namespace mteam {
 	class Mteam : public Site {
@@ -27,7 +29,9 @@ namespace mteam {
 
 		bool publish(const av::media::Source &source) override;
 		bool name(const av::media::Source& source, PublishName& publish_name) override;
+		bool douban(const std::string& douban_id, av::ptgen::Douban& douban_info) override;
 
+		//
 		~Mteam() override;
 
 	private:

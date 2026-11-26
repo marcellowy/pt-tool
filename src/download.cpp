@@ -18,7 +18,7 @@ namespace {
 	constexpr auto BUFFER_SPACE = 1024LL * 1024 * 1024 * 10; // 留出10GB的缓冲空间
 };
 
-Download::Download() {
+Download::Download(std::shared_ptr<Site>& site) : m_site(site) {
 
 }
 
@@ -95,7 +95,7 @@ bool Download::copyFile(const fs::path& src_file, const fs::path& dst_file) {
 	return false;
 }
 
-bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
+bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, MediaInfo& media_info) {
 	if (fs::is_regular_file(src)) {
 		// 检查文件是否存在
 		if (!fs::exists(src)) {
@@ -197,7 +197,6 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir) {
 
 		// 解析JSON内容
 		nlohmann::json j;
-		MediaInfo media_info;
 		try {
 			j = nlohmann::json::parse(content);
 			j.get_to(media_info);
@@ -405,6 +404,8 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 			break;
 		}
 
+		MediaInfo media_info;
+
 		//
 		if (entry.is_regular_file()) {
 			//
@@ -417,9 +418,15 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 			logi(">>>>>>>> new file {}", av::str::toUtf8(entry.path()));
 
 			//
-			if (!isDownloadable(entry.path(), dst_dir)) {
+			if (!isDownloadable(entry.path(), dst_dir, media_info)) {
 				logw("file {} is not downloadable!", av::str::toUtf8(entry.path()));
 				continue;
+			}
+
+			// 预处理一下豆瓣信息
+			if (m_site && !media_info.douban_id.empty()) {
+				av::ptgen::Douban douban_info;
+				m_site->douban(media_info.douban_id, douban_info);
 			}
 
 			//
@@ -449,9 +456,15 @@ bool Download::task(TaskProcessType type, const std::tstring& src_dir, const std
 			logi(">>>>>>>> new dir {}", av::str::toA(entry.path()));
 
 			//
-			if (!isDownloadable(entry.path(), dst_dir)) {
+			if (!isDownloadable(entry.path(), dst_dir, media_info)) {
 				logw("file {} is not downloadable!", av::str::toUtf8(entry.path()));
 				continue;
+			}
+
+			// 预处理一下豆瓣信息
+			if (m_site && !media_info.douban_id.empty()) {
+				av::ptgen::Douban douban_info;
+				m_site->douban(media_info.douban_id, douban_info);
 			}
 
 			//

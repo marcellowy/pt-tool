@@ -5,6 +5,7 @@
 // 文件还没有下载完成就会被删除，导致文件丢失
 #include <filesystem>
 #include "av_cron.h"
+#include "publish.h"
 
 namespace fs = std::filesystem;
 
@@ -27,7 +28,8 @@ constexpr TaskProcessType operator&(TaskProcessType a, TaskProcessType b) {
 
 class Download {
 public:
-	Download();
+	Download() = default;
+	Download(std::shared_ptr<Site>& site);
 	~Download();
 	bool task(TaskProcessType type, const std::tstring& src_dir, const std::tstring& dst_dir);
 	bool start();
@@ -47,12 +49,13 @@ private:
 	// 是否可下载 
 	// @param src: 文件或目录路径
 	// @param dst_dir: 目标目录路径
-	bool isDownloadable(const fs::path& src, const fs::path& dst_dir);
+	bool isDownloadable(const fs::path& src, const fs::path& dst_dir, MediaInfo& media_info);
 
 	// 获取目录最后一级,如果是顶层返回空
 	std::tstring getLastDirName(const fs::path& dir);
 private:
 	std::vector<std::shared_ptr<av::cron::Cron>> m_cron;
+	std::shared_ptr<Site> m_site;
 };
 
 #endif

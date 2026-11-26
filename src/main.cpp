@@ -70,10 +70,9 @@ int main()
 		logw("start publish cron failed");
 		return static_cast<int>(ErrorCode::ErrStartCronFailed);
 	}
-	//publish.task();
 
 	//
-	Download download;
+	Download download(ptr);
 	if (!download.start()) {
 		logw("start download cron failed");
 		return static_cast<int>(ErrorCode::ErrStartCronFailed);
