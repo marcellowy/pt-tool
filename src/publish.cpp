@@ -471,7 +471,7 @@ int Publish::processDir(Source& source,
 		if (!m_site->douban(av::str::toA(source.douban_id), douban_info)) {
 			loge("get douban info failed!");
 			error = PublishError::ErrGetDoubanInfo;
-			return false;
+			return -1;
 		}
 
 		// set douban info to obj
