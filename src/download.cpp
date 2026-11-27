@@ -126,37 +126,9 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 		return false;
 	}
 
-	// 检查目录中是否存在任意jpg/png文件
-	// 同时删除目录里指定的文件或目录
-	{
-		bool has_img = false;
-		auto tmp_p = src;
-		for (const auto& entry : fs::directory_iterator(tmp_p,
-			fs::directory_options::skip_permission_denied)) {
-
-			// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
-			if (!entry.is_directory()) {
-				auto ext = entry.path().extension().string();
-				if (av::utils::iequals(ext, std::string(".jpeg")) ||
-					av::utils::iequals(ext, std::string(".jpg")) ||
-					av::utils::iequals(ext, std::string(".png"))) {
-					has_img = true;
-					continue;
-				}
-			}
-		}
-
-		// 没有图片的直接不下载
-		if (!has_img) {
-			logw("dir {} has no jpg/png file!", av::str::toA(src));
-			return false;
-		}
-	}
-
 	// 检查是否存在固定文件
 	{
-		auto tmp_p = src;
-		auto txt_file = tmp_p / TEXT("media_info.txt");
+		auto txt_file = src / TEXT("media_info.txt");
 #ifdef _UNICODE
 		auto txt_file_str = txt_file.wstring();
 #else
@@ -172,33 +144,24 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 
 	// 检查是否存在固定格式文件
 	{
-		auto tmp_p = src;
-		auto json_file = tmp_p / TEXT("media_info.json");
+		auto json_file = src / TEXT("media_info.json");
 #ifdef _UNICODE
 		auto json_file_str = json_file.wstring();
 #else
 		auto json_file_str = json_file.string();
 #endif // _UNICODE
 
-		//
-		std::ifstream json_ifs(json_file, std::ios::in | std::ios::binary);
-		if (!json_ifs.is_open()) {
-			logw("file {} not exists! {}:{}", av::str::toA(json_file_str), std::to_string(errno), std::strerror(errno));
-			return false;
-		}
-		json_ifs.seekg(0, std::ios::end);
-		std::streamsize size = json_ifs.tellg();
-		json_ifs.seekg(0, std::ios::beg);
-		std::string content(size, '\0'); // 预分配空间
-		if (!json_ifs.read(content.data(), size)) {
-			logw("read file {} failed! {}:{}", av::str::toA(json_file_str), std::to_string(errno), std::strerror(errno));
+		// 检查文件是否存在
+		if (!av::path::exists(json_file)) {
+			logw("file {} not exists!", av::str::toA(json_file_str));
 			return false;
 		}
 
 		// 解析JSON内容
+		std::ifstream file(json_file, std::ios::in | std::ios::binary);
 		nlohmann::json j;
 		try {
-			j = nlohmann::json::parse(content);
+			j = nlohmann::json::parse(file);
 			j.get_to(media_info);
 		}
 		catch (const nlohmann::json::parse_error& e) {
@@ -210,7 +173,19 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 			return false;
 		}
 
-		// 检查json内容 
+		// 预处理一下豆瓣信息
+		if (m_site && !media_info.douban_id.empty()) {
+			av::ptgen::Douban douban_info;
+			if (m_pre_process_douban_ids.find(media_info.douban_id) == m_pre_process_douban_ids.end()) {
+				m_site->douban(media_info.douban_id, douban_info);
+				m_pre_process_douban_ids.insert(media_info.douban_id);
+			}
+			else {
+				logi("douban id {} already pre-processed, skip!", media_info.douban_id);
+			}
+		}
+
+		// 检查json内容
 		if (media_info.created_time.empty()) {
 			logw("json created_time is empty!");
 			return false;
@@ -234,6 +209,33 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 		if (diff_time_seconds < duration_cast<seconds>(std::chrono::hours(24)).count()) {
 			logw("time not reached, time: {}, elapsed seconds: {}",
 				av::str::toA(media_info.created_time), diff_time_seconds);
+			return false;
+		}
+	}
+
+	// 检查目录中是否存在任意jpg/png文件
+	// 同时删除目录里指定的文件或目录
+	{
+		bool has_img = false;
+		auto tmp_p = src;
+		for (const auto& entry : fs::directory_iterator(tmp_p,
+			fs::directory_options::skip_permission_denied)) {
+
+			// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
+			if (!entry.is_directory()) {
+				auto ext = entry.path().extension().string();
+				if (av::utils::iequals(ext, std::string(".jpeg")) ||
+					av::utils::iequals(ext, std::string(".jpg")) ||
+					av::utils::iequals(ext, std::string(".png"))) {
+					has_img = true;
+					continue;
+				}
+			}
+		}
+
+		// 没有图片的直接不下载
+		if (!has_img) {
+			logw("dir {} has no jpg/png file!", av::str::toA(src));
 			return false;
 		}
 	}

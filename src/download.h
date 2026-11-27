@@ -4,6 +4,7 @@
 // 以前使用rsync总是有漏掉文件的情况
 // 文件还没有下载完成就会被删除，导致文件丢失
 #include <filesystem>
+#include <unordered_set>
 #include "av_cron.h"
 #include "publish.h"
 
@@ -56,6 +57,7 @@ private:
 private:
 	std::vector<std::shared_ptr<av::cron::Cron>> m_cron;
 	std::shared_ptr<Site> m_site;
+	std::unordered_set<std::string> m_pre_process_douban_ids;	// 预处理的豆瓣ID列表
 };
 
 #endif
