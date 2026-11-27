@@ -217,9 +217,8 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 	// 同时删除目录里指定的文件或目录
 	{
 		bool has_img = false;
-		auto tmp_p = src;
-		for (const auto& entry : fs::directory_iterator(tmp_p,
-			fs::directory_options::skip_permission_denied)) {
+		bool has_ts = false;
+		for (const auto& entry : fs::directory_iterator(src, fs::directory_options::skip_permission_denied)) {
 
 			// 判断文件扩展名是否为 .jpg 或 .png（不区分大小写）
 			if (!entry.is_directory()) {
@@ -230,14 +229,27 @@ bool Download::isDownloadable(const fs::path& src, const fs::path& dst_dir, Medi
 					has_img = true;
 					continue;
 				}
+
+				//
+				if (av::utils::iequals(ext, std::string(".ts"))) {
+					has_ts = true;
+					continue;
+				}
 			}
 		}
 
 		// 没有图片的直接不下载
 		if (!has_img) {
-			logw("dir {} has no jpg/png file!", av::str::toA(src));
+			logw("dir {} has no jpeg/jpg/png file!", av::str::toA(src));
 			return false;
 		}
+
+		// 没有ts文件的直接不下载
+		if (!has_ts) {
+			logw("dir {} has no ts file!", av::str::toA(src));
+			return false;
+		}
+
 	}
 
 	// 检查目录大小是否超过当前磁盘剩余空间
